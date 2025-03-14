@@ -44,7 +44,7 @@ public class WebtoonService {
         }
     }
 
-    private List<WebtoonListResponseDto> ToDto(Page<Webtoon> webtoonPage) {
+    private List<WebtoonListResponseDto> toDto(Page<Webtoon> webtoonPage) {
         return webtoonPage.getContent().stream()
                 .map(webtoon -> {
                     String writer = null;
@@ -82,7 +82,7 @@ public class WebtoonService {
             webtoonPage = webtoonRepository.findAll(pageable);
         }
 
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
 
@@ -127,7 +127,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -142,7 +142,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdIn(favoriteWebtoonIds, pageable);
 
         // 조회 결과 DTO 변환
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
 
