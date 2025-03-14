@@ -13,9 +13,9 @@ public class WebtoonListResponseDto {
     private String writer;
     private String webtoonName;
     private String genre;
-    private String garoThumbnail;
-    private String seroThumbnail;
     private Long episodeCount;
     private Long viewCount;
     private Double rating;
+    private String garoThumbnail;
+    private String seroThumbnail;
 }

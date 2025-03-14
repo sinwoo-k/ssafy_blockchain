@@ -32,17 +32,17 @@ public class Webtoon {
     @Column(name = "adaptable", length = 1)
     private String adaptable;
 
-    @Column(name = "garo_thumbnail", length = 255)
+    @Column(name = "garo_thumbnail")
     private String garoThumbnail;
 
-    @Column(name = "sero_thumbnail", length = 255)
+    @Column(name = "sero_thumbnail")
     private String seroThumbnail;
 
     @Column(name = "last_upload_date", length = 10)
     private String lastUploadDate;
 
     @Column(name = "episode_count")
-    private Integer episodeCount;
+    private Long episodeCount;
 
     @Column(name = "view_count")
     private Long viewCount;
@@ -62,7 +62,7 @@ public class Webtoon {
     @PrePersist
     public void prePersist() {
         lastUploadDate = "";
-        episodeCount = 0;
+        episodeCount = 0L;
         viewCount = 0L;
         ratingSum = 0L;
         ratingCount = 0L;

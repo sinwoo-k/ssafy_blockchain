@@ -17,6 +17,7 @@ public class WebtoonResponseDto {
     private String adaptable;
     private Long episodeCount;
     private Long viewCount;
+    private Double rating;
     private String garoThumbnail;
     private String seroThumbnail;
 }
