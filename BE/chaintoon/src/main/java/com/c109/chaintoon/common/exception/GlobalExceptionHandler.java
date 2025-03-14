@@ -1,4 +1,4 @@
-package com.c109.chaintoon.common;
+package com.c109.chaintoon.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
