@@ -25,6 +25,9 @@ public class EpisodeImage {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "image_order")
+    private Integer imageOrder;
+
     @Column(name = "deleted", length = 1)
     private String deleted;
 

@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.webtoon.controller;
 
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
+import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.EpisodeService;
@@ -61,12 +62,31 @@ public class EpisodeController {
 
     @PatchMapping("/{episodeId}")
     public ResponseEntity<?> updateEpisode(
+            @PathVariable Integer episodeId,
             @RequestPart(name = "episode", required = false) EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail", required = false) MultipartFile thumbnail,
-            @RequestPart(name = "images", required = false) List<MultipartFile> images
+            @RequestPart(name = "images", required = false) List<ImageRequestDto> images
     ) {
-        EpisodeResponseDto episode = episodeService.updateEpisode();
+        Integer userId = 0; // TODO: user 구현 후 변경
+        EpisodeResponseDto episode = episodeService.updateEpisode(userId, episodeId, episodeRequest, thumbnail, images);
         return new ResponseEntity<>(episode, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{episodeId}")
+    public ResponseEntity<?> deleteEpisode(@PathVariable Integer episodeId) {
+        Integer userId = 0; // TODO: user 구현 후 변경
+        episodeService.deletedEpisode(userId, episodeId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/{episodeId}/rating")
+    public ResponseEntity<?> addEpisodeRating(
+            @PathVariable Integer episodeId,
+            @RequestParam int rating
+    ) {
+        Integer userId = 0; // TODO: user 구현 후 변경
+        episodeService.addEpisodeRating(userId, episodeId, rating);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

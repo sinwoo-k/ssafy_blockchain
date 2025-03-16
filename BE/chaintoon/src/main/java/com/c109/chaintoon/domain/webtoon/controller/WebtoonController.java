@@ -76,7 +76,7 @@ public class WebtoonController {
             @RequestPart(value = "webtoon", required = false) WebtoonRequestDto webtoonRequest,
             @RequestPart(value = "garoImage", required = false) MultipartFile garoImage,
             @RequestPart(value = "seroImage", required = false) MultipartFile seroImage) {
-        Integer userId = 0;
+        Integer userId = 0; // TODO: user 구현 후 변경
         WebtoonResponseDto webtoon = webtoonService.updateWebtoon(webtoonId, userId, webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.OK);
     }

@@ -11,4 +11,6 @@ public interface EpisodeImageRepository extends JpaRepository<EpisodeImage, Inte
 
     // episodeId와 deleted 여부로 이미지 목록 조회
     List<EpisodeImage> findByEpisodeIdAndDeleted(Integer episodeId, String deleted);
+
+    List<EpisodeImage> findByEpisodeId(Integer episodeId);
 }

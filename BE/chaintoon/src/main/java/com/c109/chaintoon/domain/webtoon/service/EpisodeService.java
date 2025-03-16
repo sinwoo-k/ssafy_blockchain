@@ -1,15 +1,16 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
+import com.c109.chaintoon.common.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
+import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
-import com.c109.chaintoon.domain.webtoon.entity.Episode;
-import com.c109.chaintoon.domain.webtoon.entity.EpisodeImage;
-import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
+import com.c109.chaintoon.domain.webtoon.entity.*;
 import com.c109.chaintoon.domain.webtoon.exeption.EpisodeNotFoundException;
 import com.c109.chaintoon.domain.webtoon.exeption.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeImageRepository;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeRepository;
+import com.c109.chaintoon.domain.webtoon.repository.RatingRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,11 +28,13 @@ public class EpisodeService {
     private final EpisodeRepository episodeRepository;
     private final EpisodeImageRepository episodeImageRepository;
     private final WebtoonRepository webtoonRepository;
+    private final RatingRepository ratingRepository;
 
-    public EpisodeService(EpisodeRepository episodeRepository, EpisodeImageRepository episodeImageRepository, WebtoonRepository webtoonRepository) {
+    public EpisodeService(EpisodeRepository episodeRepository, EpisodeImageRepository episodeImageRepository, WebtoonRepository webtoonRepository, RatingRepository ratingRepository) {
         this.episodeRepository = episodeRepository;
         this.episodeImageRepository = episodeImageRepository;
         this.webtoonRepository = webtoonRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     // 조회수 증가
@@ -192,7 +195,96 @@ public class EpisodeService {
     }
 
 
-    public EpisodeResponseDto updateEpisode() {
-        return null;
+    @Transactional
+    public EpisodeResponseDto updateEpisode(Integer userId, Integer episodeId, EpisodeRequestDto episodeRequest, MultipartFile thumbnail, List<ImageRequestDto> imageRequests) {
+        // 기존 에피소드 조회
+        Episode episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
+
+        // 수정 권한 확인
+        Webtoon webtoon = webtoonRepository.findById(episode.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(episode.getWebtoonId()));
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("에피소드 수정 권한이 없습니다.");
+        }
+
+        // 에피소드 정보 업데이트
+        if (episodeRequest != null) {
+            episode.setEpisodeName(episodeRequest.getEpisodeName());
+            episode.setWriterComment(episodeRequest.getWriterComment());
+            episode.setCommentable(episodeRequest.getCommentable());
+        }
+
+        // 썸네일 업데이트
+        if (thumbnail != null) {
+            // TODO: S3 이미지 추가 후, S3 주소로 변경
+            String thumbnailUrl = null;
+            episode.setThumbnail(thumbnailUrl);
+        }
+
+        // 이미지 업데이트
+        if (imageRequests != null && !imageRequests.isEmpty()) {
+            // 기존 이미지 소프트 삭제 (모두 삭제 후 재구성)
+            List<EpisodeImage> existingImages = episodeImageRepository.findByEpisodeId(episodeId);
+            existingImages.forEach(image -> image.setDeleted("Y"));
+            episodeImageRepository.saveAll(existingImages);
+
+            // 새로운 이미지 순서대로 저장
+            for (int i = 0; i < imageRequests.size(); i++) {
+                ImageRequestDto imageRequest = imageRequests.get(i);
+                if (imageRequest.getImageId() != null) {
+                    // 기존 이미지 유지
+                    EpisodeImage existingImage = episodeImageRepository.findById(imageRequest.getImageId())
+                            .orElseThrow(() -> new RuntimeException("기존 이미지를 찾을 수 없습니다."));
+                    existingImage.setImageOrder(i + 1); // 순서 업데이트
+                    existingImage.setDeleted("N"); // 삭제 취소
+                    episodeImageRepository.save(existingImage);
+                } else if (imageRequest.getNewImage() != null) {
+                    // 새로운 이미지 추가
+                    String newImageUrl = null;
+                    EpisodeImage newEpisodeImage = EpisodeImage.builder()
+                            .episodeId(episodeId)
+                            .imageUrl(newImageUrl)
+                            .imageOrder(i + 1) // 순서 업데이트
+                            .build();
+                    episodeImageRepository.save(newEpisodeImage);
+                }
+            }
+
+            // TODO: S3 이미지 삭제, 성능 향상을 위해 DB에서 hard 삭제 고려
+            List<EpisodeImage> deletedImages = episodeImageRepository.findByEpisodeIdAndDeleted(episodeId, "Y");
+        }
+
+        // 에피소드 저장
+        Episode updatedEpisode = episodeRepository.save(episode);
+
+        // DTO 변환 후 반환
+        return buildEpisodeResponseDto(updatedEpisode);
+    }
+
+    @Transactional
+    public void deletedEpisode(Integer userId, Integer episodeId) {
+        // 기존 에피소드 조회
+        Episode episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
+
+        // 삭제 권한 확인
+        Webtoon webtoon = webtoonRepository.findById(episode.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(episode.getWebtoonId()));
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("에피소드 삭제 권한이 없습니다.");
+        }
+
+        // 에피소드 소프트 삭제
+        episode.setDeleted("Y");
+        episodeRepository.save(episode);
+
+        // TODO: 썸네일, 에피소드 이미지 DB & S3 삭제
+    }
+
+    public void addEpisodeRating(Integer userId, Integer episodeId, Integer rating) {
+        RatingId ratingId = new RatingId(episodeId, userId);
+        Rating ratingEntity = new Rating(ratingId, rating);
+        ratingRepository.save(ratingEntity);
     }
 }
