@@ -1,6 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
-import com.c109.chaintoon.common.UnauthorizedAccessException;
+import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
