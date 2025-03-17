@@ -16,7 +16,7 @@ public interface WebtoonRepository extends JpaRepository<Webtoon, Integer> {
     Page<Webtoon> findByWebtoonIdIn(List<Integer> webtoonIds, Pageable pageable);
 
     @Query("SELECT w FROM Webtoon w " +
-            "LEFT JOIN User u ON w.userId = u.userId " +
+            "LEFT JOIN User u ON w.userId = u.id " +
             "WHERE LOWER(w.webtoonName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Webtoon> findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(
