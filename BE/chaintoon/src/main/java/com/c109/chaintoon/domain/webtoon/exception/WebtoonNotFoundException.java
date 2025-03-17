@@ -1,9 +1,9 @@
-package com.c109.chaintoon.domain.webtoon.exeption;
+package com.c109.chaintoon.domain.webtoon.exception;
 
 import com.c109.chaintoon.common.NotFoundException;
 
 public class WebtoonNotFoundException extends NotFoundException {
     public WebtoonNotFoundException(Integer webtoonId) {
-        super("Webtoon with id " + webtoonId + " not found");
+        super("삭제 또는 없는 웹툰: " + webtoonId);
     }
 }

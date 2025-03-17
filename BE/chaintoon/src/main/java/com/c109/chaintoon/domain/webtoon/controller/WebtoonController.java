@@ -28,6 +28,7 @@ public class WebtoonController {
             @RequestParam(required = false, defaultValue = "latest") String orderBy,
             @RequestParam(required = false) String genre
     ) {
+
         List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
@@ -38,6 +39,7 @@ public class WebtoonController {
             @RequestPart("garoImage") MultipartFile garoImage,
             @RequestPart("seroImage") MultipartFile seroImage
     ) {
+        webtoonRequest.setUserId(0); // TODO: user 구현 후 변경
         WebtoonResponseDto webtoon = webtoonService.addWebtoon(webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.CREATED);
     }
@@ -76,7 +78,7 @@ public class WebtoonController {
             @RequestPart(value = "webtoon", required = false) WebtoonRequestDto webtoonRequest,
             @RequestPart(value = "garoImage", required = false) MultipartFile garoImage,
             @RequestPart(value = "seroImage", required = false) MultipartFile seroImage) {
-        Integer userId = 0;
+        Integer userId = 0; // TODO: user 구현 후 변경
         WebtoonResponseDto webtoon = webtoonService.updateWebtoon(webtoonId, userId, webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.OK);
     }
