@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import LogoImg from '../../assets/logo1.png'
 import { Link } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { userReducerActions } from '../../redux/reducers/userSlice'
+import LoginModal from '../Auth/LoginModal'
 
 const NavBar = () => {
   // 로그인 확인
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+  const dispatch = useDispatch()
 
+  // 로그인 모달 상태
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  
   // 스크롤 감지
   const [scroll, setScroll] = useState(false)
 
@@ -29,7 +35,13 @@ const NavBar = () => {
       setScroll(false)
     }
   }
+
+  const handleLogout = () => {
+    dispatch(userReducerActions.logout())
+  }
+  
   return (
+    <>
     <div
       className={`border-text text-text ${scroll && 'bg-black'} 
       fixed top-0 z-10 flex h-[80px] w-full justify-between border-b`}
@@ -56,21 +68,37 @@ const NavBar = () => {
       <div className='flex'>
         {isAuthenticated && (
           <div className='flex h-full w-[150px] items-center justify-center'>
-            <Link className='text-xl'>마이페이지</Link>
+            <Link to="/mypage" className='text-xl'>마이페이지</Link>
           </div>
-        )}
+          )}  
         {isAuthenticated && (
           <div className='flex h-full w-[150px] items-center justify-center'>
-            <button className='cursor-pointer text-xl'>로그아웃</button>
+            <button 
+              className='cursor-pointer text-xl'
+              onClick={handleLogout}
+            >
+              로그아웃
+            </button>
           </div>
         )}
         {!isAuthenticated && (
           <div className='flex h-full w-[150px] items-center justify-center'>
-            <button className='cursor-pointer text-xl'>로그인</button>
+            <button 
+            className='cursor-pointer text-xl'
+            onClick={() => setIsLoginModalOpen(true)}
+            >
+            로그인
+            </button>
           </div>
         )}
       </div>
     </div>
+          {/* 로그인 모달 추가 */}
+          <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
+      </>
   )
 }
 
