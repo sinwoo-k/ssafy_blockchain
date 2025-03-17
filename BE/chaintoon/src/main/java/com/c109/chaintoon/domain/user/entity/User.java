@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.user.entity;
 
+import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "user")
 public class User {
 
     @Id
@@ -19,11 +21,10 @@ public class User {
     @Column(name = "user_id")
     private Integer id;
 
-    @Column(name = "email", length = 50, nullable = false)
+    @Column(name = "email", length = 50, nullable = false, unique = true)
     private String email;
 
-    @ColumnDefault("Unnamed")
-    @Column(name = "nickname", length = 20, nullable = false)
+    @Column(name = "nickname", length = 20, nullable = false, unique = true)
     private String nickname;
 
     @Column(name = "introduction", length = 255)
@@ -36,12 +37,12 @@ public class User {
     private String backgroundImage;
 
     @ColumnDefault("0")
-    @Column(name = "follwer")
-    private Integer follwer;
+    @Column(name = "follower")
+    private Integer follower;
 
     @ColumnDefault("0")
-    @Column(name = "follwing")
-    private Integer follwing;
+    @Column(name = "following")
+    private Integer following;
 
     @Column(name = "join_date", length = 10)
     private String joinDate;
@@ -56,4 +57,11 @@ public class User {
     @ColumnDefault("Y")
     @Column(name = "status", length = 1)
     private String status;
+
+    @PostPersist
+    public void initNickname() {
+        this.nickname = Integer.toString(this.id);
+    }
+
+    public void toSearchUserDto(SearchUserResponseDto searchUserResponseDto) {}
 }
