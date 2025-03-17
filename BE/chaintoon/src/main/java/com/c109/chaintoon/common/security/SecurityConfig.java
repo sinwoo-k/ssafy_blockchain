@@ -68,7 +68,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/api/auth/**",
                         "/api/users/search",
-                        "/api/search"
+                        "/api/search",
+                        "/api/redis/test"
                 ).permitAll()
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")  // 관리자만 접근
                 .requestMatchers("/api/**").authenticated()
