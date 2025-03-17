@@ -1,4 +1,4 @@
-package com.c109.chaintoon.common;
+package com.c109.chaintoon.common.exception;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {

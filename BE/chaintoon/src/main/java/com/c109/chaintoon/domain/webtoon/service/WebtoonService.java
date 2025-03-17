@@ -1,13 +1,13 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
-import com.c109.chaintoon.common.UnauthorizedAccessException;
+import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoon;
 import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoonId;
 import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
-import com.c109.chaintoon.domain.webtoon.exeption.WebtoonNotFoundException;
+import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.FavoriteWebtoonRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import org.springframework.data.domain.Page;
@@ -44,7 +44,7 @@ public class WebtoonService {
         }
     }
 
-    private List<WebtoonListResponseDto> ToDto(Page<Webtoon> webtoonPage) {
+    private List<WebtoonListResponseDto> toDto(Page<Webtoon> webtoonPage) {
         return webtoonPage.getContent().stream()
                 .map(webtoon -> {
                     String writer = null;
@@ -82,7 +82,7 @@ public class WebtoonService {
             webtoonPage = webtoonRepository.findAll(pageable);
         }
 
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
 
@@ -127,7 +127,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -142,7 +142,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdIn(favoriteWebtoonIds, pageable);
 
         // 조회 결과 DTO 변환
-        return ToDto(webtoonPage);
+        return toDto(webtoonPage);
     }
 
 
