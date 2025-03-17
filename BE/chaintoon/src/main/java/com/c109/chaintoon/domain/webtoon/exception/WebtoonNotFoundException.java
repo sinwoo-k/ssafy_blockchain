@@ -1,4 +1,4 @@
-package com.c109.chaintoon.domain.webtoon.exeption;
+package com.c109.chaintoon.domain.webtoon.exception;
 
 import com.c109.chaintoon.common.NotFoundException;
 

@@ -7,7 +7,7 @@ import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoon;
 import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoonId;
 import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
-import com.c109.chaintoon.domain.webtoon.exeption.WebtoonNotFoundException;
+import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.FavoriteWebtoonRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import org.springframework.data.domain.Page;

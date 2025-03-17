@@ -11,11 +11,13 @@ import java.util.Optional;
 @Repository
 public interface EpisodeRepository extends JpaRepository<Episode, Integer> {
 
-    Page<Episode> findByWebtoonId(Integer webtoonId, Pageable pageable);
+    Page<Episode> findByWebtoonIdAndDeleted(Integer webtoonId, String deleted, Pageable pageable);
 
     Optional<Episode> findTopByWebtoonIdAndDeletedOrderByEpisodeIdDesc(Integer webtoonId, String deleted);
 
     Optional<Episode> findFirstByWebtoonIdAndDeletedOrderByEpisodeIdAsc(Integer webtoonId, String deleted);
 
     Optional<Episode> findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(Integer webtoonId, String deleted);
+
+    Optional<Episode> findByEpisodeIdAndDeleted(Integer episodeId, String deleted);
 }

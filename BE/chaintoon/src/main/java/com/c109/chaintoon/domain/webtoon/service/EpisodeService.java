@@ -6,8 +6,9 @@ import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
 import com.c109.chaintoon.domain.webtoon.entity.*;
-import com.c109.chaintoon.domain.webtoon.exeption.EpisodeNotFoundException;
-import com.c109.chaintoon.domain.webtoon.exeption.WebtoonNotFoundException;
+import com.c109.chaintoon.domain.webtoon.exception.EpisodeNotFoundException;
+import com.c109.chaintoon.domain.webtoon.exception.RatingDuplicatedException;
+import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeImageRepository;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeRepository;
 import com.c109.chaintoon.domain.webtoon.repository.RatingRepository;
@@ -101,7 +102,7 @@ public class EpisodeService {
     public List<EpisodeListResponseDto> getEpisodeList(Integer webtoonId, int page, int pageSize) {
         // 페이징 처리
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Episode> episodePage = episodeRepository.findByWebtoonId(webtoonId, pageable);
+        Page<Episode> episodePage = episodeRepository.findByWebtoonIdAndDeleted(webtoonId, "N", pageable);
 
         // Entity -> DTO 변환
         return episodePage.getContent().stream()
@@ -160,7 +161,7 @@ public class EpisodeService {
 
     public EpisodeResponseDto getEpisode(Integer episodeId) {
         // 에피소드 조회
-        Episode episode = episodeRepository.findById(episodeId)
+        Episode episode = episodeRepository.findByEpisodeIdAndDeleted(episodeId, "N")
                 .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
 
         // 조회수 증가
@@ -233,7 +234,7 @@ public class EpisodeService {
             for (int i = 0; i < imageRequests.size(); i++) {
                 ImageRequestDto imageRequest = imageRequests.get(i);
                 if (imageRequest.getImageId() != null) {
-                    // 기존 이미지 유지
+                    // 기존 이미지 유지 TODO: Exception 변경
                     EpisodeImage existingImage = episodeImageRepository.findById(imageRequest.getImageId())
                             .orElseThrow(() -> new RuntimeException("기존 이미지를 찾을 수 없습니다."));
                     existingImage.setImageOrder(i + 1); // 순서 업데이트
@@ -284,7 +285,13 @@ public class EpisodeService {
 
     public void addEpisodeRating(Integer userId, Integer episodeId, Integer rating) {
         RatingId ratingId = new RatingId(episodeId, userId);
-        Rating ratingEntity = new Rating(ratingId, rating);
+        Rating ratingEntity = ratingRepository.findById(ratingId).orElse(null);
+
+        if (ratingEntity != null) {
+            throw new RatingDuplicatedException("이미 별점을 매긴 에피소드입니다.");
+        }
+
+        ratingEntity = new Rating(ratingId, rating);
         ratingRepository.save(ratingEntity);
     }
 }
