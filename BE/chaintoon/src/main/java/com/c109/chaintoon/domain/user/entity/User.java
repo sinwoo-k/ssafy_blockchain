@@ -63,5 +63,4 @@ public class User {
         this.nickname = Integer.toString(this.id);
     }
 
-    public void toSearchUserDto(SearchUserResponseDto searchUserResponseDto) {}
 }

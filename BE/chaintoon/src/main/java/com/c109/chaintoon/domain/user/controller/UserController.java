@@ -19,14 +19,14 @@ public class UserController {
     private final UserService userService;
 
     // 회원 검색 (목록)
-//    @GetMapping("/search")
-//    public ResponseEntity<?> findUserByNickname(
-//            @RequestParam(required = false) String search,
-//            @RequestParam(required = false, defaultValue = "1") int page,
-//            @RequestParam(required = false, defaultValue = "10") int pageSize) {
-//        List<SearchUserResponseDto> list = userService.searchByNickname(search, page, pageSize);
-//        return ResponseEntity.ok(list);
-//    }
+    @GetMapping("/search")
+    public ResponseEntity<?> findUserByNickname(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize) {
+        List<SearchUserResponseDto> list = userService.searchByNickname(search, page, pageSize);
+        return ResponseEntity.ok(list);
+    }
 
 
     // 회원 정보 조회

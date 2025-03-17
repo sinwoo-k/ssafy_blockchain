@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +19,18 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-//    @Transactional
-//    public List<SearchUserResponseDto> searchByNickname(String search, int page, int pageSize){
-//        List<User> list = userRepository.findByNickname(search);
-//
-//        return list;
-//    }
+    @Transactional
+    public List<SearchUserResponseDto> searchByNickname(String search, int page, int pageSize){
+        List<User> list = userRepository.findByNickname(search);
+
+        return list.stream()
+                .map(user -> SearchUserResponseDto.builder()
+                        .id(user.getId())
+                        .nickname(user.getNickname())
+                        .profileImage(user.getProfileImage())
+                        .build())
+                .collect(Collectors.toList());
+    }
 
 
 
