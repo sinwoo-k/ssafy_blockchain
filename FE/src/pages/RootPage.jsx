@@ -4,7 +4,7 @@ import NavBar from '../components/common/NavBar'
 
 const RootPage = () => {
   return (
-    <div className='root-page relative min-h-[100vh] w-full bg-black'>
+    <div id='root-page' className='w-full'>
       <NavBar />
       <Outlet />
     </div>
