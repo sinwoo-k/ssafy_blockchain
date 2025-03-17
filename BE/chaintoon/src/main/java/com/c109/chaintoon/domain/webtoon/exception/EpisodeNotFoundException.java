@@ -1,6 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.exception;
 
-import com.c109.chaintoon.common.NotFoundException;
+import com.c109.chaintoon.common.exception.NotFoundException;
 
 public class EpisodeNotFoundException extends NotFoundException {
     public EpisodeNotFoundException(Integer episodeId) {
