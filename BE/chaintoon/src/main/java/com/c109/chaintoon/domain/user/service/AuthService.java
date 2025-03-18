@@ -5,13 +5,14 @@ import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
 import com.c109.chaintoon.domain.user.entity.User;
-import com.c109.chaintoon.domain.user.exception.UserNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
@@ -67,7 +68,7 @@ public class AuthService {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         User user = optionalUser.orElseGet(() -> autoRegisterUser(email));
 
-        // 4. JWT 토큰 발급 및 반환
+        // JWT 토큰 발급 및 반환
         return jwtTokenProvider.createAccessToken(user.getId(), "USER");
     }
 
@@ -76,6 +77,7 @@ public class AuthService {
         User newUser = User.builder()
                 .email(email)
                 .nickname(email)
+                .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .build();
 
         return userRepository.save(newUser);
