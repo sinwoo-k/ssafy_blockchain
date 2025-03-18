@@ -194,7 +194,7 @@ public class CommentService {
             comment.setLikeCount(comment.getLikeCount() + 1);
             commentRepository.save(comment);
         }
-        else if (commentPreference.getLiked().equals("Y")) {
+        else if ("Y".equals(commentPreference.getLiked())) {
             // 중복 요청
             throw new DuplicatedException("이미 '좋아요'한 댓글입니다.");
         }
@@ -226,7 +226,7 @@ public class CommentService {
             // 중복된 요청
             throw new DuplicatedException("'좋아요'한 적 없는 댓글입니다.");
         }
-        else if (commentPreference.getLiked().equals("Y")) {
+        else if ("Y".equals(commentPreference.getLiked())) {
             // 레코드 삭제
             commentPreferenceRepository.delete(commentPreference);
             comment.setLikeCount(comment.getLikeCount() - 1);
@@ -265,7 +265,7 @@ public class CommentService {
             comment.setHateCount(comment.getHateCount() + 1);
             commentRepository.save(comment);
         }
-        else if (commentPreference.getLiked().equals("N")) {
+        else if ("N".equals(commentPreference.getLiked())) {
             // 중복된 요청
             throw new DuplicatedException("이미 '싫어요'한 댓글입니다.");
         }
@@ -295,7 +295,7 @@ public class CommentService {
             // 중복된 요청
             throw new DuplicatedException("'싫어요'한 적 없는 댓글입니다.");
         }
-        else if (commentPreference.getLiked().equals("N")) {
+        else if ("N".equals(commentPreference.getLiked())) {
             // 레코드 삭제
             commentPreferenceRepository.delete(commentPreference);
             comment.setHateCount(comment.getHateCount() - 1);

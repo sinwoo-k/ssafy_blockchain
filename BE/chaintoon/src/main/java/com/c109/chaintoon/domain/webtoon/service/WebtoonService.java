@@ -11,6 +11,7 @@ import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
 import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.FavoriteWebtoonRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,18 +23,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class WebtoonService {
 
     private final WebtoonRepository webtoonRepository;
     private final FavoriteWebtoonRepository favoriteWebtoonRepository;
     private final S3Service s3Service;
-
-    public WebtoonService(WebtoonRepository webtoonRepository, FavoriteWebtoonRepository favoriteWebtoonRepository, S3Service s3Service) {
-        this.webtoonRepository = webtoonRepository;
-        this.favoriteWebtoonRepository = favoriteWebtoonRepository;
-        this.s3Service = s3Service;
-    }
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
