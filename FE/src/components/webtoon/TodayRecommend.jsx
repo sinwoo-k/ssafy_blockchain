@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import WebtoonCard from './WebtoonCard'
 // carousel
 import Slider from 'react-slick'
 import 'slick-carousel/slick/slick.css'
@@ -9,7 +10,6 @@ import actionCover from '../../assets/defaultCover/action.webp'
 import romanceCover from '../../assets/defaultCover/romance.webp'
 import dramaCover from '../../assets/defaultCover/drama.webp'
 import historyCover from '../../assets/defaultCover/history.webp'
-import WebtoonCard from './WebtoonCard'
 
 const TodayRecommend = () => {
   // 배경 이미지
