@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
@@ -26,10 +27,12 @@ public class WebtoonService {
 
     private final WebtoonRepository webtoonRepository;
     private final FavoriteWebtoonRepository favoriteWebtoonRepository;
+    private final S3Service s3Service;
 
-    public WebtoonService(WebtoonRepository webtoonRepository, FavoriteWebtoonRepository favoriteWebtoonRepository) {
+    public WebtoonService(WebtoonRepository webtoonRepository, FavoriteWebtoonRepository favoriteWebtoonRepository, S3Service s3Service) {
         this.webtoonRepository = webtoonRepository;
         this.favoriteWebtoonRepository = favoriteWebtoonRepository;
+        this.s3Service = s3Service;
     }
 
     private Sort getSort(String orderBy) {
@@ -71,15 +74,23 @@ public class WebtoonService {
                 .collect(Collectors.toList());
     }
 
+    private String uploadGaroThumbnail(Integer webtoonId, MultipartFile file) {
+        return s3Service.uploadFile(file, "webtoon/" + webtoonId  + "/garoThumbnail");
+    }
+
+    private String uploadSeroThumbnail(Integer webtoonId, MultipartFile file) {
+        return s3Service.uploadFile(file, "webtoon/" + webtoonId  + "/seroThumbnail");
+    }
+
     @Transactional(readOnly = true)
     public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Webtoon> webtoonPage;
 
         if (genre != null && !genre.isEmpty()) {
-            webtoonPage = webtoonRepository.findByGenre(genre, pageable);
+            webtoonPage = webtoonRepository.findByGenreAndDeleted(genre, "N", pageable);
         } else {
-            webtoonPage = webtoonRepository.findAll(pageable);
+            webtoonPage = webtoonRepository.findByDeleted("N", pageable);
         }
 
         return toDto(webtoonPage);
@@ -87,10 +98,6 @@ public class WebtoonService {
 
 
     public WebtoonResponseDto addWebtoon(WebtoonRequestDto webtoonDto, MultipartFile garoImage, MultipartFile seroImage) {
-        // 이미지 업로드 TODO: 이미지 추가
-        String garoImageUrl = null;
-        String seroImageUrl = null;
-
         // Webtoon 엔티티 생성
         Webtoon webtoon = Webtoon.builder()
                 .userId(webtoonDto.getUserId())
@@ -98,12 +105,17 @@ public class WebtoonService {
                 .genre(webtoonDto.getGenre())
                 .summary(webtoonDto.getSummary())
                 .adaptable(webtoonDto.getAdaptable())
-                .garoThumbnail(garoImageUrl)
-                .seroThumbnail(seroImageUrl)
                 .build();
 
         // 저장
         Webtoon savedWebtoon = webtoonRepository.save(webtoon);
+
+        // 이미지 저장
+        String garoImageUrl = uploadGaroThumbnail(savedWebtoon.getWebtoonId(), garoImage);
+        String seroImageUrl = uploadSeroThumbnail(savedWebtoon.getWebtoonId(), seroImage);
+        savedWebtoon.setGaroThumbnail(garoImageUrl);
+        savedWebtoon.setSeroThumbnail(seroImageUrl);
+        webtoonRepository.save(savedWebtoon);
 
         // 응답 DTO 생성
         return WebtoonResponseDto.builder()
@@ -139,7 +151,7 @@ public class WebtoonService {
         List<Integer> favoriteWebtoonIds = favoriteWebtoonRepository.findWebtoonIdsByUserId(userId);
 
         // 찜한 웹툰 ID 목록을 기반으로 웹툰 조회
-        Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdIn(favoriteWebtoonIds, pageable);
+        Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdInAndDeleted(favoriteWebtoonIds, "N", pageable);
 
         // 조회 결과 DTO 변환
         return toDto(webtoonPage);
@@ -147,7 +159,7 @@ public class WebtoonService {
 
 
     public WebtoonResponseDto getWebtoon(Integer webtoonId) {
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
         double rating = webtoon.getRatingCount() == 0 ? 0.0 :
                 Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
@@ -170,7 +182,7 @@ public class WebtoonService {
 
     public WebtoonResponseDto updateWebtoon(Integer webtoonId, Integer userId, WebtoonRequestDto webtoonRequest, MultipartFile garoImage, MultipartFile seroImage) {
         // 기존 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
 
         // 삭제 권한 없음
@@ -178,13 +190,15 @@ public class WebtoonService {
             throw new UnauthorizedAccessException("웹툰 수정 권한이 없습니다.");
         }
 
-        // 이미지 업데이트 (새로운 이미지가 제공된 경우에만 업로드) TODO: 이미지 추가
+        // 이미지 업데이트 (새로운 이미지가 제공된 경우에만 업로드)
         if (garoImage != null && !garoImage.isEmpty()) {
-            String garoImageUrl = null;
+            s3Service.deleteFile(webtoon.getGaroThumbnail());
+            String garoImageUrl = uploadGaroThumbnail(webtoonId, garoImage);
             webtoon.setGaroThumbnail(garoImageUrl);
         }
         if (seroImage != null && !seroImage.isEmpty()) {
-            String seroImageUrl = null;
+            s3Service.deleteFile(webtoon.getSeroThumbnail());
+            String seroImageUrl = uploadSeroThumbnail(webtoonId, seroImage);
             webtoon.setSeroThumbnail(seroImageUrl);
         }
 
@@ -214,7 +228,7 @@ public class WebtoonService {
 
     public void deleteWebtoon(Integer webtoonId, Integer userId) {
         // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
 
         // 삭제 권한 없음
@@ -222,9 +236,14 @@ public class WebtoonService {
             throw new UnauthorizedAccessException("웹툰 삭제 권한이 없습니다.");
         }
 
+        // S3 이미지 삭제
+        s3Service.deleteFile(webtoon.getGaroThumbnail());
+        s3Service.deleteFile(webtoon.getSeroThumbnail());
+
         // 소프트 삭제
         webtoon.setDeleted("Y");
         webtoonRepository.save(webtoon);
+
     }
 
 
