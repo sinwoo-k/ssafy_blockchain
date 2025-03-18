@@ -39,7 +39,7 @@ public class FanartController {
         return fanartService.getWebtoonGrid(page, orderBy);
     }
 
-    // 웹툰별 팬아트 목록 조회
+    // 특정 웹툰의 모든 팬아트 조회
     @GetMapping("webtoons/{webtoonId}")
     public WebtoonFanartResponseDto getFanartByWebtoon(
             @PathVariable Integer webtoonId,
@@ -53,9 +53,10 @@ public class FanartController {
     // 팬아트 등록
     @PostMapping
     public WebtoonFanartResponseDto createFanart(
-            @RequestBody FanartRequestDto fanartRequestDto
+            @RequestPart("fanart") FanartRequestDto fanartRequestDto,
+            @RequestPart("fanartImage") MultipartFile fanartImage
     ) {
-        return fanartService.createFanart(fanartRequestDto);
+        return fanartService.createFanart(fanartRequestDto, fanartImage);
     }
 
     // 팬아트 상세 조회
@@ -74,11 +75,12 @@ public class FanartController {
             @RequestParam(required = false, defaultValue = "latest") String orderBy) {
         return fanartService.getMyFanartList(userId, page, pageSize, orderBy);
     }
+
     // 팬아트 수정
     @PatchMapping("/{fanartId}")
     public FanartResponseDto updateFanart(
             @PathVariable Integer fanartId,
-            @RequestPart("fanartRequest") FanartRequestDto fanartRequestDto,
+            @RequestPart("fanart") FanartRequestDto fanartRequestDto,
             @RequestPart(value = "fanartImage", required = false) MultipartFile fanartImage) {
         fanartRequestDto.setFanartId(fanartId);
         return fanartService.updateFanart(fanartRequestDto, fanartImage);

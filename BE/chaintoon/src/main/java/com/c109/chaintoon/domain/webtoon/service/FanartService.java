@@ -13,6 +13,7 @@ import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.FanartRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FanartService {
 
     private final FanartRepository fanartRepository;
@@ -111,10 +113,17 @@ public class FanartService {
     }
 
     // 팬아트 등록
-    public WebtoonFanartResponseDto createFanart(FanartRequestDto fanartRequestDto) {
+    public WebtoonFanartResponseDto createFanart(FanartRequestDto fanartRequestDto, MultipartFile fanartImage) {
         // 웹툰 조회
         Webtoon webtoon = webtoonRepository.findById(fanartRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanartRequestDto.getWebtoonId()));
+
+        // TODO : 이미지 업로드
+        String fanartImageUrl = fanartRequestDto.getFanartImage(); // 기본값 (예: 미리 입력된 URL)
+        if (fanartImage != null && !fanartImage.isEmpty()) {
+            // S3에 파일 업로드 후 URL 반환
+            fanartImageUrl = null;
+        }
 
         // 팬아트 엔티티 생성
         Fanart fanart = Fanart.builder()
@@ -258,6 +267,11 @@ public class FanartService {
         // 팬아트 조회
         Fanart fanart = fanartRepository.findById(fanartId)
                 .orElseThrow(() -> new FanartNotFoundException(fanartId));
+
+        // 이미 삭제된 팬아트라면 예외 발생
+        if ("Y".equalsIgnoreCase(fanart.getDeleted())) {
+            throw new FanartNotFoundException(fanartId);
+        }
 
         // 삭제 권한 없음
         if(!fanart.getUserId().equals(userId)) {
