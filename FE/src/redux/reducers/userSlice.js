@@ -5,7 +5,14 @@ export const userSlice = createSlice({
   initialState: {
     isAuthenticated: false,
   },
-  reducers: {},
+  reducers: {
+    setAuthenticated: (state, action) => {
+      state.isAuthenticated = action.payload
+    },
+    logout: (state) => {
+      state.isAuthenticated = false
+    }
+  },
 })
 
 export const userReducerActions = userSlice.actions
