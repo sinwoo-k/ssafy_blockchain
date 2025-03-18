@@ -7,7 +7,6 @@ import MyNFTList from '../../components/mypage/MyNFTList';
 import TransactionHistory from '../../components/mypage/TransactionHistory';
 import FavoritesList from '../../components/mypage/FavoritesList';
 
-// 라우팅 역할만 하는 마이페이지 컴포넌트
 const MyPage = () => {
   // 탭 선택 상태만 관리
   const [activeTab, setActiveTab] = useState('나의 NFT');
@@ -15,7 +14,7 @@ const MyPage = () => {
   return (
     <div className="min-h-screen bg-black text-white pt-[80px]">
       {/* 전체 컨테이너 */}
-      <div className="mx-auto max-w-4xl px-4">
+      <div className="mx-auto max-w-4xl">
         {/* 사용자 프로필 */}
         <UserProfile />
         

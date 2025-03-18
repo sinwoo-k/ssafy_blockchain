@@ -8,7 +8,7 @@ const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
 const WebtoonDetail = lazy(() => import('../pages/webtoon/WebtoonDetail'))
 
 // 마이페이지 추가
-const MyPage = lazy(() => import('../pages/MyPage/Mypage'))
+const MyPage = lazy(() => import('../pages/mypage/Mypage'))
 
 const router = createBrowserRouter([
   {
