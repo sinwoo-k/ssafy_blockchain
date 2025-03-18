@@ -1,19 +1,45 @@
 import React, { useState, useEffect } from 'react';
+import NFTSellModal from './NFTSellModal';
 import { nftData } from '../../pages/mypage/data';
 
 const MyNFTList = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 판매 모달 상태
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [selectedNft, setSelectedNft] = useState(null);
 
   useEffect(() => {
     // 실제 구현에서는 API 호출하여 NFT 데이터 가져오기
     setTransactions(nftData);
   }, []);
 
-  // NFT 판매 함수
-  const handleSellNft = (id) => {
-    console.log(`NFT ID ${id} 판매 시작`);
-    // 실제 구현에서는 판매 모달을 열거나 API 호출
+  // NFT 판매 버튼 클릭 핸들러
+  const handleSellClick = (nft) => {
+    setSelectedNft(nft);
+    setShowSellModal(true);
+  };
+  
+  // 판매 모달 닫기 핸들러
+  const handleCloseSellModal = () => {
+    setShowSellModal(false);
+    setSelectedNft(null);
+  };
+  
+  // NFT 판매 처리 핸들러
+  const handleSellNft = (sellInfo) => {
+    console.log('NFT 판매 정보:', sellInfo);
+    // 실제 구현에서는 판매 API 호출
+    
+    // 판매 중인 상태로 UI 업데이트
+    setTransactions(prev => 
+      prev.map(item => 
+        item.id === sellInfo.nftId
+          ? { ...item, isOnSale: true, sellInfo }
+          : item
+      )
+    );
   };
 
   // 검색어 입력 처리
@@ -72,12 +98,16 @@ const MyNFTList = () => {
               <div className="text-sm text-center">{item.owner}</div>
               <div className="text-sm text-center">{item.time}</div>
               <div className="text-center">
-                <button 
-                  className="bg-[#3cc3ec] text-black px-3 py-1 rounded-md text-xs"
-                  onClick={() => handleSellNft(item.id)}
-                >
-                  판매
-                </button>
+                {item.isOnSale ? (
+                  <span className="text-xs text-[#3cc3ec]">판매 중</span>
+                ) : (
+                  <button 
+                    className="bg-[#3cc3ec] text-black px-3 py-1 rounded-md text-xs"
+                    onClick={() => handleSellClick(item)}
+                  >
+                    판매
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -87,6 +117,14 @@ const MyNFTList = () => {
           </div>
         )}
       </div>
+      
+      {/* NFT 판매 모달 - 별도 컴포넌트로 분리 */}
+      <NFTSellModal 
+        isOpen={showSellModal}
+        onClose={handleCloseSellModal}
+        nft={selectedNft}
+        onSell={handleSellNft}
+      />
     </div>
   );
 };
