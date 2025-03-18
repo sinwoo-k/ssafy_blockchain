@@ -6,7 +6,7 @@ import Loader from '../components/common/Loader'
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
 // 마이페이지 추가
-const MyPage = lazy(() => import('../pages/MyPage/MyPage'))
+const MyPage = lazy(() => import('../pages/MyPage/Mypage'))
 
 const router = createBrowserRouter([
   {
