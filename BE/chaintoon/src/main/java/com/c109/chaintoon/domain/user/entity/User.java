@@ -4,6 +4,7 @@ import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -51,6 +52,7 @@ public class User {
     @Column(name = "deleted", length = 1)
     private String deleted;
 
+    @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -58,9 +60,5 @@ public class User {
     @Column(name = "status", length = 1)
     private String status;
 
-    @PostPersist
-    public void initNickname() {
-        this.nickname = Integer.toString(this.id);
-    }
 
 }
