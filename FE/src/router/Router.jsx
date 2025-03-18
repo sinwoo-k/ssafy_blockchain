@@ -7,6 +7,9 @@ import Loader from '../components/common/Loader'
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
 const WebtoonDetail = lazy(() => import('../pages/webtoon/WebtoonDetail'))
 
+// 마이페이지 추가
+const MyPage = lazy(() => import('../pages/MyPage/Mypage'))
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -18,6 +21,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <WebtoonMain />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'mypage',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <MyPage />
           </Suspense>
         ),
       },
