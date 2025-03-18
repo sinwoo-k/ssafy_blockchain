@@ -1,4 +1,7 @@
 import React, { useState } from 'react'
+// 아이콘
+import ErrorIcon from '@mui/icons-material/Error'
+import CommentCard from './CommentCard'
 
 const dummyData = {
   episodeId: 12,
@@ -73,9 +76,31 @@ const WebtoonEpisodeComment = () => {
   return (
     <div className='flex justify-center'>
       <div className='w-[1160px]'>
-        <div className='flex gap-5'>
-          <h2 className='text-xl'>댓글</h2>
-          <span className='text-lg'>{comments.count}</span>
+        <div className='mb-3 flex items-end gap-5'>
+          <h2 className='text-2xl'>댓글</h2>
+          <span className='text-text/75 text-lg'>{comments.count}</span>
+        </div>
+        {/* 댓글 입력창 */}
+        <div className='mb-5 flex gap-3'>
+          <input type='text' className='bg-text/50 h-[50px] grow rounded-lg' />
+          <button className='bg-chaintoon h-[50px] w-[100px] flex-none rounded-lg text-lg'>
+            등록
+          </button>
+        </div>
+        {/* 댓글 목록 */}
+        <div>
+          {comments.comments.length === 0 ? (
+            <div className='flex h-[300px] w-full flex-col items-center justify-center gap-3'>
+              <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
+              <p className='text-xl'>등록된 댓글이 없습니다.</p>
+            </div>
+          ) : (
+            <div className='border-t'>
+              {comments.comments.map((comment) => (
+                <CommentCard key={comment.commentId} comment={comment} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

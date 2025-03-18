@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 // 아이콘
-import InfoIcon from '@mui/icons-material/Info'
+import ErrorIcon from '@mui/icons-material/Error'
 import EpisodeCard from './EpisodeCard'
 
 const generateDummyEpisodes = (count, startId = 0) => {
@@ -73,7 +73,7 @@ const WebtoonDetailEpisodeList = () => {
         <div className='flex flex-col border-t'>
           {episodes.length === 0 ? (
             <div className='flex h-[300px] w-full flex-col items-center justify-center gap-3'>
-              <InfoIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
+              <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
               <p className='text-xl'>등록된 에피소드가 없습니다.</p>
             </div>
           ) : (
