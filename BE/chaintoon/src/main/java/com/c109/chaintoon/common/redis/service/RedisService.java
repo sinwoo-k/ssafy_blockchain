@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -23,5 +24,14 @@ public class RedisService {
 
     public void deleteValue(String key) {
         redisTemplate.delete(key);
+    }
+
+    public String testRedis() {
+        redisTemplate.opsForValue().set("testKey", "Hello Redis!");
+
+        return Optional.ofNullable(redisTemplate.opsForValue().get("testKey"))
+                .map(Object::toString)
+                .orElse(null);
+
     }
 }
