@@ -50,7 +50,7 @@ public class SecurityConfig {
         // 3. URL별 권한 설정
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        HttpMethod.GET,
+//                        HttpMethod.GET,
                         "/api/users/{userId}",
                         "/api/users/followers/{userId}",
                         "/api/users/following/{userId}",
