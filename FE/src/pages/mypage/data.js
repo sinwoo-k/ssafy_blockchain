@@ -8,13 +8,10 @@ export const userData = {
   email: 'user@chaintoon.com',
   walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
   profileImage: null,
-  followers: 120,
-  following: 45,
   registrationDate: '2024.01.15 가입',
   balance: {
     eth: 2.34,
     usd: 4324.56,
-    nftCount: 23
   }
 };
 

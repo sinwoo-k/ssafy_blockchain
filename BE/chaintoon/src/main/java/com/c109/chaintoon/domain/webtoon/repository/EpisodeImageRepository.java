@@ -13,4 +13,6 @@ public interface EpisodeImageRepository extends JpaRepository<EpisodeImage, Inte
     List<EpisodeImage> findByEpisodeIdAndDeleted(Integer episodeId, String deleted);
 
     List<EpisodeImage> findByEpisodeId(Integer episodeId);
+
+    List<EpisodeImage> findByEpisodeIdAndDeletedOrderByImageOrderAsc(Integer episodeId, String deleted);
 }

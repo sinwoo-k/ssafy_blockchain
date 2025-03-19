@@ -123,10 +123,10 @@ const UserProfile = () => {
 
   return (
     <>
-      <div className="border-b border-gray-800 py-4">
-        <div className="flex items-start">
+      <div className="border-b border-gray-800 py-3 mt-10">
+        <div className="flex items-start mb-5">
           {/* 프로필 이미지 */}
-          <div className="relative mr-4 group">
+          <div className="relative mr-4 group mt-1">
             <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-700">
               {user.profileImage ? (
                 <img src={user.profileImage} alt="프로필" className="h-full w-full object-cover" />
@@ -178,7 +178,7 @@ const UserProfile = () => {
                   onClick={handleCopyPageAddress}
                   title="현재 페이지 주소 복사"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 18" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-5 relative top-0.5" fill="none" viewBox="0 0 24 21" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                   </svg>
                 </button>
@@ -195,39 +195,11 @@ const UserProfile = () => {
             
             <p className="text-gray-400 text-sm mb-1">{user.bio || '안녕하세요'}</p>
             
-            {/* 팔로워/팔로잉 버튼 */}
-            <div className="flex space-x-3 mb-1">
-              <button 
-                className="text-xs text-[#3cc3ec] hover:underline flex items-center"
-                onClick={handleFollowersClick}
-              >
-                <span>팔로워 {followers.length}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <button 
-                className="text-xs text-[#3cc3ec] hover:underline flex items-center"
-                onClick={handleFollowingClick}
-              >
-                <span>팔로잉 {following.length}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* 가입일 */}
-            <div className="flex items-center text-xs text-gray-400">
-              <span>{user.registrationDate}</span>
-              <span className="mx-2">|</span>
-              <span>NFT {nftData.length}개</span>
-            </div>
           </div>
           
           {/* 잔액 정보 */}
-          <div className="text-right text-sm">
-            <div className="mb-1">
+          <div className="text-right text-sm mt-3">
+            <div className="mb-3">
               <span className="text-xs text-gray-400 mr-2">순자산</span>
               <span>{user.balance.eth} ETH</span>
             </div>
@@ -237,6 +209,35 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
+        {/* 팔로워/팔로잉 버튼 */}
+        <div className="flex space-x-3 mb-1 ml-3">
+          <button 
+            className="text-[#3cc3ec] hover:underline flex items-center"
+            onClick={handleFollowersClick}
+          >
+            <span>팔로워 {followers.length}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <span className="text-gray-400">|</span>
+          <button 
+            className="text-[#3cc3ec] hover:underline flex items-center"
+            onClick={handleFollowingClick}
+          >
+            <span>팔로잉 {following.length}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        {/* 가입일 */}
+        <div className="flex items-center text-xs text-gray-400 mt-4 ml-3">
+          <span>{user.registrationDate}</span>
+          <span className="mx-2">|</span>
+          <span>NFT {nftData.length}개</span>
+        </div>
+        
       </div>
       
       {/* 프로필 수정 모달 */}

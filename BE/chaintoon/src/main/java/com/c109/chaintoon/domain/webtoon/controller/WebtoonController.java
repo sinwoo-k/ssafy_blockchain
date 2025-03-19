@@ -4,6 +4,7 @@ import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.WebtoonService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,14 +13,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/webtoons")
 public class WebtoonController {
 
     private final WebtoonService webtoonService;
-
-    public WebtoonController(WebtoonService webtoonService) {
-        this.webtoonService = webtoonService;
-    }
 
     @GetMapping
     public ResponseEntity<?> getWebtoonList(
