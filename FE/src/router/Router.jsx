@@ -10,6 +10,10 @@ const WebtoonDetail = lazy(() => import('../pages/webtoon/WebtoonDetail'))
 // 마이페이지 추가
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
 
+// 스토어 추가
+const StoreMain = lazy(() => import('../pages/store/StoreMain'))
+const ProductDetail = lazy(()=> import('../pages/store/ProductDetail'))
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -39,6 +43,22 @@ const router = createBrowserRouter([
             <WebtoonDetail />
           </Suspense>
         ),
+      },
+      {
+        path : '/store',
+        element:(
+          <Suspense fallback={<Loader />}>
+            <StoreMain />
+          </Suspense>
+        )
+      },
+      {
+        path : '/store/product/:productId',
+        element:(
+          <Suspense fallback={<Loader />}>
+            <ProductDetail />
+          </Suspense>
+        )
       },
     ],
   },
