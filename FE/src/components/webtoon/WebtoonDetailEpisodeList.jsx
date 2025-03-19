@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
 import EpisodeCard from './EpisodeCard'
+import { Link } from 'react-router-dom'
 
 const generateDummyEpisodes = (count, startId = 0) => {
   return Array.from({ length: count }, (_, i) => ({
@@ -51,7 +52,7 @@ const WebtoonDetailEpisodeList = () => {
   }, [])
   return (
     <div className={`relative mb-10 flex w-full justify-center py-10`}>
-      <div className='w-[1160px]'>
+      <div className='w-[1000px]'>
         {/* 정렬 버튼 */}
         <div className='mb-1 flex justify-between gap-5'>
           <p>총 {dummyData.length}화</p>
@@ -79,7 +80,12 @@ const WebtoonDetailEpisodeList = () => {
           ) : (
             <>
               {episodes.map((episode) => (
-                <EpisodeCard key={episode.episodeId} episode={episode} />
+                <Link
+                  to={`/webtoon/episode/${episode.episodeId}`}
+                  key={episode.episodeId}
+                >
+                  <EpisodeCard episode={episode} />
+                </Link>
               ))}
               {episodes.length !== dummyData.length && (
                 <div className='flex h-[80px] items-center justify-center'>

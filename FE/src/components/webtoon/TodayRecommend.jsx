@@ -49,8 +49,8 @@ const TodayRecommend = () => {
           filter: 'blur(35px) brightness(0.5)',
         }}
       ></div>
-      <div className='relative w-[1160px]'>
-        <h1 className='mt-24 mb-5 text-2xl'>오늘의 추천 웹툰</h1>
+      <div className='relative w-[1000px]'>
+        <h1 className='mt-24 mb-5 text-xl'>오늘의 추천 웹툰</h1>
         <div>
           <Slider {...setting}>
             {webtoons.map((webtoon) => (

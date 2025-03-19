@@ -75,15 +75,15 @@ const WebtoonEpisodeComment = () => {
 
   return (
     <div className='flex justify-center'>
-      <div className='w-[1160px]'>
-        <div className='mb-3 flex items-end gap-5'>
-          <h2 className='text-2xl'>댓글</h2>
-          <span className='text-text/75 text-lg'>{comments.count}</span>
+      <div className='w-[1000px]'>
+        <div className='mb-3 flex items-end gap-3'>
+          <h2 className='text-xl'>댓글</h2>
+          <span className='text-text/75 '>{comments.count}</span>
         </div>
         {/* 댓글 입력창 */}
         <div className='mb-5 flex gap-3'>
-          <input type='text' className='bg-text/50 h-[50px] grow rounded-lg' />
-          <button className='bg-chaintoon h-[50px] w-[100px] flex-none rounded-lg text-lg'>
+          <input type='text' className='bg-text/50 h-[45px] grow rounded-lg' />
+          <button className='bg-chaintoon h-[45px] w-[100px] flex-none rounded-lg'>
             등록
           </button>
         </div>

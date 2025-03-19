@@ -56,7 +56,7 @@ const WebtoonViewer = ({ handleClickViewer, images }) => {
 
   return (
     <div
-      className='mt-[80px] flex justify-center'
+      className='mt-[60px] flex justify-center'
       onClick={handleClickViewer}
       onContextMenuCapture={handleContextMenuCapture}
       onDragStartCapture={handleDragStartCapture}
