@@ -1,6 +1,6 @@
-// db/db.js
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+import mysql from 'mysql2/promise';
+import { createClient } from 'redis';
+import 'dotenv/config';
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -9,4 +9,16 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-module.exports = pool;
+const redisClient = createClient({
+  legacyMode: true,
+  url: process.env.REDIS_URL || 'redis://j12c109.p.ssafy.io:6379'
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
+
+await redisClient.connect();
+
+
+export { pool, redisClient };

@@ -1,10 +1,9 @@
-// cryptoHelper.js
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const algorithm = 'aes-256-cbc';
-const secretKey = process.env.ENCRYPTION_KEY; // 32바이트(64자리 16진수)
+const secretKey = process.env.ENCRYPTION_KEY; // 32바이트 (64자리 16진수)
 
-function encrypt(text) {
+export function encrypt(text) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, Buffer.from(secretKey, 'hex'), iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -12,7 +11,7 @@ function encrypt(text) {
   return iv.toString('hex') + ':' + encrypted;
 }
 
-function decrypt(data) {
+export function decrypt(data) {
   const [ivHex, encrypted] = data.split(':');
   const iv = Buffer.from(ivHex, 'hex');
   const decipher = crypto.createDecipheriv(algorithm, Buffer.from(secretKey, 'hex'), iv);
@@ -20,5 +19,3 @@ function decrypt(data) {
   decrypted += decipher.final('utf8');
   return decrypted;
 }
-
-module.exports = { encrypt, decrypt };

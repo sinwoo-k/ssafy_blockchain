@@ -1,9 +1,10 @@
-// routes/walletRoutes.js
-const express = require('express');
+import express from 'express';
+import { createWallet, getWalletInfo, connectWallet } from '../controller/walletController.js';
+
 const router = express.Router();
-const walletController = require('../controller/walletController');
 
-router.post('/create-wallet', walletController.createWallet);
-router.get('/wallet-info/:wallet_address', walletController.getWalletInfo);
+router.post('/create-wallet', createWallet);
+router.get('/wallet-info', getWalletInfo);
+router.post('/connect-wallet', connectWallet);
 
-module.exports = router;
+export default router;
