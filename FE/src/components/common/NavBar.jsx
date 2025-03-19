@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import LogoImg from '../../assets/logo1.png'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
+// 컴포넌트
 import LoginModal from '../Auth/LoginModal'
+
+// 이미지
+import LogoImg from '../../assets/logo1.png'
+
+// 아이콘
+import CollectionsBookmarkIcon from '@mui/icons-material/CollectionsBookmark'
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'
+import IconLink from './IconLink'
 
 const NavBar = () => {
   // 로그인 확인
@@ -27,11 +35,9 @@ const NavBar = () => {
   }, [])
 
   const handleScroll = () => {
-    // 스크롤이 Top에서 50px 이상 내려오면 true
-    if (window.scrollY >= 50) {
+    if (window.scrollY !== 0) {
       setScroll(true)
     } else {
-      // 스크롤이 50px 미만일경우 false
       setScroll(false)
     }
   }
@@ -66,6 +72,20 @@ const NavBar = () => {
         </div>
         {/* 회원 관련 */}
         <div className='flex'>
+          {isAuthenticated && (
+            <div className='flex h-full w-[100px] items-center justify-center gap-5'>
+              <IconLink
+                path={'/'}
+                Icon={CollectionsBookmarkIcon}
+                tooltip={'관심 웹툰'}
+              />
+              <IconLink
+                path={'/myworks/webtoon'}
+                Icon={LocalLibraryIcon}
+                tooltip={'내 작품 목록'}
+              />
+            </div>
+          )}
           {isAuthenticated && (
             <div className='flex h-full w-[100px] items-center justify-center'>
               <Link to='/mypage' className='text-lg'>
