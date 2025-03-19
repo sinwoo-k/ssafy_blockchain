@@ -1,12 +1,9 @@
-package com.c109.chaintoon.domain.webtoon.repository;
+package com.c109.chaintoon.domain.fanart.repository;
 
-import com.c109.chaintoon.domain.webtoon.entity.Fanart;
-import jakarta.persistence.criteria.CriteriaBuilder;
+import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
 
 public interface FanartRepository extends JpaRepository<Fanart, Integer> {
 
