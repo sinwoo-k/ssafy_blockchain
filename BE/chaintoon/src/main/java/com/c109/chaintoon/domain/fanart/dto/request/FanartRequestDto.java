@@ -1,4 +1,4 @@
-package com.c109.chaintoon.domain.webtoon.dto.request;
+package com.c109.chaintoon.domain.fanart.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
