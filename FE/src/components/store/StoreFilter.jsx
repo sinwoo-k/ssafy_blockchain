@@ -1,32 +1,29 @@
+// StoreFilter.jsx
 import React from 'react'
+import { genres } from '../../pages/store/storeData'
 
-const StoreFilter = ({ categories, onFilterChange }) => {
+const StoreFilter = ({ onFilterChange }) => {
   const filterGroups = [
     {
-      id: 'main',
-      title: '모바일 상점',
+      id: 'status',
+      title: '판매 상태',
       filters: [
-        { id: 'all', label: '전체품목' },
-        { id: 'new', label: '이벤트' },
-        { id: 'sale', label: '할인' },
+        { id: 'sell', label: '판매중' },
+        { id: 'notsell', label: '미판매' },
       ],
     },
     {
-      id: 'category',
+      id: 'genre',
       title: '장르',
-      filters: categories.map(cat => ({ id: cat, label: cat })),
+      filters: genres.map(genre => ({ id: genre, label: genre })),
     },
     {
-      id: 'character',
-      title: '캐릭터 고리',
+      id: 'category',
+      title: '카테고리',
       filters: [
-        { id: 'char1', label: '판롤' },
-        { id: 'char2', label: '주주' },
-        { id: 'char3', label: '바비' },
-        { id: 'char4', label: '체크' },
-        { id: 'char5', label: '스퀘어' },
-        { id: 'char6', label: '트라이앵글' },
-        { id: 'char7', label: '서클' },
+        { id: '웹툰', label: '웹툰' },
+        { id: '굿즈', label: '굿즈' },
+        { id: '팬아트', label: '팬아트' }
       ],
     },
   ]

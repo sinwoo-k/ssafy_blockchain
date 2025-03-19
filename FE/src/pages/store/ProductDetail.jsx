@@ -1,9 +1,9 @@
 // ProductDetail.jsx
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import Loader from '../../components/common/Loader'
-import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { dummyProducts } from '../store/storeData'
 
 // 아이콘
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
@@ -19,19 +19,17 @@ const ProductDetail = () => {
   const [selectedOption, setSelectedOption] = useState('')
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
 
-  // 상품 정보 불러오기 (API 연동 시 변경 필요)
+  // 상품 정보 불러오기
   useEffect(() => {
-    const fetchProductDetails = () => {
-      setTimeout(() => {
-        // 더미 데이터
-        setProduct({
-          id: parseInt(productId),
-          title: `상품 ${productId} 피규어 아이템`,
-          category: '피규어',
-          price: 25000,
-          discount: 20,
-          image: `/api/placeholder/500/400`,
-          description: '이 상품은 웹툰 팬들을 위한 한정판 피규어입니다. 고품질 소재를 사용하여 제작되었으며, 웹툰 캐릭터의 디테일을 정교하게 표현했습니다.',
+    // API 호출 지연 시뮬레이션
+    setTimeout(() => {
+      const foundProduct = dummyProducts.find(p => p.id === parseInt(productId));
+      
+      if (foundProduct) {
+        // 실제 API에서는 받아오지 않을 추가 정보
+        const productDetails = {
+          ...foundProduct,
+          description: `이 상품은 ${foundProduct.genre} 웹툰 팬들을 위한 ${foundProduct.category} 아이템입니다. 고품질 소재를 사용하여 제작되었으며, 웹툰 캐릭터의 디테일을 정교하게 표현했습니다.`,
           details: [
             '크기: 20cm x 15cm',
             '소재: PVC',
@@ -42,18 +40,17 @@ const ProductDetail = () => {
           options: ['기본 색상', '레드 에디션', '블루 에디션', '스페셜 에디션'],
           rating: 4.8,
           reviewCount: 126,
-          inStock: true,
           relatedWebtoon: {
             id: 2,
-            title: '판타지 웹툰',
+            title: `${foundProduct.genre} 웹툰`,
             author: '작가 이름'
           }
-        })
-        setIsLoading(false)
-      }, 800)
-    }
-
-    fetchProductDetails()
+        };
+        
+        setProduct(productDetails);
+      }
+      setIsLoading(false)
+    }, 800)
   }, [productId])
 
   const handleQuantityChange = (e) => {
@@ -78,8 +75,19 @@ const ProductDetail = () => {
   if (isLoading) {
     return <Loader />
   }
-
-  const discountedPrice = Math.floor(product.price * (1 - product.discount / 100))
+  
+  if (!product) {
+    return (
+      <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
+        <div className='mx-auto w-[1160px] text-center'>
+          <h1 className='text-2xl'>상품을 찾을 수 없습니다.</h1>
+          <Link to="/store" className='mt-4 inline-block rounded bg-blue-600 px-6 py-2'>
+            스토어로 돌아가기
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
@@ -101,11 +109,16 @@ const ProductDetail = () => {
               alt={product.title} 
               className='h-[500px] w-full rounded-lg object-cover' 
             />
+            {product.status === 'notsell' && (
+              <div className='mt-4 rounded bg-red-500 p-3 text-center text-white'>
+                현재 판매가 종료된 상품입니다.
+              </div>
+            )}
           </div>
 
           {/* 상품 상세 정보 */}
           <div className='flex flex-1 flex-col'>
-            <div className='mb-2 text-gray-400'>{product.category}</div>
+            <div className='mb-2 text-gray-400'>{product.category} | {product.genre}</div>
             <h1 className='mb-4 text-3xl font-bold'>{product.title}</h1>
             
             {/* 별점 */}
@@ -120,21 +133,7 @@ const ProductDetail = () => {
             
             {/* 가격 정보 */}
             <div className='mb-6'>
-              {product.discount > 0 ? (
-                <div className='flex items-center'>
-                  <span className='mr-3 text-3xl font-bold'>{discountedPrice.toLocaleString()}원</span>
-                  <div className='flex items-center'>
-                    <span className='text-lg text-gray-400 line-through'>
-                      {product.price.toLocaleString()}원
-                    </span>
-                    <span className='ml-2 rounded-md bg-red-500 px-2 py-1 text-sm text-white'>
-                      {product.discount}% 할인
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <span className='text-3xl font-bold'>{product.price.toLocaleString()}원</span>
-              )}
+              <span className='text-3xl font-bold'>{product.price.toLocaleString()}원</span>
             </div>
             
             {/* 상품 설명 */}
@@ -147,6 +146,7 @@ const ProductDetail = () => {
                 className='w-full rounded-md border border-gray-700 bg-gray-800 p-3 text-white'
                 value={selectedOption}
                 onChange={(e) => setSelectedOption(e.target.value)}
+                disabled={product.status === 'notsell'}
               >
                 <option value=''>옵션을 선택하세요</option>
                 {product.options.map((option, index) => (
@@ -162,6 +162,7 @@ const ProductDetail = () => {
                 <button 
                   onClick={decreaseQuantity}
                   className='flex h-full w-[50px] items-center justify-center rounded-l-md border border-r-0 border-gray-700 bg-gray-800 text-xl'
+                  disabled={product.status === 'notsell'}
                 >
                   -
                 </button>
@@ -172,10 +173,12 @@ const ProductDetail = () => {
                   value={quantity}
                   onChange={handleQuantityChange}
                   className='h-full w-[80px] border-y border-gray-700 bg-gray-800 text-center'
+                  disabled={product.status === 'notsell'}
                 />
                 <button 
                   onClick={increaseQuantity}
                   className='flex h-full w-[50px] items-center justify-center rounded-r-md border border-l-0 border-gray-700 bg-gray-800 text-xl'
+                  disabled={product.status === 'notsell'}
                 >
                   +
                 </button>
@@ -186,7 +189,7 @@ const ProductDetail = () => {
             <div className='mb-6 flex items-center justify-between border-y border-gray-700 py-4'>
               <span className='text-xl'>총 금액</span>
               <span className='text-2xl font-bold'>
-                {(discountedPrice * quantity).toLocaleString()}원
+                {(product.price * quantity).toLocaleString()}원
               </span>
             </div>
             
@@ -195,12 +198,17 @@ const ProductDetail = () => {
               <button 
                 className='flex-1 rounded-md bg-gray-700 py-3 px-6 text-lg font-medium hover:bg-gray-600'
                 onClick={() => alert('위시리스트에 추가되었습니다.')}
+                disabled={product.status === 'notsell'}
               >
                 <FavoriteIcon className='mr-2' />
                 찜하기
               </button>
               <button 
-                className='flex-1 rounded-md bg-blue-600 py-3 px-6 text-lg font-medium hover:bg-blue-500'
+                className={`flex-1 rounded-md py-3 px-6 text-lg font-medium ${
+                  product.status === 'notsell' 
+                    ? 'bg-gray-500 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-500'
+                }`}
                 onClick={() => {
                   if (!isAuthenticated) {
                     alert('로그인이 필요한 서비스입니다.')
@@ -212,6 +220,7 @@ const ProductDetail = () => {
                   }
                   alert('장바구니에 추가되었습니다.')
                 }}
+                disabled={product.status === 'notsell'}
               >
                 <ShoppingCartIcon className='mr-2' />
                 장바구니 담기
