@@ -11,9 +11,7 @@ const CommentCard = ({ comment }) => {
 
   // 답글 토글
   const toggleChildren = () => {
-    if (comment.replies.length !== 0) {
-      setShowChildren(!showChildren)
-    }
+    setShowChildren(!showChildren)
   }
 
   return (
@@ -57,7 +55,7 @@ const CommentCard = ({ comment }) => {
         </div>
       </div>
       {showChildren && (
-        <div className='flex flex-col gap-5'>
+        <div className='flex flex-col'>
           {comment.replies.map((reply) => (
             <div className='flex gap-5 py-2'>
               {/* 답글 표시 */}
@@ -100,6 +98,22 @@ const CommentCard = ({ comment }) => {
               </div>
             </div>
           ))}
+          <div className='border-text/50 flex gap-5 border-t py-2'>
+            {/* 답글 표시 */}
+            <div className='flex w-[50px] flex-none justify-center'>
+              <SubdirectoryArrowRightIcon sx={{ fontSize: 20 }} />
+            </div>
+            {/* 답글 */}
+            <div className='flex grow gap-3'>
+              <input
+                type='text'
+                className='bg-text/50 h-[45px] grow rounded-lg'
+              />
+              <button className='bg-chaintoon h-[45px] w-[100px] flex-none rounded-lg'>
+                등록
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
