@@ -52,7 +52,7 @@ const WebtoonDetailInfo = () => {
           filter: 'blur(35px) brightness(0.5)',
         }}
       ></div>
-      <div className='relative w-[1160px]'>
+      <div className='relative w-[1000px]'>
         <div className='mt-24 flex gap-10'>
           {/* 웹툰 이미지 및 아이콘 정보 */}
           <div>
@@ -61,29 +61,35 @@ const WebtoonDetailInfo = () => {
               <img
                 src={fantasyCover}
                 alt={`${webtoon?.title} 대표 이미지`}
-                className='h-[400px] w-[300px] rounded-xl'
+                className='h-[300px] w-[250px] rounded-xl'
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}
             <div className='flex items-center justify-evenly'>
               <div className='flex items-center gap-1'>
-                <FavoriteIcon sx={{ fontSize: 30, color: '#ff1919' }} />
-                <span className='w-[45px] text-xl'>109</span>
+                <FavoriteIcon sx={{ fontSize: 25, color: '#ff1919' }} />
+                <span className='inline-block w-[45px] translate-y-[1px] transform'>
+                  109
+                </span>
               </div>
               <div className='flex items-center gap-1'>
-                <VisibilityIcon sx={{ fontSize: 35, color: '#3cc3ec' }} />
-                <span className='w-[45px] text-xl'>109K</span>
+                <VisibilityIcon sx={{ fontSize: 30, color: '#3cc3ec' }} />
+                <span className='inline-block w-[45px] translate-y-[1px] transform'>
+                  109K
+                </span>
               </div>
               <div className='flex items-center gap-1'>
-                <StarIcon sx={{ fontSize: 30, color: '#ffff19' }} />
-                <span className='w-[45px] text-xl'>4.5</span>
+                <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
+                <span className='inline-block w-[45px] translate-y-[1px] transform'>
+                  4.56
+                </span>
               </div>
             </div>
           </div>
           {/* 웹툰 정보 */}
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
-              <p className='text-3xl'>{webtoon.title}</p>
+              <p className='text-2xl'>{webtoon.title}</p>
               <p className='text-xl text-[#b9b9b9]'>{webtoon.author}</p>
               <p className='text-xl text-[#b9b9b9]'>{webtoon.genre}</p>
               <div className='text-xl'>
@@ -105,14 +111,14 @@ const WebtoonDetailInfo = () => {
         {/* 버튼 */}
         <div className='mt-10 flex gap-10'>
           <button
-            className='bg-chaintoon h-[50px] w-[300px] 
+            className='bg-chaintoon h-[45px] w-[250px] 
             cursor-pointer rounded text-lg'
           >
             관심 웹툰 등록
           </button>
           <Link>
             <button
-              className='bg-chaintoon h-[50px] w-[300px] 
+              className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded text-lg'
             >
               팬아트 보러가기
@@ -120,7 +126,7 @@ const WebtoonDetailInfo = () => {
           </Link>
           <Link>
             <button
-              className='bg-chaintoon h-[50px] w-[300px] 
+              className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded text-lg'
             >
               스토어 바로가기
