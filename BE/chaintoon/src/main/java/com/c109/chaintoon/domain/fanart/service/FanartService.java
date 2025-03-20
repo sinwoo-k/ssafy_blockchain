@@ -47,6 +47,7 @@ public class FanartService {
     private final UserRepository userRepository;
     private final FanartPreferenceRepository fanartPreferenceRepository;
     private final S3Service s3Service;
+    private final NoticeService noticeService;
 
     // 1. 팬아트 메인 목록 조회
     // 1-1. 가장 최근에 등록된 팬아트 7개 조회
@@ -151,6 +152,8 @@ public class FanartService {
         String fanartImageUrl = uploadFanartImage(savedFanart.getFanartId(), fanartImage);
         savedFanart.setFanartImage(fanartImageUrl);
         fanartRepository.save(savedFanart);
+
+        noticeService.addSecondaryCreateNotice(webtoon, fanart, user);
 
         return FanartDetailResponseDto.builder()
                 .fanartId(savedFanart.getFanartId())
