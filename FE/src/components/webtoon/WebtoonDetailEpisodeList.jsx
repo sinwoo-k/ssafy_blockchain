@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import EpisodeCard from './EpisodeCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-import EpisodeCard from './EpisodeCard'
-import { Link } from 'react-router-dom'
 
 const generateDummyEpisodes = (count, startId = 0) => {
   return Array.from({ length: count }, (_, i) => ({

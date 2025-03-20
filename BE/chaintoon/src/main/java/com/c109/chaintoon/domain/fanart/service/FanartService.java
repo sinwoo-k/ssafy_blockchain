@@ -14,6 +14,7 @@ import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.webtoon.entity.Webtoon;

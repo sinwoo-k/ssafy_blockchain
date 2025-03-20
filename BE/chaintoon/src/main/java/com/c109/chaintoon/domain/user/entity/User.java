@@ -46,7 +46,6 @@ public class User {
     @Column(name = "join_date", length = 10)
     private String joinDate;
 
-    @ColumnDefault("N")
     @Column(name = "deleted", length = 1)
     private String deleted;
 
@@ -54,8 +53,6 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ColumnDefault("Y")
     @Column(name = "status", length = 1)
     private String status;
-
 }

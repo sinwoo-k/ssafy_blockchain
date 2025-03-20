@@ -109,7 +109,7 @@ const CommentCard = ({ comment }) => {
                 type='text'
                 className='bg-text/50 h-[45px] grow rounded-lg'
               />
-              <button className='bg-chaintoon h-[45px] w-[100px] flex-none rounded-lg'>
+              <button className='bg-chaintoon h-[45px] w-[100px] flex-none rounded-lg text-black'>
                 등록
               </button>
             </div>
