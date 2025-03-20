@@ -2,6 +2,7 @@ package com.c109.chaintoon.common.s3.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.c109.chaintoon.common.exception.ServerException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class S3Service {
             amazonS3.putObject(bucketName, filePath, file.getInputStream(), metadata);
             return amazonS3.getUrl(bucketName, filePath).toString();
         } catch (IOException e) {
-            throw new RuntimeException("S3 파일 업로드 실패", e);
+            throw new ServerException("파일 업로드가 실패했습니다.");
         }
     }
 

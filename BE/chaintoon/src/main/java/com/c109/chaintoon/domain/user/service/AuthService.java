@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.email.service.EmailService;
+import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
@@ -45,7 +46,7 @@ public class AuthService {
         try {
             emailService.sendMail(subject, email, content);
         } catch (MessagingException e) {
-            throw new RuntimeException("이메일 전송 실패", e);
+            throw new ServerException("이메일 전송이 실패했습니다.");
         }
     }
 

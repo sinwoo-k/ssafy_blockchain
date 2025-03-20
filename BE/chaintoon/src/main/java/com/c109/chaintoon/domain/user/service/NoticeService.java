@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.code.Codes;
+import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.user.dto.response.NoticeListResponseDto;
@@ -35,7 +36,7 @@ public class NoticeService {
         try {
             return objectMapper.readTree(jsonString);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse metadata", e);
+            throw new ServerException("JSON 변환이 실패했습니다.");
         }
     }
 
@@ -123,7 +124,7 @@ public class NoticeService {
             noticeRepository.save(notice);
         }
         catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("알림 생성이 실패했습니다.");
         }
     }
 
@@ -153,7 +154,7 @@ public class NoticeService {
             noticeRepository.save(notice);
         }
         catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("알림 생성이 실패했습니다.");
         }
     }
 
