@@ -1,7 +1,6 @@
 package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
-import com.c109.chaintoon.common.security.CustomerUserDetails;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
@@ -10,13 +9,11 @@ import com.c109.chaintoon.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -60,9 +57,38 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    // 닉네임 중복 확인
+    @GetMapping("/isExist/{nickname}")
+    public ResponseEntity<?> isExist(@PathVariable String nickname) {
+        return ResponseEntity.ok(userService.checkNickname(nickname));
+    }
+
+    // 프로필 이미지 제거
+    @DeleteMapping("/delete-profile")
+    public ResponseEntity<?> deleteProfile() {
+        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Integer userId = (Integer) authentication.getPrincipal();
+
+        UserResponseDto user = userService.deleteProfile(userId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 배경 이미지 제거
+    @DeleteMapping("/delete-background")
+    public ResponseEntity<?> deleteBackground() {
+        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Integer userId = (Integer) authentication.getPrincipal();
+
+        UserResponseDto user = userService.deleteBackground(userId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
     // 팔로우
     @PutMapping("/following/{userId}")
     public ResponseEntity<?> following(@PathVariable Integer userId) {
+
         // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Integer id = (Integer) authentication.getPrincipal();
