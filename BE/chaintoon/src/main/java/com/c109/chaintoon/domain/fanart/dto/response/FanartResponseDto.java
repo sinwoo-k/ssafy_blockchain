@@ -1,4 +1,4 @@
-package com.c109.chaintoon.domain.webtoon.dto.response;
+package com.c109.chaintoon.domain.fanart.dto.response;
 
 import lombok.*;
 

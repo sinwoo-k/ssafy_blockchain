@@ -5,12 +5,12 @@ const WebtoonCard = ({ webtoon }) => {
   return (
     <div className='mx-5'>
       {/* 웹툰 대표이미지 */}
-      <div className='border-chaintoon mb-3 rounded-xl border'>
+      <div className='border-chaintoon mb-3 w-[200px] rounded-xl border'>
         <Link to={`/webtoon/${webtoon.id}`}>
           <img
             src={webtoon.cover}
             alt={`${webtoon.title} 대표 이미지`}
-            className='h-[300px] w-[250px] rounded-xl'
+            className='h-[250px] w-[200px] rounded-xl'
           />
         </Link>
       </div>

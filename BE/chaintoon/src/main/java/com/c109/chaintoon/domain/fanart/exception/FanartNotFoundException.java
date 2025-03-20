@@ -1,4 +1,4 @@
-package com.c109.chaintoon.domain.webtoon.exception;
+package com.c109.chaintoon.domain.fanart.exception;
 
 public class FanartNotFoundException extends RuntimeException {
     public FanartNotFoundException(Integer fanartId) {

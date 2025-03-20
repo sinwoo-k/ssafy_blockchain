@@ -2,10 +2,14 @@ package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
+import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
+import com.c109.chaintoon.domain.user.entity.Following;
+import com.c109.chaintoon.domain.user.entity.FollowingId;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.FolllowingRepository;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FolllowingRepository followingRepository;
 
     // 유저 검색
     @Transactional(readOnly = true)
@@ -95,6 +100,101 @@ public class UserService {
                 .follower(user.getFollower())
                 .joinDate(user.getJoinDate())
                 .build();
+    }
+
+    // 팔로우
+    @Transactional
+    public void addFollow(Integer followerId, Integer followeeId) {
+        // 복합키 생성
+        FollowingId id = new FollowingId(followerId, followeeId);
+
+        // 중복 체크 (이미 팔로우한 유저인지 확인)
+        if(followingRepository.existsById(id)) {
+            return;
+        }
+
+        // 팔로우, 팔로워 수 증가
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        followee.setFollower(followee.getFollower() + 1);
+        userRepository.save(followee);
+
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+        follower.setFollowing(follower.getFollowing() + 1);
+        userRepository.save(follower);
+
+        // Following 엔티티 생성
+        Following following = new Following(id);
+
+        // 데이터베이스에 저장
+        followingRepository.save(following);
+    }
+
+    // 팔로우 취소
+    @Transactional
+    public void removeFollow(Integer followerId, Integer followeeId) {
+        // 복합키 생성
+        FollowingId id = new FollowingId(followerId, followeeId);
+
+        // 엔티티 존재 여부 확인
+        if(!followingRepository.existsById(id)) {
+            return;
+        }
+
+        // 팔로우, 팔로워 수 감소
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        followee.setFollower(followee.getFollower() - 1);
+        userRepository.save(followee);
+
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+        follower.setFollowing(follower.getFollowing() - 1);
+        userRepository.save(follower);
+
+        // 데이터베이스에서 삭제
+        followingRepository.deleteById(id);
+    }
+
+    // 팔로우 목록 조회
+    @Transactional(readOnly = true)
+    public List<FollowingResponseDto> getFollowingList(Integer userId, int page, int pageSize) {
+        // 페이지네이션
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+
+        // 팔로우중인 사용자 목록 조회
+        List<Integer> follwingIdList=followingRepository.findFollowingsById(userId);
+
+        // 팔로우 목록을 기반으로 사용자 조회
+        Page<User> userPage = userRepository.findByIdIn(follwingIdList, pageable);
+
+        // 조회 결과 DTO 변환
+        return toFollowDto(userPage);
+    }
+
+    // 팔로워 목록 조회
+    @Transactional(readOnly = true)
+    public List<FollowingResponseDto> getFollowerList(Integer userId, int page, int pageSize) {
+        // 페이지네이션
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+
+        // 팔로우중인 사용자 목록 조회
+        List<Integer> follweeIdList=followingRepository.findFollowersById(userId);
+
+        // 팔로우 목록을 기반으로 사용자 조회
+        Page<User> userPage = userRepository.findByIdIn(follweeIdList, pageable);
+
+        // 조회 결과 DTO 변환
+        return toFollowDto(userPage);
+    }
+
+    private List<FollowingResponseDto> toFollowDto(Page<User> userPage) {
+        return userPage.getContent().stream()
+                .map(user -> {
+                    return FollowingResponseDto.builder()
+                            .profile(user.getProfileImage())
+                            .userId(user.getId())
+                            .nickname(user.getNickname())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
 

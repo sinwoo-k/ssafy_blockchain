@@ -1,4 +1,4 @@
-package com.c109.chaintoon.domain.webtoon.entity;
+package com.c109.chaintoon.domain.goods.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Fanart {
+public class Goods {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "fanart_id")
-    private Integer fanartId;
+    @Column(name = "goods_id")
+    private Integer goodsId;
 
     @Column(name = "user_id", nullable = false)
     private Integer userId;
@@ -24,17 +24,14 @@ public class Fanart {
     @Column(name = "webtoon_id", nullable = false)
     private Integer webtoonId;
 
-    @Column(name = "fanart_name", length = 50)
-    private String fanartName;
+    @Column(name = "goods_name", length = 50)
+    private String goodsName;
 
     @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "fanart_image", length = 255)
-    private String fanartImage;
-
-    @Column(name = "comment")
-    private Integer comment;
+    @Column(name = "goods_image", length = 255)
+    private String goodsImage;
 
     @Column(name = "deleted", length = 1)
     private String deleted;
@@ -44,8 +41,8 @@ public class Fanart {
 
     @PrePersist
     public void prePersist() {
-        if (comment == null) {comment = 0;}
         if (deleted == null) {deleted = "N";}
         if (createdAt == null) {createdAt = LocalDateTime.now();}
     }
+
 }

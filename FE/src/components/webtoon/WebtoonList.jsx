@@ -37,7 +37,7 @@ const WebtoonList = () => {
   const [page, setPage] = useState(1) // 현재 페이지 번호
 
   const columnCount = 4 // 한 줄에 표시할 웹툰 개수
-  const rowHeight = 380 // 각 웹툰 카드의 높이
+  const rowHeight = 330 // 각 웹툰 카드의 높이
 
   const fetchWebtoons = async () => {
     if (!hasMore) return
@@ -75,8 +75,8 @@ const WebtoonList = () => {
 
   return (
     <div className='flex h-full w-full justify-center'>
-      <div className='flex h-full w-[1160px] flex-col'>
-        <h2 className='mb-5 text-2xl'>🔥 최신 업데이트 웹툰</h2>
+      <div className='flex h-full w-[1000px] flex-col'>
+        <h2 className='mb-5 text-xl'>🔥 최신 업데이트 웹툰</h2>
         <InfiniteLoader
           isRowLoaded={isRowLoaded}
           loadMoreRows={loadMoreRows}

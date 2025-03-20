@@ -12,7 +12,7 @@ const NavBar = () => {
 
   // 로그인 모달 상태
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  
+
   // 스크롤 감지
   const [scroll, setScroll] = useState(false)
 
@@ -39,7 +39,7 @@ const NavBar = () => {
   const handleLogout = () => {
     dispatch(userReducerActions.logout())
   }
-  
+
   return (
     <>
     <div
@@ -58,7 +58,7 @@ const NavBar = () => {
           <Link className='text-xl'>웹툰</Link>
         </div>
         <div className='flex h-full w-[150px] items-center justify-center'>
-          <Link to = "/store" className='text-xl'>스토어</Link>
+          <Link className='text-xl'>스토어</Link>
         </div>
         <div className='flex h-full w-[150px] items-center justify-center'>
           <Link className='text-xl'>팬아트</Link>
