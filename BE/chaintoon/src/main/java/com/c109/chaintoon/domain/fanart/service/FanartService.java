@@ -8,6 +8,7 @@ import com.c109.chaintoon.domain.fanart.dto.response.FanartDetailResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.WebtoonFanartResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.FanartPreference;
+import com.c109.chaintoon.domain.fanart.exception.FanartPreferenceNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartPreferenceRepository;
 import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -373,7 +374,7 @@ public class FanartService {
 
         // 좋아요 기록 조회
         FanartPreference fanartPreference = fanartPreferenceRepository.findByFanartIdAndUserId(fanartId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("좋아요한 기록이 존재하지 않습니다."));
+                .orElseThrow(() -> new FanartPreferenceNotFoundException(fanartId, userId));
 
         // 좋아요 기록 삭제
         fanartPreferenceRepository.delete(fanartPreference);
