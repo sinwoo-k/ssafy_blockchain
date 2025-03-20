@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
@@ -28,6 +29,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FolllowingRepository followingRepository;
+    private final S3Service s3Service;
 
     // 유저 검색
     @Transactional(readOnly = true)
@@ -69,8 +71,9 @@ public class UserService {
                 .joinDate(user.getJoinDate())
                 .build();
     }
-    
-    public UserResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile garoImage) {
+
+    // 회원 정보 수정
+    public UserResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile backgroundImage) {
         // 기존 유저 조회
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
         
@@ -79,14 +82,92 @@ public class UserService {
             throw new UnauthorizedAccessException("회원 수정 권한이 없습니다.");
         }
 
-        // 이미지 업데이트
+        // 프로필 이미지 업데이트
+        if (profileImage != null && !profileImage.isEmpty()) {
+            if(userRequestDto.getProfileImage() != null) {
+                s3Service.deleteFile(user.getProfileImage());
+            }
+            String profileUrl = uploadProfile(userId, profileImage);
+            user.setProfileImage(profileUrl);
+        }
+
+        // 배경 이미지 업데이트
+        if(backgroundImage != null && !backgroundImage.isEmpty()) {
+            if (user.getBackgroundImage() != null) {
+                s3Service.deleteFile(user.getBackgroundImage());
+            }
+            String backgroundUrl = uploadBackground(userId, backgroundImage);
+            user.setBackgroundImage(backgroundUrl);
+        }
 
         // 회원 정보 업데이트
         user.setNickname(userRequestDto.getNickname());
         user.setIntroduction(userRequestDto.getIntroduction());
-        user.setProfileImage(userRequestDto.getProfileImage());
-        user.setBackgroundImage(userRequestDto.getBackgroundImage());
 
+        userRepository.save(user);
+
+        return UserResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .introduction(user.getIntroduction())
+                .profileImage(user.getProfileImage())
+                .backgroundImage(user.getBackgroundImage())
+                .following(user.getFollowing())
+                .follower(user.getFollower())
+                .joinDate(user.getJoinDate())
+                .build();
+    }
+
+    // 프로필 이미지 업로드
+    private String uploadProfile(Integer userId, MultipartFile file){
+        return s3Service.uploadFile(file, "user/" + userId + "/profile");
+    }
+
+    // 배경 이미지 업로드
+    private String uploadBackground(Integer userId, MultipartFile file){
+        return s3Service.uploadFile(file, "user/" + userId + "/background");
+    }
+
+    // 닉네임 중복 확인
+    @Transactional(readOnly = true)
+    public boolean checkNickname(String nickname){
+        return userRepository.existsByNicknameAndDeleted(nickname, "N");
+    }
+
+    // 프로필 이미지 제거
+    @Transactional
+    public UserResponseDto deleteProfile(Integer userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        if(user.getProfileImage() != null) {
+            s3Service.deleteFile(user.getProfileImage());
+        }
+        user.setProfileImage(null);
+        userRepository.save(user);
+
+        return UserResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .introduction(user.getIntroduction())
+                .profileImage(user.getProfileImage())
+                .backgroundImage(user.getBackgroundImage())
+                .following(user.getFollowing())
+                .follower(user.getFollower())
+                .joinDate(user.getJoinDate())
+                .build();
+    }
+
+    // 배경 이미지 제거
+    @Transactional
+    public UserResponseDto deleteBackground(Integer userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        if(user.getBackgroundImage() != null) {
+            s3Service.deleteFile(user.getBackgroundImage());
+        }
+        user.setBackgroundImage(null);
         userRepository.save(user);
 
         return UserResponseDto.builder()
