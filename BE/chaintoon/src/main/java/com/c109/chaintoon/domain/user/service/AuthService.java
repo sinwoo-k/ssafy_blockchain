@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.email.service.EmailService;
+import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +46,7 @@ public class AuthService {
         try {
             emailService.sendMail(subject, email, content);
         } catch (MessagingException e) {
-            throw new RuntimeException("이메일 전송 실패", e);
+            throw new ServerException("이메일 전송이 실패했습니다.");
         }
     }
 
@@ -55,9 +57,7 @@ public class AuthService {
         String redisKey = "auth:code:" + email;
         Object storedCode = redisService.getValue(redisKey);
 
-        storedCode = storedCode.toString().replaceAll("^\"|\"$", "");
-
-        if (storedCode == null || !storedCode.equals(inputCode)) {
+        if (storedCode == null || !storedCode.toString().replaceAll("^\"|\"$", "").equals(inputCode)) {
             throw new IllegalArgumentException("잘못된 인증 코드이거나 만료되었습니다.");
         }
 
@@ -74,10 +74,26 @@ public class AuthService {
 
     // 회원이 아닐 경우 자동 회원가입 (이메일만 등록)
     private User autoRegisterUser(String email) {
+        Random rand = new Random();
+        int randomNumber = rand.nextInt(900000) + 100000;
+        String nickname="Unnamed"+randomNumber;
+
+        while(userRepository.existsByNicknameAndDeleted(nickname, "N")){
+            randomNumber = rand.nextInt(900000) + 100000;
+            nickname = "Unnamed" + randomNumber;
+        }
+
         User newUser = User.builder()
                 .email(email)
-                .nickname(email)
+                .nickname(nickname)
                 .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .following(0)
+                .follower(0)
+                .introduction("")
+                .deleted("N")
+                .status("Y")
+                .backgroundImage("")
+                .profileImage("")
                 .build();
 
         return userRepository.save(newUser);

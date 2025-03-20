@@ -109,7 +109,7 @@ const WebtoonDetailInfo = () => {
           </div>
         </div>
         {/* 버튼 */}
-        <div className='mt-10 flex gap-10'>
+        <div className='mt-10 flex gap-10 text-black'>
           <button
             className='bg-chaintoon h-[45px] w-[250px] 
             cursor-pointer rounded text-lg'

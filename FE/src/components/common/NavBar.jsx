@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import LogoImg from '../../assets/logo1.png'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
+// 컴포넌트
 import LoginModal from '../Auth/LoginModal'
+
+// 이미지
+import LogoImg from '../../assets/logo1.png'
+
+// 아이콘
+import CollectionsBookmarkIcon from '@mui/icons-material/CollectionsBookmark'
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'
+import IconLink from './IconLink'
 
 const NavBar = () => {
   // 로그인 확인
@@ -27,11 +35,9 @@ const NavBar = () => {
   }, [])
 
   const handleScroll = () => {
-    // 스크롤이 Top에서 50px 이상 내려오면 true
-    if (window.scrollY >= 50) {
+    if (window.scrollY !== 0) {
       setScroll(true)
     } else {
-      // 스크롤이 50px 미만일경우 false
       setScroll(false)
     }
   }
@@ -42,63 +48,77 @@ const NavBar = () => {
 
   return (
     <>
-    <div
-      className={`border-text text-text ${scroll && 'bg-black'} 
+      <div
+        className={`border-text text-text ${scroll && 'bg-black'} 
       fixed top-0 z-10 flex h-[80px] w-full justify-between border-b`}
-    >
-      <div className='flex'>
-        {/* 로고 */}
-        <div className='flex w-[250px] items-center justify-center'>
-          <Link to={'/'}>
-            <img src={LogoImg} alt='체인툰 로고' className='w-[200px]' />
-          </Link>
+      >
+        <div className='flex'>
+          {/* 로고 */}
+          <div className='flex w-[250px] items-center justify-center'>
+            <Link to={'/'}>
+              <img src={LogoImg} alt='체인툰 로고' className='w-[200px]' />
+            </Link>
+          </div>
+          {/* 페이지 내비게이션*/}
+          <div className='flex h-full w-[150px] items-center justify-center'>
+            <Link className='text-xl'>웹툰</Link>
+          </div>
+          <div className='flex h-full w-[150px] items-center justify-center'>
+            <Link to="/store" className='text-xl'>스토어</Link>
+          </div>
+          <div className='flex h-full w-[150px] items-center justify-center'>
+            <Link className='text-xl'>팬아트</Link>
+          </div>
         </div>
-        {/* 페이지 내비게이션*/}
-        <div className='flex h-full w-[150px] items-center justify-center'>
-          <Link className='text-xl'>웹툰</Link>
-        </div>
-        <div className='flex h-full w-[150px] items-center justify-center'>
-          <Link to="/store" className='text-xl'>스토어</Link>
-        </div>
-        <div className='flex h-full w-[150px] items-center justify-center'>
-          <Link className='text-xl'>팬아트</Link>
+        {/* 회원 관련 */}
+        <div className='flex'>
+          {isAuthenticated && (
+            <div className='flex h-full w-[150px] items-center justify-center gap-5'>
+              <IconLink
+                path={'/'}
+                Icon={CollectionsBookmarkIcon}
+                tooltip={'관심 웹툰'}
+              />
+              <IconLink
+                path={'/myworks/webtoon'}
+                Icon={LocalLibraryIcon}
+                tooltip={'내 작품 목록'}
+              />
+            </div>
+          )}
+          {isAuthenticated && (
+            <div className='flex h-full w-[150px] items-center justify-center'>
+              <Link to="/mypage" className='text-xl'>마이페이지</Link>
+            </div>
+          )}
+          {isAuthenticated && (
+            <div className='flex h-full w-[150px] items-center justify-center'>
+              <button 
+                className='cursor-pointer text-xl'
+                onClick={handleLogout}
+              >
+                로그아웃
+              </button>
+            </div>
+          )}
+          {!isAuthenticated && (
+            <div className='flex h-full w-[150px] items-center justify-center'>
+              <button 
+                className='cursor-pointer text-xl'
+                onClick={() => setIsLoginModalOpen(true)}
+              >
+                로그인
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      {/* 회원 관련 */}
-      <div className='flex'>
-        {isAuthenticated && (
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <Link to="/mypage" className='text-xl'>마이페이지</Link>
-          </div>
-          )}  
-        {isAuthenticated && (
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <button 
-              className='cursor-pointer text-xl'
-              onClick={handleLogout}
-            >
-              로그아웃
-            </button>
-          </div>
-        )}
-        {!isAuthenticated && (
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <button 
-            className='cursor-pointer text-xl'
-            onClick={() => setIsLoginModalOpen(true)}
-            >
-            로그인
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-          {/* 로그인 모달 추가 */}
-          <LoginModal 
-          isOpen={isLoginModalOpen} 
-          onClose={() => setIsLoginModalOpen(false)} 
-        />
-      </>
+      {/* 로그인 모달 추가 */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+      />
+    </>
   )
 }
 

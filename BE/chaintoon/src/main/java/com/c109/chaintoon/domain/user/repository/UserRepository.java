@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Page<User> findByNicknameIgnoreCaseContaining(String nickname, Pageable pageable);
 
     Page<User> findByIdIn(Collection<Integer> userIds, Pageable pageable);
+
+    Boolean existsByNicknameAndDeleted(String nickname, String deleted);
 }
