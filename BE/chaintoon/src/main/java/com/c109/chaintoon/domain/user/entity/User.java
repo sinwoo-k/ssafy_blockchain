@@ -37,28 +37,23 @@ public class User {
     @Column(name = "background_image", length = 255)
     private String backgroundImage;
 
-    @ColumnDefault("0")
     @Column(name = "follower")
-    private Integer follower;
+    private Integer follower = 0;
 
-    @ColumnDefault("0")
     @Column(name = "following")
-    private Integer following;
+    private Integer following = 0;
 
     @Column(name = "join_date", length = 10)
     private String joinDate;
 
-    @ColumnDefault("N")
     @Column(name = "deleted", length = 1)
-    private String deleted;
+    private String deleted = "N";
 
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ColumnDefault("Y")
     @Column(name = "status", length = 1)
-    private String status;
-
+    private String status = "y";
 
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -74,9 +75,18 @@ public class AuthService {
 
     // 회원이 아닐 경우 자동 회원가입 (이메일만 등록)
     private User autoRegisterUser(String email) {
+        Random rand = new Random();
+        int randomNumber = rand.nextInt(900000) + 100000;
+        String nickname="Unnamed"+randomNumber;
+
+        while(userRepository.existsByNicknameAndDeleted(nickname, "N")){
+            randomNumber = rand.nextInt(900000) + 100000;
+            nickname = "Unnamed" + randomNumber;
+        }
+
         User newUser = User.builder()
                 .email(email)
-                .nickname(email)
+                .nickname(nickname)
                 .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .build();
 
