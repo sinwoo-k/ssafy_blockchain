@@ -54,6 +54,7 @@ public class NoticeService {
         List<NoticeResponseDto> noticeResponseDtos = noticePage.getContent().stream()
                 .map(notice -> NoticeResponseDto.builder()
                         .noticeId(notice.getNoticeId())
+                        .userId(notice.getUserId())
                         .type(notice.getType())
                         .checked(notice.getChecked())
                         .metadata(convertStringToJsonNode(notice.getMetadata()))
