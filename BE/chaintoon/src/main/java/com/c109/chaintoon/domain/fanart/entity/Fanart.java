@@ -33,6 +33,9 @@ public class Fanart {
     @Column(name = "fanart_image", length = 255)
     private String fanartImage;
 
+    @Column(name = "like_count")
+    private Integer likeCount;
+
     @Column(name = "comment")
     private Integer comment;
 
@@ -44,6 +47,7 @@ public class Fanart {
 
     @PrePersist
     public void prePersist() {
+        if (likeCount == null) {likeCount = 0;}
         if (comment == null) {comment = 0;}
         if (deleted == null) {deleted = "N";}
         if (createdAt == null) {createdAt = LocalDateTime.now();}
