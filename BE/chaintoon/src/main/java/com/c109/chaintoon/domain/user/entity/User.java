@@ -47,13 +47,12 @@ public class User {
     private String joinDate;
 
     @Column(name = "deleted", length = 1)
-    private String deleted = "N";
+    private String deleted;
 
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "status", length = 1)
-    private String status = "y";
-
+    private String status;
 }
