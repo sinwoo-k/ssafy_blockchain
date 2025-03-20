@@ -8,6 +8,7 @@ import com.c109.chaintoon.domain.fanart.dto.response.WebtoonFanartResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
@@ -36,6 +37,7 @@ public class FanartService {
     private final FanartRepository fanartRepository;
     private final WebtoonRepository webtoonRepository;
     private final UserRepository userRepository;
+    private final NoticeService noticeService;
 
     // 1. 팬아트 메인 목록 조회
     // 1-1. 가장 최근에 등록된 팬아트 7개 조회
@@ -144,6 +146,9 @@ public class FanartService {
 
         // 팬아트 저장
         Fanart savedFanart = fanartRepository.save(fanart);
+
+        // 팬아트 생성 알림 저장
+        noticeService.addSecondaryCreateNotice(webtoon, fanart, user);
 
         return FanartDetailResponseDto.builder()
                 .fanartId(savedFanart.getFanartId())
