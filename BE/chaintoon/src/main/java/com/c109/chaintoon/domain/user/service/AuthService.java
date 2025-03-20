@@ -56,9 +56,7 @@ public class AuthService {
         String redisKey = "auth:code:" + email;
         Object storedCode = redisService.getValue(redisKey);
 
-        storedCode = storedCode.toString().replaceAll("^\"|\"$", "");
-
-        if (storedCode == null || !storedCode.equals(inputCode)) {
+        if (storedCode == null || !storedCode.toString().replaceAll("^\"|\"$", "").equals(inputCode)) {
             throw new IllegalArgumentException("잘못된 인증 코드이거나 만료되었습니다.");
         }
 
@@ -88,6 +86,13 @@ public class AuthService {
                 .email(email)
                 .nickname(nickname)
                 .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .following(0)
+                .follower(0)
+                .introduction("")
+                .deleted("N")
+                .status("Y")
+                .backgroundImage("")
+                .profileImage("")
                 .build();
 
         return userRepository.save(newUser);
