@@ -58,7 +58,7 @@ const NavBar = () => {
           <Link className='text-xl'>웹툰</Link>
         </div>
         <div className='flex h-full w-[150px] items-center justify-center'>
-          <Link className='text-xl'>스토어</Link>
+          <Link to="/store" className='text-xl'>스토어</Link>
         </div>
         <div className='flex h-full w-[150px] items-center justify-center'>
           <Link className='text-xl'>팬아트</Link>

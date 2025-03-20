@@ -2,7 +2,7 @@
 import React from 'react'
 import { genres } from '../../pages/store/storeData'
 
-const StoreFilter = ({ onFilterChange }) => {
+const StoreFilter = ({ onFilterChange, activeFilters = {}, activeCategory = '' }) => {
   const filterGroups = [
     {
       id: 'status',
@@ -28,6 +28,16 @@ const StoreFilter = ({ onFilterChange }) => {
     },
   ]
 
+  // 체크 상태 확인 함수
+  const isChecked = (groupId, filterId) => {
+    // 카테고리 그룹의 경우 activeCategory와 비교
+    if (groupId === 'category' && filterId === activeCategory && activeCategory !== '') {
+      return true;
+    }
+    // 그 외의 경우 activeFilters에서 확인
+    return activeFilters[groupId]?.includes(filterId) || false;
+  };
+
   return (
     <div className='mr-8 w-[180px]'>
       {filterGroups.map((group) => (
@@ -42,6 +52,7 @@ const StoreFilter = ({ onFilterChange }) => {
                   type='checkbox'
                   id={filter.id}
                   className='mr-2 h-4 w-4'
+                  checked={isChecked(group.id, filter.id)}
                   onChange={() => onFilterChange(group.id, filter.id)}
                 />
                 <label htmlFor={filter.id} className='cursor-pointer'>

@@ -3,11 +3,16 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 const ProductCard = ({ product }) => {
+  // 웹툰 카테고리는 컬렉션 페이지로, 나머지는 상품 상세 페이지로 이동
+  const linkUrl = product.category
+    ? `/store/collection/${product.id}`
+    : `/store/product/${product.id}`
+
   return (
     <div className='mx-2 mb-5'>
       {/* 상품 이미지 */}
       <div className='relative mb-2 rounded-xl bg-gray-300'>
-        <Link to={`/store/product/${product.id}`}>
+        <Link to={linkUrl}>
           <img
             src={product.image}
             alt={`${product.title} 상품 이미지`}
@@ -15,7 +20,7 @@ const ProductCard = ({ product }) => {
           />
           {product.status === 'notsell' && (
             <div className='absolute inset-0 flex items-center justify-center rounded-xl bg-black/70'>
-              <span className='text-lg font-medium text-white'>판매 종료</span>
+              <span className='text-lg font-medium text-white'>미판매</span>
             </div>
           )}
         </Link>
@@ -29,7 +34,7 @@ const ProductCard = ({ product }) => {
         <h2 className='mb-1 truncate text-base font-medium'>{product.title}</h2>
         <div className='flex items-center justify-between'>
           <span className='text-lg font-bold'>
-            {product.price.toLocaleString()}원
+            {product.price.toLocaleString()} ETH
           </span>
         </div>
       </div>
