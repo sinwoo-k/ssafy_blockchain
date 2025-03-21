@@ -15,7 +15,8 @@ module.exports = {
     holesky: {
       provider: () => new HDWalletProvider(
         process.env.MNEMONIC,
-        "https://ethereum-holesky.publicnode.com"
+        `wss://ethereum-holesky-rpc.publicnode.com` // Holesky publicnode RPC 엔드포인트
+        // `https://holesky.infura.io/v3/${process.env.INFURA_PROJECT_ID}` // Holesky Infura RPC 엔드포인트
       ),
       network_id: 17000, // Holesky 네트워크 ID
       gas: 8000000,      // 가스 제한 (필요에 따라 조정)
@@ -24,6 +25,7 @@ module.exports = {
       timeoutBlocks: 200, // 블록 타임아웃
       skipDryRun: true    // dry run 생략 (배포 속도 향상)
     },
+    networkCheckTimeout: 180000, // 3분 (단위: ms)
   },
 
   // Set default mocha options here, use special reporters, etc.

@@ -3,7 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pinataSDK from '@pinata/sdk';
-import { getNftData } from '../repository/nftRepository.js';
+import {
+  getWebtoonById,
+  saveNftToDatabase,
+  getEpisodeById, getFanartById,
+  getGoodsById,
+  getNftById
+} from '../repository/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
 import { Readable } from 'stream';
@@ -38,20 +44,20 @@ async function downloadFileFromS3(s3Url) {
  * @returns {Promise<string>} IPFS URL
  */
 async function uploadFileToPinata(fileBuffer) {
-    try {
-      const options = {
-        pinataMetadata: {
-          name: 'uploaded-file', // 원하는 파일 이름을 지정 (동적 이름 사용 가능)
-        },
-      };
-      const readableStream = Readable.from(fileBuffer);
-      const result = await pinata.pinFileToIPFS(readableStream, options);
-      return `${process.env.IPFS_GATEWAY}${result.IpfsHash}`;
-    } catch (error) {
-      throw new AppError('Pinata 파일 업로드 실패: ' + error.message, 500);
-    }
+  try {
+    const options = {
+      pinataMetadata: {
+        name: 'uploaded-file', // 원하는 파일 이름을 지정 (동적 이름 사용 가능)
+      },
+    };
+    const readableStream = Readable.from(fileBuffer);
+    const result = await pinata.pinFileToIPFS(readableStream, options);
+    return `${process.env.IPFS_GATEWAY}${result.IpfsHash}`;
+  } catch (error) {
+    throw new AppError('Pinata 파일 업로드 실패: ' + error.message, 500);
   }
-  
+}
+
 
 /**
  * JSON 데이터를 Pinata에 업로드하고, IPFS 게이트웨이 URL을 반환하는 함수
@@ -69,24 +75,31 @@ async function uploadJSONToPinata(jsonData) {
 
 /**
  * NFT 민팅용 메타데이터를 생성하고, 스마트 컨트랙트를 통해 NFT 민팅을 진행하는 함수
- * @param {Object} params - { nftType, entityId, s3Url, toAddress }
  * @returns {Promise<Object>} 민팅 결과 (토큰 ID 및 메타데이터 URI 포함)
  */
-export async function mintNftService({ nftType, entityId, s3Url, toAddress, originalCreator, registrant, adminWallet }) {
+export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, registrant }) {
   try {
     // 1. 이미지 처리: S3 URL이 있으면 다운로드 후 Pinata에 업로드
-    let imageUrl;
-    if (s3Url) {
-      const fileBuffer = await downloadFileFromS3(s3Url);
-      imageUrl = await uploadFileToPinata(fileBuffer);
+    const fileBuffer = await downloadFileFromS3(s3Url);
+    const imageUrl = await uploadFileToPinata(fileBuffer);
+    const adminWallet = process.env.ADMIN_WALLET_ADDRESS;
+    let title;
+    if (type == 'fanart') {
+      title = await getFanartById(typeId).fanartName;
+    } else if (type == 'goods') {
+      title = await getGoodsById(typeId).goodsName;
+    } else if (type == 'episode') {
+      title = await getEpisodeById(typeId).episodeName;
+    } else if (type == 'webtoon') {
+      title = await getWebtoonById(webtoonId).webtoonName;
     } else {
-      imageUrl = process.env.S3_DEFAULT_URL; // 기본 이미지 URL
+      throw new AppError('type이 fanart, goods, episode 중 하나여야 합니다.', 400);
     }
-
+    let webtoonName = await getWebtoonById(webtoonId).webtoonName;
     // 2. 메타데이터 생성
     const metadata = {
-      title: `${nftType} NFT #${entityId}`,
-      description: `${nftType} 에 대한 NFT.`,
+      title: `${title} NFT #${typeId}`,
+      description: `${webtoonName}에 대한 NFT.`,
       image: imageUrl,
       wallets: {
         originalCreator, // 원작자 코인 지갑 주소
@@ -108,13 +121,13 @@ export async function mintNftService({ nftType, entityId, s3Url, toAddress, orig
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
     const NFT_CONTRACT_ABI = nftArtifact.abi;
     const NFT_CONTRACT_ADDRESS = process.env.NFT_CONTRACT_ADDRESS;
-    
+
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
     const serverWallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);
     const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_CONTRACT_ABI, serverWallet);
-    
-    // 민팅 함수 호출: mint(toAddress, metadataUri)
-    const tx = await nftContract.mint(toAddress, metadataUri);
+
+    // 민팅 함수 호출: mint(adminWallet, metadataUri)
+    const tx = await nftContract.mint(adminWallet, metadataUri);
     const receipt = await tx.wait();
 
     // 민팅 결과로 이벤트에서 tokenId 추출
@@ -130,13 +143,18 @@ export async function mintNftService({ nftType, entityId, s3Url, toAddress, orig
         // 이 로그는 NFTMinted 이벤트가 아닐 수 있으므로 무시
       }
     }
-
-    return {
-      nftId: entityId,
+    const nftData = await saveNftToDatabase({
+      webtoonId,
+      userId,
       tokenId,
+      type,
+      typeId,
+      tokenId,
+      contractAddress: process.env.NFT_CONTRACT_ADDRESS,
       metadataUri,
-      message: 'NFT 민팅이 완료되었습니다.'
-    };
+    });
+    return { message: 'NFT 민팅 성공', metadata };
+
   } catch (error) {
     throw new AppError('NFT 민팅 중 오류가 발생했습니다: ' + error.message, 500);
   }
