@@ -25,8 +25,8 @@ public class Comment {
     @Column(name = "usage_id", nullable = false)
     private Integer usageId;
 
-    @Column(name = "usage_type", length = 10)
-    private String usageType;
+    @Column(name = "type", length = 50)
+    private String type;
 
     @Column(name = "parent_id")
     private Integer parentId;
