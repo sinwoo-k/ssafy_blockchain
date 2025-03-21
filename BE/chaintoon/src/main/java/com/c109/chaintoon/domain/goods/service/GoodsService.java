@@ -1,12 +1,16 @@
 package com.c109.chaintoon.domain.goods.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.fanart.entity.Fanart;
+import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
 import com.c109.chaintoon.domain.goods.dto.request.GoodsRequestDto;
 import com.c109.chaintoon.domain.goods.dto.response.GoodsListResponseDto;
 import com.c109.chaintoon.domain.goods.dto.response.WebtoonGoodsResponseDto;
 import com.c109.chaintoon.domain.goods.entity.Goods;
 import com.c109.chaintoon.domain.goods.exception.GoodsNotFoundException;
 import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
+import com.c109.chaintoon.domain.goods.specification.GoodsSpecification;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -18,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +37,7 @@ public class GoodsService {
     private final WebtoonRepository webtoonRepository;
     private final GoodsRepository goodsRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     // 굿즈 등록
     public GoodsListResponseDto createGoods(GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
@@ -43,22 +49,19 @@ public class GoodsService {
         User user = userRepository.findById(goodsRequestDto.getUserId())
                 .orElseThrow(() -> new UserIdNotFoundException(goodsRequestDto.getUserId()));
 
-        // TODO : 이미지 업로드
-        String goodsImageUrl = goodsRequestDto.getGoodsImage();
-        if (goodsImage != null && !goodsImage.isEmpty()) {
-            goodsImageUrl = null;
-        }
-
         // 굿즈 엔티티 생성
         Goods goods = Goods.builder()
                 .userId(goodsRequestDto.getUserId())
                 .webtoonId(goodsRequestDto.getWebtoonId())
                 .goodsName(goodsRequestDto.getGoodsName())
-                .goodsImage(goodsRequestDto.getGoodsImage())
                 .build();
 
         // 굿즈 저장
         Goods savedGoods = goodsRepository.save(goods);
+
+        String goodsImageUrl = uploadGoodsImage(savedGoods.getGoodsId(), goodsImage);
+        savedGoods.setGoodsImage(goodsImageUrl);
+        goodsRepository.save(savedGoods);
 
         return GoodsListResponseDto.builder()
                 .goodsId(savedGoods.getGoodsId())
@@ -67,6 +70,10 @@ public class GoodsService {
                 .goodsName(savedGoods.getGoodsName())
                 .goodsImage(savedGoods.getGoodsImage())
                 .build();
+    }
+
+    private String uploadGoodsImage(Integer goodsId, MultipartFile file) {
+        return s3Service.uploadFile(file, "goods/" + goodsId + "/image");
     }
 
     // 웹툰별 굿즈 목록 조회
@@ -131,11 +138,13 @@ public class GoodsService {
             goods.setGoodsName(goodsRequestDto.getGoodsName());
         }
 
-        // 이미지 수정: 파일이 첨부되어 있다면 이미지 업로드 후 URL 업데이트 (TODO: 실제 업로드 로직 구현)
+        // 이미지 업데이트
         if (goodsImage != null && !goodsImage.isEmpty()) {
-            // 실제 업로드 로직 구현 시, 업로드 후 반환받은 URL로 대체
-            String updatedImageUrl = null; // 임시 값
-            goods.setGoodsImage(updatedImageUrl);
+            if(goods.getGoodsImage() != null) {
+                s3Service.deleteFile(goods.getGoodsImage());
+            }
+            String goodsImageUrl = uploadGoodsImage(goods.getGoodsId(), goodsImage);
+            goods.setGoodsImage(goodsImageUrl);
         } else if (goodsRequestDto.getGoodsImage() != null) {
             // 이미지 파일 없이 이미지 URL만 변경하는 경우
             goods.setGoodsImage(goodsRequestDto.getGoodsImage());
@@ -168,6 +177,29 @@ public class GoodsService {
         // 소프트 삭제: deleted 플래그를 "Y"로 변경하고 저장
         goods.setDeleted("Y");
         goodsRepository.save(goods);
+    }
+
+    // 굿즈 검색
+    public List<GoodsListResponseDto> searchGoods(int page, int pageSize, String keyword) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
+
+        // 키워드에 대해 제목이 포함되는 조건을 specification으로 구성
+        Specification<Goods> spec = Specification.where(GoodsSpecification.goodsNameContains(keyword))
+                .and((root, query, cb) ->cb.equal(root.get("deleted"), "N"));
+
+        Page<Goods> resultPage = goodsRepository.findAll(spec, pageable);
+
+        List<GoodsListResponseDto> dtos = resultPage.getContent().stream()
+                .map(goods -> GoodsListResponseDto.builder()
+                        .goodsId(goods.getGoodsId())
+                        .userId(goods.getUserId())
+                        .webtoonId(goods.getWebtoonId())
+                        .goodsName(goods.getGoodsName())
+                        .goodsImage(goods.getGoodsImage())
+                        .build())
+                .collect(Collectors.toList());
+
+        return dtos;
     }
 
     private Sort getSort(String orderBy) {

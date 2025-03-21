@@ -7,6 +7,7 @@ import com.c109.chaintoon.domain.fanart.dto.response.WebtoonFanartResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.fanart.service.FanartService;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -102,5 +103,36 @@ public class FanartController {
             @RequestParam Integer userId) {
         fanartService.deleteFanart(fanartId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    // 팬아트 검색
+    @GetMapping("/search")
+    public ResponseEntity<?> searchFanart(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize,
+            @RequestParam String keyword
+    ) {
+        List<FanartDetailResponseDto> fanartList = fanartService.searchFanarts(page, pageSize, keyword);
+        return new ResponseEntity<>(fanartList, HttpStatus.OK);
+    }
+
+    // 좋아요 추가
+    @PostMapping("/{fanartId}/like")
+    public ResponseEntity<?> likeFanart(
+            @PathVariable Integer fanartId,
+            @RequestParam Integer userId
+    ) {
+        fanartService.likeFanart(fanartId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 좋아요 취소
+    @DeleteMapping("/{fanartId}/like")
+    public ResponseEntity<?> unlikeFanart(
+            @PathVariable Integer fanartId,
+            @RequestParam Integer userId
+    ) {
+        fanartService.unlikeFanart(fanartId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

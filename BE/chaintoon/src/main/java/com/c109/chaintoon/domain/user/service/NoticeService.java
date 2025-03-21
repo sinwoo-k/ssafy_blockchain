@@ -4,6 +4,8 @@ import com.c109.chaintoon.common.code.Codes;
 import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
+import com.c109.chaintoon.domain.nft.entity.AuctionItem;
+import com.c109.chaintoon.domain.nft.entity.TradingHistory;
 import com.c109.chaintoon.domain.user.dto.response.NoticeListResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.NoticeResponseDto;
 import com.c109.chaintoon.domain.user.entity.Notice;
@@ -52,6 +54,7 @@ public class NoticeService {
         List<NoticeResponseDto> noticeResponseDtos = noticePage.getContent().stream()
                 .map(notice -> NoticeResponseDto.builder()
                         .noticeId(notice.getNoticeId())
+                        .userId(notice.getUserId())
                         .type(notice.getType())
                         .checked(notice.getChecked())
                         .metadata(convertStringToJsonNode(notice.getMetadata()))
@@ -102,6 +105,7 @@ public class NoticeService {
         noticeRepository.save(notice);
     }
 
+    // 팬아트 생성 알림
     @Transactional
     public void addSecondaryCreateNotice(Webtoon webtoon, Fanart fanart, User secondWriter) {
         try {
@@ -129,24 +133,19 @@ public class NoticeService {
     }
 
     // TODO: 소연 - 경매장 기능 구현 후 알림 생성
-    // 매개변수랑 알림 형식은 알아서 해
-
-    // 상회 입찰 시 기존 입찰자에게 알림
-    public void addOverbidNotice(
-             // ActionItem actionItem
-    ) {
+    public void addOverbidNotice(AuctionItem auctionItem) {
         try {
             // metadata 생성
             Map<String, Object> metadata = Map.of(
-//                    "nftId", actionItem.getNftId(),
-//                    "biddingPrice", actionItem.getBiddingPrice()
+                    "nftId", auctionItem.getNftId(),
+                    "previousBiddingPrice", auctionItem.getBiddingPrice()
             );
 
             // JSON 문자열 변환
             String metadataJson = objectMapper.writeValueAsString(metadata);
 
             Notice notice = Notice.builder()
-                    //.userId(actionItem.getBidderId()) // 기존 입찰자에게 알림 전송
+                    .userId(auctionItem.getBidderId()) // 기존 입찰자에게 알림 전송
                     .type(Codes.NoticeType.OVERBID.getValue())
                     .metadata(metadataJson)
                     .build();
@@ -159,30 +158,87 @@ public class NoticeService {
     }
 
     // 계약 체결 시 호출
-    public void addActionCompleteNotice(
-            // TradingHistory tradingHistory
-    ) {
-        addNftPurchaseNotice();
-        addNftSoldNotice();
-        addSecondaryCreationNftSoldNotice(); // 2차 창작물일 경우 원작자에게 알림
+    public void addActionCompleteNotice(TradingHistory tradingHistory, Webtoon webtoon) {
+        addNftPurchaseNotice(tradingHistory);
+        addNftSoldNotice(tradingHistory);
+        addSecondaryCreationNftSoldNotice(tradingHistory, webtoon); // 원작자에게 알림
     }
-    // 구매자에게 구매 알림
-    private void addNftPurchaseNotice(
-            // TradingHistory tradingHistory
-    ) {
 
+    // 구매자에게 구매 알림 TODO: 수익 구조 결정 후 값 저장
+    private void addNftPurchaseNotice(TradingHistory tradingHistory) {
+        try {
+            // metadata 생성
+            Map<String, Object> metadata = Map.of(
+                    "nftId", tradingHistory.getNftId(),
+                    "tradingValue", tradingHistory.getTradingValue()
+            );
+
+            // JSON 문자열 변환
+            String metadataJson = objectMapper.writeValueAsString(metadata);
+
+            Notice notice = Notice.builder()
+                    .userId(tradingHistory.getBuyerId()) // 구매자에게 알림 전송
+                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .metadata(metadataJson)
+                    .build();
+
+            noticeRepository.save(notice);
+        }
+        catch (JsonProcessingException e) {
+            throw new ServerException("알림 생성이 실패했습니다.");
+        }
     }
 
     // 판매자에게 판매 알림
-    private void addNftSoldNotice(
-            // TradingHistory tradingHistory
-    ) {
+    private void addNftSoldNotice(TradingHistory tradingHistory) {
+        try {
+            // metadata 생성
+            Map<String, Object> metadata = Map.of(
+                    "nftId", tradingHistory.getNftId(),
+                    "tradingValue", tradingHistory.getTradingValue(),
+                    "revenue", 0.0D
+            );
 
+            // JSON 문자열 변환
+            String metadataJson = objectMapper.writeValueAsString(metadata);
+
+            Notice notice = Notice.builder()
+                    .userId(tradingHistory.getSellerId()) // 판매자에게 알림 전송
+                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .metadata(metadataJson)
+                    .build();
+
+            noticeRepository.save(notice);
+        }
+        catch (JsonProcessingException e) {
+            throw new ServerException("알림 생성이 실패했습니다.");
+        }
     }
 
     // 2차 창작물 판매 시 원작자에게 알림
-    public void addSecondaryCreationNftSoldNotice() {
+    public void addSecondaryCreationNftSoldNotice(TradingHistory tradingHistory, Webtoon webtoon) {
+        try {
+            // metadata 생성
+            Map<String, Object> metadata = Map.of(
+                    "nftId", tradingHistory.getNftId(),
+                    "tradingValue", tradingHistory.getTradingValue(),
+                    "copyrightFee", 0.0D
+            );
 
+            // JSON 문자열 변환
+            String metadataJson = objectMapper.writeValueAsString(metadata);
+
+            Notice notice = Notice.builder()
+                    .userId(webtoon.getUserId()) // 원작자에게 알림 전송
+                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .metadata(metadataJson)
+                    .build();
+
+            noticeRepository.save(notice);
+        }
+        catch (JsonProcessingException e) {
+            throw new ServerException("알림 생성이 실패했습니다.");
+        }
     }
 
     // TODO: 도현 - NFT 발행 기능 구현 후, 2차 창작물일 경우 알림 생성

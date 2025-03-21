@@ -29,4 +29,6 @@ public interface WebtoonRepository extends JpaRepository<Webtoon, Integer> {
     Page<Webtoon> findByWebtoonIdInAndDeleted(Collection<Integer> webtoonIds, String deleted, Pageable pageable);
 
     Optional<Webtoon> findByWebtoonIdAndDeleted(Integer webtoonId, String deleted);
+
+    Page<Webtoon> findByUserIdAndDeleted(Integer userId, String deleted, Pageable pageable);
 }

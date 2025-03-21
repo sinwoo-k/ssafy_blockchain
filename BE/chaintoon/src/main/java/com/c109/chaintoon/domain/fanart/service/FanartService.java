@@ -1,10 +1,16 @@
 package com.c109.chaintoon.domain.fanart.service;
 
+import com.c109.chaintoon.common.exception.DuplicatedException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.fanart.dto.request.FanartRequestDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartDetailResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.WebtoonFanartResponseDto;
+import com.c109.chaintoon.domain.fanart.entity.FanartPreference;
+import com.c109.chaintoon.domain.fanart.exception.FanartPreferenceNotFoundException;
+import com.c109.chaintoon.domain.fanart.repository.FanartPreferenceRepository;
+import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -16,12 +22,14 @@ import com.c109.chaintoon.domain.fanart.exception.FanartNotFoundException;
 import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,13 +45,15 @@ public class FanartService {
     private final FanartRepository fanartRepository;
     private final WebtoonRepository webtoonRepository;
     private final UserRepository userRepository;
+    private final FanartPreferenceRepository fanartPreferenceRepository;
+    private final S3Service s3Service;
     private final NoticeService noticeService;
 
     // 1. 팬아트 메인 목록 조회
     // 1-1. 가장 최근에 등록된 팬아트 7개 조회
     public List<FanartResponseDto> getLatestSevenFanarts(int page, int pageSize, String orderBy) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<Fanart> fanartPage = fanartRepository.findAll(pageable);
+        Page<Fanart> fanartPage = fanartRepository.findAllByDeleted("N", pageable);
 
         List<FanartResponseDto> dtos = new ArrayList<>();
         for(Fanart fanart : fanartPage.getContent()) {
@@ -97,7 +107,7 @@ public class FanartService {
         Pageable pageable = PageRequest.of(page -1, pageSize, getSort(orderBy));
 
         // 웹툰에 속한 팬아트 목록 조회
-        Page<Fanart> fanarts = fanartRepository.findByWebtoonId(webtoonId, pageable);
+        Page<Fanart> fanarts = fanartRepository.findAllByWebtoonIdAndDeleted(webtoonId, "N", pageable);
 
         // 팬아트 이미지 경로만 추출
         List<String> fanartImages = fanarts.stream()
@@ -124,30 +134,25 @@ public class FanartService {
         Webtoon webtoon = webtoonRepository.findById(fanartRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanartRequestDto.getWebtoonId()));
 
-        // 2. 등록한 사용자 조회 (닉네임 가져오기)
+        // 등록한 사용자 조회 (닉네임 가져오기)
         User user = userRepository.findById(fanartRequestDto.getUserId())
                 .orElseThrow(() -> new UserIdNotFoundException(fanartRequestDto.getUserId()));
-
-        // TODO : 이미지 업로드
-        String fanartImageUrl = fanartRequestDto.getFanartImage(); // 기본값 (예: 미리 입력된 URL)
-        if (fanartImage != null && !fanartImage.isEmpty()) {
-            // S3에 파일 업로드 후 URL 반환
-            fanartImageUrl = null;
-        }
 
         // 팬아트 엔티티 생성
         Fanart fanart = Fanart.builder()
                 .userId(fanartRequestDto.getUserId())
                 .webtoonId(fanartRequestDto.getWebtoonId())
                 .fanartName(fanartRequestDto.getFanartName())
-                .fanartImage(fanartImageUrl)
                 .description(fanartRequestDto.getDescription())
                 .build();
 
         // 팬아트 저장
         Fanart savedFanart = fanartRepository.save(fanart);
 
-        // 팬아트 생성 알림 저장
+        String fanartImageUrl = uploadFanartImage(savedFanart.getFanartId(), fanartImage);
+        savedFanart.setFanartImage(fanartImageUrl);
+        fanartRepository.save(savedFanart);
+
         noticeService.addSecondaryCreateNotice(webtoon, fanart, user);
 
         return FanartDetailResponseDto.builder()
@@ -160,6 +165,10 @@ public class FanartService {
                 .userNickname(user.getNickname())
                 .description(savedFanart.getDescription())
                 .build();
+    }
+
+    private String uploadFanartImage(Integer fanartId, MultipartFile file) {
+        return s3Service.uploadFile(file, "fanart/" + fanartId + "/image");
     }
 
     // 팬아트 상세 조회
@@ -189,6 +198,7 @@ public class FanartService {
                 .webtoonName(webtoon.getWebtoonName())
                 .userNickname(userNickname)
                 .description(fanart.getDescription())
+                .likeCount(fanart.getLikeCount())
                 .build();
     }
 
@@ -234,13 +244,14 @@ public class FanartService {
         Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanart.getWebtoonId()));
 
-        // 이미지 업데이트 (TODO: 실제 업로드 로직 구현)
+        // 이미지 업데이트
         if (fanartImage != null && !fanartImage.isEmpty()) {
-            // 실제 업로드 로직 구현 후 반환받은 URL 사용
-            String updatedImageUrl = null; // 임시 처리
-            fanart.setFanartImage(updatedImageUrl);
+            if(fanart.getFanartImage() != null) {
+                s3Service.deleteFile(fanart.getFanartImage());
+            }
+            String fanartImageUrl = uploadFanartImage(fanart.getFanartId(), fanartImage);
+            fanart.setFanartImage(fanartImageUrl);
         } else if (fanartRequestDto.getFanartImage() != null) {
-            // 이미지 파일 없이 URL만 변경하는 경우
             fanart.setFanartImage(fanartRequestDto.getFanartImage());
         }
 
@@ -293,6 +304,92 @@ public class FanartService {
     }
 
     // 팬아트 검색
+    public List<FanartDetailResponseDto> searchFanarts(int page, int pageSize, String keyword) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
+
+        // 키워드에 대해 제목이나 설명이 포함되는 조건을 specification으로 구성
+        Specification<Fanart> spec = Specification.where(FanartSpecification.fanartNameContains(keyword))
+                .or(FanartSpecification.descriptionContains(keyword))
+                .and((root, query, cb) ->cb.equal(root.get("deleted"), "N"));
+
+        // 검색 결과를 페이징 처리하여 조회하고 결과 리스트 반환
+        Page<Fanart> resultPage = fanartRepository.findAll(spec, pageable);
+
+        // 결과 엔티티를 FanartDetailResponseDto로 매핑
+        List<FanartDetailResponseDto> dtos = resultPage.getContent().stream().map(fanart -> {
+            // 웹툰 조회하여 웹툰명 가져오기
+            Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId()).orElse(null);
+            String webtoonName = (webtoon != null) ? webtoon.getWebtoonName() : null;
+
+            // 사용자 조회하여 사용자 닉네임 가져오기
+            User user = userRepository.findById(fanart.getUserId()).orElse(null);
+            String userNickname = (user != null) ? user.getNickname() : null;
+
+            return FanartDetailResponseDto.builder()
+                    .fanartId(fanart.getFanartId())
+                    .userId(fanart.getUserId())
+                    .webtoonId(fanart.getWebtoonId())
+                    .fanartImage(fanart.getFanartImage())
+                    .fanartName(fanart.getFanartName())
+                    .webtoonName(webtoonName)
+                    .userNickname(userNickname)
+                    .description(fanart.getDescription())
+                    .likeCount(fanart.getLikeCount())
+                    .build();
+        }).collect(Collectors.toList());
+
+        return dtos;
+    }
+
+    // 좋아요 증가
+    @Transactional
+    public void likeFanart(Integer userId, Integer fanartId) {
+        // 팬아트 조회
+        Fanart fanart = fanartRepository.findById(fanartId)
+                .orElseThrow(() -> new FanartNotFoundException(fanartId));
+
+        FanartPreference fanartPreference = fanartPreferenceRepository.findByFanartIdAndUserId(fanartId, userId)
+                .orElse(null);
+
+        if (fanartPreference == null) {
+            // 좋아요 기록이 없으면 새로 생성하여 저장
+            fanartPreference = FanartPreference.builder()
+                    .fanartId(fanartId)
+                    .userId(userId)
+                    .liked("Y")
+                    .build();
+            fanartPreferenceRepository.save(fanartPreference);
+            // 팬아트 좋아요 개수 증가
+            int currentLikeCount = fanart.getLikeCount() != null ? fanart.getLikeCount() : 0;
+            fanart.setLikeCount(currentLikeCount + 1);
+            fanartRepository.save(fanart);
+        } else {
+            // 이미 좋아요한 경우
+            throw new DuplicatedException("이미 좋아요한 팬아트입니다.");
+        }
+    }
+
+    // 좋아요 취소
+    @Transactional
+    public void unlikeFanart(Integer userId, Integer fanartId) {
+        // 팬아트 조회
+        Fanart fanart = fanartRepository.findById(fanartId)
+                .orElseThrow(() -> new FanartNotFoundException(fanartId));
+
+        // 좋아요 기록 조회
+        FanartPreference fanartPreference = fanartPreferenceRepository.findByFanartIdAndUserId(fanartId, userId)
+                .orElseThrow(() -> new FanartPreferenceNotFoundException(fanartId, userId));
+
+        // 좋아요 기록 삭제
+        fanartPreferenceRepository.delete(fanartPreference);
+
+        //팬아트 좋아요 개수 감소
+        int currentLikeCount = fanart.getLikeCount() != null ? fanart.getLikeCount() : 0;
+        if (currentLikeCount > 0) {
+            fanart.setLikeCount(fanart.getLikeCount() - 1);
+            fanartRepository.save(fanart);
+        }
+    }
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
