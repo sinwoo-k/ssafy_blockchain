@@ -42,6 +42,16 @@ public class WebtoonController {
         return new ResponseEntity<>(webtoon, HttpStatus.CREATED);
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyWebtoonList(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize
+    ) {
+        Integer userId = 0; // TODO: user 구현 후 변경
+        List<WebtoonListResponseDto> webtoonList = webtoonService.getMyWebtoonList(userId, page, pageSize);
+        return new ResponseEntity<>(webtoonList, HttpStatus.OK);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<?> searchWebtoon(
             @RequestParam(required = false, defaultValue = "1") int page,
