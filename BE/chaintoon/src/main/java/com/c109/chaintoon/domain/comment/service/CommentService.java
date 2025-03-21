@@ -113,14 +113,6 @@ public class CommentService {
 
     @Transactional
     public CommentResponseDto updateComment(CommentRequestDto commentRequestDto) {
-        Integer parentId = commentRequestDto.getParentId();
-        // 대댓글인 경우
-        if (parentId != 0) {
-            // 부모 댓글 조회
-            commentRepository.findByCommentIdAndDeleted(parentId, "N")
-                    .orElseThrow(() -> new IllegalArgumentException("부모댓글이 없거나 삭제되었습니다."));
-        }
-        
         // 기존 댓글 조회
         Comment comment = commentRepository.findByCommentIdAndDeleted(commentRequestDto.getCommentId(), "N")
                 .orElseThrow(() -> new CommentNotFoundException(commentRequestDto.getCommentId()));
@@ -128,6 +120,14 @@ public class CommentService {
         // 댓글 수정 권한 확인
         if (!comment.getUserId().equals(commentRequestDto.getUserId())) {
             throw new UnauthorizedAccessException("댓글 수정 권한이 없습니다.");
+        }
+
+        Integer parentId = comment.getParentId();
+        // 대댓글인 경우
+        if (parentId != 0) {
+            // 부모 댓글 조회
+            commentRepository.findByCommentIdAndDeleted(parentId, "N")
+                    .orElseThrow(() -> new IllegalArgumentException("부모댓글이 없거나 삭제되었습니다."));
         }
 
         // 댓글 내용 수정
