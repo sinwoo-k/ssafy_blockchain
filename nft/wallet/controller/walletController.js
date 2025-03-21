@@ -1,12 +1,12 @@
-import { createWalletService, getWalletInfoService } from '../service/walletService.js';
+import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService } from '../service/walletService.js';
 
 export async function createWallet(req, res) {
   try {
-    const { user_email, coin_type } = req.body;
+    const { user_email } = req.body;
     if (!user_email) {
       return res.status(400).json({ error: 'email은 필수입니다.' });
     }
-    const walletData = await createWalletService({ user_email, coin_type });
+    const walletData = await createWalletService({ user_email });
     res.status(201).json({
       ...walletData,
       message: '제공된 이메일에 대해 새 지갑이 생성되고, 컨트랙트에 등록되었습니다.'
@@ -45,5 +45,20 @@ export async function connectWallet(req, res) {
     console.error(err);
     const status = err.statusCode || 500;
     res.status(status).json({ error: err.message || '지갑 연결 중 오류가 발생했습니다.' });
+  }
+}
+
+export async function sendTransaction(req, res) {
+  try {
+    const { from_address, to_address, amount, user_email } = req.body;
+    if (!from_address || !to_address || !amount || !user_email) {
+      return res.status(400).json({ error: 'from_address, to_address, amount, email는 필수입니다.' });
+    }
+    const result = await sendTransactionService({ from_address, to_address, amount, user_email });
+    res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    const status = err.statusCode || 500;
+    res.status(status).json({ error: err.message || '트랜잭션 전송 중 오류가 발생했습니다.' });
   }
 }

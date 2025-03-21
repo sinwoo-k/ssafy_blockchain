@@ -11,9 +11,12 @@
   "type": "module",
   "description": "",
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
+    "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
     "express": "^4.21.2",
+    "ipfs-http-client": "^60.0.1",
     "mysql2": "^3.13.0",
     "redis": "^4.7.0",
     "uuid": "^11.1.0"
