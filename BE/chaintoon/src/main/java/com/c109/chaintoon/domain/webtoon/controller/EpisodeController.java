@@ -47,13 +47,13 @@ public class EpisodeController {
     }
 
     @GetMapping("/first")
-    public ResponseEntity<?> getFirstEpisode(@RequestParam int webtoonId) {
+    public ResponseEntity<?> getFirstEpisode(@RequestParam Integer webtoonId) {
         EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/latest")
-    public ResponseEntity<?> getLatestEpisode(@RequestParam int webtoonId) {
+    public ResponseEntity<?> getLatestEpisode(@RequestParam Integer webtoonId) {
         EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }

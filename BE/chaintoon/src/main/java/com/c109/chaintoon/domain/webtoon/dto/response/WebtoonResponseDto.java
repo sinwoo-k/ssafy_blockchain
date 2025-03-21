@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.webtoon.dto.response;
 
 import lombok.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,4 +21,5 @@ public class WebtoonResponseDto {
     private Double rating;
     private String garoThumbnail;
     private String seroThumbnail;
+    private List<String> tags;
 }
