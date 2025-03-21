@@ -37,7 +37,7 @@ public class CommentService {
                 .commentId(comment.getCommentId())
                 .userId(comment.getUserId())
                 .usageId(comment.getUsageId())
-                .usageType(comment.getUsageType())
+                .type(comment.getType())
                 .parentId(comment.getParentId())
                 .content(comment.getContent())
                 .updateDate(comment.getUpdatedAt().format(dateFormatter)) // updated_at을 날짜 형식으로 변환
@@ -81,7 +81,7 @@ public class CommentService {
         Comment comment = Comment.builder()
                 .userId(commentRequestDto.getUserId())
                 .usageId(commentRequestDto.getUsageId())
-                .usageType(commentRequestDto.getUsageType())
+                .type(commentRequestDto.getType())
                 .parentId(commentRequestDto.getParentId())
                 .content(commentRequestDto.getContent())
                 .build();

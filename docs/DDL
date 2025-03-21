@@ -19,7 +19,7 @@ CREATE TABLE `comment` (
   `comment_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `usage_id` int NOT NULL DEFAULT '0',
-  `usage_type` varchar(10) DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
   `parent_id` int DEFAULT '0',
   `content` varchar(255) DEFAULT NULL,
   `deleted` varchar(1) DEFAULT NULL,

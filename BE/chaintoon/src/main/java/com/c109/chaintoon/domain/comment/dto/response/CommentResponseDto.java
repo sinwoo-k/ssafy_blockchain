@@ -11,7 +11,7 @@ public class CommentResponseDto {
     private Integer commentId;
     private Integer userId;
     private Integer usageId;
-    private String usageType;
+    private String type;
     private Integer parentId;
     private String content;
     private String updateDate; // 2025-03-17
