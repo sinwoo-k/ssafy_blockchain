@@ -12,13 +12,14 @@ const WebtoonEpisode = lazy(() => import('../pages/webtoon/WebtoonEpisode'))
 // 내 작품 목록 section
 const MyWorks = lazy(() => import('../pages/myworks/MyWorks'))
 const MyWebtoon = lazy(() => import('../pages/myworks/MyWebtoon'))
+const MyWebtoonCreate = lazy(() => import('../pages/myworks/MyWebtoonCreate'))
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
 
 // 스토어 추가
 const StoreMain = lazy(() => import('../pages/store/StoreMain'))
-const ProductDetail = lazy(()=> import('../pages/store/ProductDetail'))
+const ProductDetail = lazy(() => import('../pages/store/ProductDetail'))
 
 const router = createBrowserRouter([
   {
@@ -67,6 +68,14 @@ const router = createBrowserRouter([
               </Suspense>
             ),
           },
+          {
+            path: 'webtoon/create',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyWebtoonCreate />
+              </Suspense>
+            ),
+          },
         ],
       },
       // 마이페이지 section
@@ -78,29 +87,30 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      // store section
       {
-        path : '/store',
-        element:(
+        path: '/store',
+        element: (
           <Suspense fallback={<Loader />}>
             <StoreMain />
           </Suspense>
-        )
+        ),
       },
       {
-        path : '/store/product/:productId',
-        element:(
+        path: '/store/product/:productId',
+        element: (
           <Suspense fallback={<Loader />}>
             <ProductDetail />
           </Suspense>
-        )
+        ),
       },
       {
-        path : '/store/collection/:collectionId',
-        element:(
+        path: '/store/collection/:collectionId',
+        element: (
           <Suspense fallback={<Loader />}>
             <CollectionPage />
           </Suspense>
-        )
+        ),
       },
     ],
   },

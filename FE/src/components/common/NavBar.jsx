@@ -50,30 +50,32 @@ const NavBar = () => {
     <>
       <div
         className={`border-text text-text ${scroll && 'bg-black'} 
-      fixed top-0 z-10 flex h-[80px] w-full justify-between border-b`}
+      fixed top-0 z-10 flex h-[60px] w-full justify-between border-b`}
       >
         <div className='flex'>
           {/* 로고 */}
-          <div className='flex w-[250px] items-center justify-center'>
+          <div className='flex w-[200px] items-center justify-center'>
             <Link to={'/'}>
-              <img src={LogoImg} alt='체인툰 로고' className='w-[200px]' />
+              <img src={LogoImg} alt='체인툰 로고' className='w-[150px]' />
             </Link>
           </div>
           {/* 페이지 내비게이션*/}
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <Link className='text-xl'>웹툰</Link>
+          <div className='flex h-full w-[100px] items-center justify-center'>
+            <Link className='text-lg'>웹툰</Link>
           </div>
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <Link to="/store" className='text-xl'>스토어</Link>
+          <div className='flex h-full w-[100px] items-center justify-center'>
+            <Link to='/store' className='text-lg'>
+              스토어
+            </Link>
           </div>
-          <div className='flex h-full w-[150px] items-center justify-center'>
-            <Link className='text-xl'>팬아트</Link>
+          <div className='flex h-full w-[100px] items-center justify-center'>
+            <Link className='text-lg'>팬아트</Link>
           </div>
         </div>
         {/* 회원 관련 */}
         <div className='flex'>
           {isAuthenticated && (
-            <div className='flex h-full w-[150px] items-center justify-center gap-5'>
+            <div className='flex h-full w-[100px] items-center justify-center gap-5'>
               <IconLink
                 path={'/'}
                 Icon={CollectionsBookmarkIcon}
@@ -87,24 +89,23 @@ const NavBar = () => {
             </div>
           )}
           {isAuthenticated && (
-            <div className='flex h-full w-[150px] items-center justify-center'>
-              <Link to="/mypage" className='text-xl'>마이페이지</Link>
+            <div className='flex h-full w-[100px] items-center justify-center'>
+              <Link to='/mypage' className='text-lg'>
+                마이페이지
+              </Link>
             </div>
           )}
           {isAuthenticated && (
-            <div className='flex h-full w-[150px] items-center justify-center'>
-              <button 
-                className='cursor-pointer text-xl'
-                onClick={handleLogout}
-              >
+            <div className='flex h-full w-[100px] items-center justify-center'>
+              <button className='cursor-pointer text-lg' onClick={handleLogout}>
                 로그아웃
               </button>
             </div>
           )}
           {!isAuthenticated && (
-            <div className='flex h-full w-[150px] items-center justify-center'>
-              <button 
-                className='cursor-pointer text-xl'
+            <div className='flex h-full w-[100px] items-center justify-center'>
+              <button
+                className='cursor-pointer text-lg'
                 onClick={() => setIsLoginModalOpen(true)}
               >
                 로그인
@@ -114,9 +115,9 @@ const NavBar = () => {
         </div>
       </div>
       {/* 로그인 모달 추가 */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
       />
     </>
   )
