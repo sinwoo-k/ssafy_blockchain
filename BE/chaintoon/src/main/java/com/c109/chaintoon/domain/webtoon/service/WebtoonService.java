@@ -2,6 +2,8 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
@@ -30,6 +32,7 @@ public class WebtoonService {
     private final WebtoonRepository webtoonRepository;
     private final FavoriteWebtoonRepository favoriteWebtoonRepository;
     private final TagRepository tagRepository;
+    private final UserRepository userRepository;
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
@@ -43,16 +46,22 @@ public class WebtoonService {
         }
     }
 
-    private List<WebtoonListResponseDto> toListDto(Page<Webtoon> webtoonPage) {
+    // 평균 평점 계산 (소수점 둘째자리까지)
+    private double calculateRating(Webtoon webtoon) {
+        return webtoon.getRatingCount() == 0 ? 0.0 :
+                Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
+    }
+
+    private List<WebtoonListResponseDto> toDtoList(Page<Webtoon> webtoonPage) {
         return webtoonPage.getContent().stream()
                 .map(webtoon -> {
-                    String writer = null;
-                    // TODO: 유저 구현 시 변경
-                    // writer = userRepository.findById(webtoon.getUserId())
-                    //         .orElseThrow(() -> new RuntimeException("User not found"))
-                    //         .getNickname();
-                    double rating = webtoon.getRatingCount() == 0 ? 0.0 :
-                            Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
+                    // 작성자 조회
+                    String writer = userRepository.findById(webtoon.getUserId())
+                             .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()))
+                             .getNickname();
+
+                    // 평점 계산
+                    double rating = calculateRating(webtoon);
 
                     return WebtoonListResponseDto.builder()
                             .webtoonId(webtoon.getWebtoonId())
@@ -72,8 +81,7 @@ public class WebtoonService {
 
     private WebtoonResponseDto toWebtoonDto(Webtoon webtoon) {
         // 평점 계산
-        double rating = webtoon.getRatingCount() == 0 ? 0.0 :
-                Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
+        double rating = calculateRating(webtoon);
 
         // 태그 조회
         List<String> tags = tagRepository
@@ -118,7 +126,7 @@ public class WebtoonService {
             webtoonPage = webtoonRepository.findByDeleted("N", pageable);
         }
 
-        return toListDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
 
@@ -161,7 +169,7 @@ public class WebtoonService {
         webtoonPage = webtoonRepository.findByUserIdAndDeleted(userId, "N", pageable);
 
         // Dto 변환 후 반환
-        return toListDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -173,7 +181,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return toListDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -188,7 +196,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdInAndDeleted(favoriteWebtoonIds, "N", pageable);
 
         // 조회 결과 DTO 변환
-        return toListDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
 

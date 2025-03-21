@@ -7,6 +7,7 @@ import com.c109.chaintoon.domain.webtoon.service.WebtoonService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,21 +34,22 @@ public class WebtoonController {
 
     @PostMapping
     public ResponseEntity<?> addWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @RequestPart("webtoon") WebtoonRequestDto webtoonRequest,
             @RequestPart("garoImage") MultipartFile garoImage,
             @RequestPart("seroImage") MultipartFile seroImage
     ) {
-        webtoonRequest.setUserId(0); // TODO: user 구현 후 변경
+        webtoonRequest.setUserId(userId);
         WebtoonResponseDto webtoon = webtoonService.addWebtoon(webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.CREATED);
     }
 
     @GetMapping("/my")
     public ResponseEntity<?> getMyWebtoonList(
+            @AuthenticationPrincipal Integer userId,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         List<WebtoonListResponseDto> webtoonList = webtoonService.getMyWebtoonList(userId, page, pageSize);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
@@ -64,10 +66,10 @@ public class WebtoonController {
 
     @GetMapping("/favorites")
     public ResponseEntity<?> getFavoriteWebtoonList(
+            @AuthenticationPrincipal Integer userId,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         List<WebtoonListResponseDto> webtoonList = webtoonService.getFavoriteWebtoonList(page, pageSize, userId);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
@@ -82,38 +84,38 @@ public class WebtoonController {
 
     @PatchMapping("/{webtoonId}")
     public ResponseEntity<?> updateWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId,
             @RequestPart(value = "webtoon", required = false) WebtoonRequestDto webtoonRequest,
             @RequestPart(value = "garoImage", required = false) MultipartFile garoImage,
             @RequestPart(value = "seroImage", required = false) MultipartFile seroImage) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         WebtoonResponseDto webtoon = webtoonService.updateWebtoon(webtoonId, userId, webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.OK);
     }
 
     @DeleteMapping("/{webtoonId}")
     public ResponseEntity<?> deleteWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         webtoonService.deleteWebtoon(webtoonId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/{webtoonId}/favorite")
     public ResponseEntity<?> addFavoriteWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         webtoonService.addFavoriteWebtoon(webtoonId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{webtoonId}/favorite")
     public ResponseEntity<?> deleteFavoriteWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         webtoonService.deleteFavoriteWebtoon(webtoonId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

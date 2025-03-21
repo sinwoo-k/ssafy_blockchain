@@ -6,6 +6,8 @@ import com.c109.chaintoon.domain.comment.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +30,11 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addComment(@RequestBody CommentRequestDto commentRequestDto) {
-        commentRequestDto.setUserId(0); // TODO: user 구현 후 변경
+    public ResponseEntity<?> addComment(
+            @AuthenticationPrincipal Integer userId,
+            @RequestBody CommentRequestDto commentRequestDto
+    ) {
+        commentRequestDto.setUserId(userId);
         CommentResponseDto comment = commentService.addComment(commentRequestDto);
         return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
@@ -46,10 +51,11 @@ public class CommentController {
 
     @PatchMapping("/{commentId}")
     public ResponseEntity<?> updateComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId,
             @RequestBody CommentRequestDto commentRequestDto
     ) {
-        commentRequestDto.setUserId(0); // TODO: user 구현 후 변경
+        commentRequestDto.setUserId(userId);
         commentRequestDto.setCommentId(commentId);
         CommentResponseDto comment = commentService.updateComment(commentRequestDto);
         return new ResponseEntity<>(comment, HttpStatus.OK);
@@ -57,45 +63,45 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<?> deleteComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         commentService.deleteComment(userId, commentId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/{commentId}/like")
     public ResponseEntity<?> likeComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         commentService.likeComment(userId, commentId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{commentId}/like")
     public ResponseEntity<?> unlikeComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         commentService.unlikeComment(userId, commentId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/{commentId}/hate")
     public ResponseEntity<?> hateComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         commentService.hateComment(userId, commentId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
     
     @DeleteMapping("/{commentId}/hate")
     public ResponseEntity<?> unhateComment(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         commentService.unhateComment(userId, commentId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
