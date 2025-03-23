@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,4 +17,5 @@ public class WebtoonRequestDto {
     private String genre;
     private String summary;
     private String adaptable;
+    private List<String> tags;
 }

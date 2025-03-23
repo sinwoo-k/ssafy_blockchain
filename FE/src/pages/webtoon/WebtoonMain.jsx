@@ -4,7 +4,7 @@ import WebtoonList from '../../components/webtoon/WebtoonList'
 
 const WebtoonMain = () => {
   return (
-    <div className='text-text/85 relative min-h-screen bg-black'>
+    <div className='relative min-h-screen bg-black'>
       <TodayRecommend />
       <WebtoonList />
     </div>

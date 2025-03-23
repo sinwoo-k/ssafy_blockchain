@@ -1,15 +1,18 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
-import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoon;
-import com.c109.chaintoon.domain.webtoon.entity.FavoriteWebtoonId;
-import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
+import com.c109.chaintoon.domain.webtoon.entity.*;
 import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.FavoriteWebtoonRepository;
+import com.c109.chaintoon.domain.webtoon.repository.TagRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +24,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class WebtoonService {
 
+    private final S3Service s3Service;
     private final WebtoonRepository webtoonRepository;
     private final FavoriteWebtoonRepository favoriteWebtoonRepository;
-
-    public WebtoonService(WebtoonRepository webtoonRepository, FavoriteWebtoonRepository favoriteWebtoonRepository) {
-        this.webtoonRepository = webtoonRepository;
-        this.favoriteWebtoonRepository = favoriteWebtoonRepository;
-    }
+    private final TagRepository tagRepository;
+    private final UserRepository userRepository;
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
@@ -44,16 +46,22 @@ public class WebtoonService {
         }
     }
 
-    private List<WebtoonListResponseDto> toDto(Page<Webtoon> webtoonPage) {
+    // 평균 평점 계산 (소수점 둘째자리까지)
+    private double calculateRating(Webtoon webtoon) {
+        return webtoon.getRatingCount() == 0 ? 0.0 :
+                Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
+    }
+
+    private List<WebtoonListResponseDto> toDtoList(Page<Webtoon> webtoonPage) {
         return webtoonPage.getContent().stream()
                 .map(webtoon -> {
-                    String writer = null;
-                    // TODO: 유저 구현 시 변경
-                    // writer = userRepository.findById(webtoon.getUserId())
-                    //         .orElseThrow(() -> new RuntimeException("User not found"))
-                    //         .getNickname();
-                    double rating = webtoon.getRatingCount() == 0 ? 0.0 :
-                            Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
+                    // 작성자 조회
+                    String writer = userRepository.findById(webtoon.getUserId())
+                             .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()))
+                             .getNickname();
+
+                    // 평점 계산
+                    double rating = calculateRating(webtoon);
 
                     return WebtoonListResponseDto.builder()
                             .webtoonId(webtoon.getWebtoonId())
@@ -71,26 +79,58 @@ public class WebtoonService {
                 .collect(Collectors.toList());
     }
 
+    private WebtoonResponseDto toWebtoonDto(Webtoon webtoon) {
+        // 평점 계산
+        double rating = calculateRating(webtoon);
+
+        // 태그 조회
+        List<String> tags = tagRepository
+                .findByTagId_WebtoonId(webtoon.getWebtoonId())
+                .stream()
+                .map(tag -> tag.getTagId().getTag())
+                .toList();
+
+        // 응답 dto 생성
+        return WebtoonResponseDto.builder()
+                .webtoonId(webtoon.getWebtoonId())
+                .userId(webtoon.getUserId())
+                .webtoonName(webtoon.getWebtoonName())
+                .genre(webtoon.getGenre())
+                .summary(webtoon.getSummary())
+                .adaptable(webtoon.getAdaptable())
+                .garoThumbnail(webtoon.getGaroThumbnail())
+                .seroThumbnail(webtoon.getSeroThumbnail())
+                .episodeCount(webtoon.getEpisodeCount())
+                .viewCount(webtoon.getViewCount())
+                .rating(rating)
+                .tags(tags)
+                .build();
+    }
+
+    private String uploadGaroThumbnail(Integer webtoonId, MultipartFile file) {
+        return s3Service.uploadFile(file, "webtoon/" + webtoonId  + "/garoThumbnail");
+    }
+
+    private String uploadSeroThumbnail(Integer webtoonId, MultipartFile file) {
+        return s3Service.uploadFile(file, "webtoon/" + webtoonId  + "/seroThumbnail");
+    }
+
     @Transactional(readOnly = true)
     public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Webtoon> webtoonPage;
 
         if (genre != null && !genre.isEmpty()) {
-            webtoonPage = webtoonRepository.findByGenre(genre, pageable);
+            webtoonPage = webtoonRepository.findByGenreAndDeleted(genre, "N", pageable);
         } else {
-            webtoonPage = webtoonRepository.findAll(pageable);
+            webtoonPage = webtoonRepository.findByDeleted("N", pageable);
         }
 
-        return toDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
 
     public WebtoonResponseDto addWebtoon(WebtoonRequestDto webtoonDto, MultipartFile garoImage, MultipartFile seroImage) {
-        // 이미지 업로드 TODO: 이미지 추가
-        String garoImageUrl = null;
-        String seroImageUrl = null;
-
         // Webtoon 엔티티 생성
         Webtoon webtoon = Webtoon.builder()
                 .userId(webtoonDto.getUserId())
@@ -98,24 +138,38 @@ public class WebtoonService {
                 .genre(webtoonDto.getGenre())
                 .summary(webtoonDto.getSummary())
                 .adaptable(webtoonDto.getAdaptable())
-                .garoThumbnail(garoImageUrl)
-                .seroThumbnail(seroImageUrl)
                 .build();
 
-        // 저장
+        // 웹툰 저장
         Webtoon savedWebtoon = webtoonRepository.save(webtoon);
 
+        // 태그 저장
+        webtoonDto.getTags().forEach(tag -> {
+            TagId tagId = new TagId(savedWebtoon.getWebtoonId(), tag);
+            tagRepository.save(new Tag(tagId));
+        });
+
+        // 이미지 저장
+        String garoImageUrl = uploadGaroThumbnail(savedWebtoon.getWebtoonId(), garoImage);
+        String seroImageUrl = uploadSeroThumbnail(savedWebtoon.getWebtoonId(), seroImage);
+        savedWebtoon.setGaroThumbnail(garoImageUrl);
+        savedWebtoon.setSeroThumbnail(seroImageUrl);
+        webtoonRepository.save(savedWebtoon);
+
         // 응답 DTO 생성
-        return WebtoonResponseDto.builder()
-                .webtoonId(savedWebtoon.getWebtoonId())
-                .userId(savedWebtoon.getUserId())
-                .webtoonName(savedWebtoon.getWebtoonName())
-                .genre(savedWebtoon.getGenre())
-                .summary(savedWebtoon.getSummary())
-                .adaptable(savedWebtoon.getAdaptable())
-                .garoThumbnail(savedWebtoon.getGaroThumbnail())
-                .seroThumbnail(savedWebtoon.getSeroThumbnail())
-                .build();
+        return toWebtoonDto(savedWebtoon);
+    }
+
+    public List<WebtoonListResponseDto> getMyWebtoonList(Integer userId, int page, int pageSize) {
+        // 페이지네이션 및 정렬 설정 (최신 업데이트 순)
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
+        Page<Webtoon> webtoonPage;
+
+        // 내 웹툰 조회
+        webtoonPage = webtoonRepository.findByUserIdAndDeleted(userId, "N", pageable);
+
+        // Dto 변환 후 반환
+        return toDtoList(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -127,7 +181,7 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return toDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
     @Transactional(readOnly = true)
@@ -139,52 +193,41 @@ public class WebtoonService {
         List<Integer> favoriteWebtoonIds = favoriteWebtoonRepository.findWebtoonIdsByUserId(userId);
 
         // 찜한 웹툰 ID 목록을 기반으로 웹툰 조회
-        Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdIn(favoriteWebtoonIds, pageable);
+        Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonIdInAndDeleted(favoriteWebtoonIds, "N", pageable);
 
         // 조회 결과 DTO 변환
-        return toDto(webtoonPage);
+        return toDtoList(webtoonPage);
     }
 
 
     public WebtoonResponseDto getWebtoon(Integer webtoonId) {
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        // 웹툰 엔티티 조회
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
-        double rating = webtoon.getRatingCount() == 0 ? 0.0 :
-                Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
 
-        // 응답 dto 생성
-        return WebtoonResponseDto.builder()
-                .webtoonId(webtoonId)
-                .userId(webtoon.getUserId())
-                .webtoonName(webtoon.getWebtoonName())
-                .genre(webtoon.getGenre())
-                .summary(webtoon.getSummary())
-                .adaptable(webtoon.getAdaptable())
-                .garoThumbnail(webtoon.getGaroThumbnail())
-                .seroThumbnail(webtoon.getSeroThumbnail())
-                .episodeCount(webtoon.getEpisodeCount())
-                .viewCount(webtoon.getViewCount())
-                .rating(rating)
-                .build();
+        // DTO 변환
+        return toWebtoonDto(webtoon);
     }
 
     public WebtoonResponseDto updateWebtoon(Integer webtoonId, Integer userId, WebtoonRequestDto webtoonRequest, MultipartFile garoImage, MultipartFile seroImage) {
         // 기존 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
 
-        // 삭제 권한 없음
+        // 수정 권한 없음
         if (!webtoon.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("웹툰 수정 권한이 없습니다.");
         }
 
-        // 이미지 업데이트 (새로운 이미지가 제공된 경우에만 업로드) TODO: 이미지 추가
+        // 이미지 업데이트 (새로운 이미지가 제공된 경우에만 업로드)
         if (garoImage != null && !garoImage.isEmpty()) {
-            String garoImageUrl = null;
+            s3Service.deleteFile(webtoon.getGaroThumbnail());
+            String garoImageUrl = uploadGaroThumbnail(webtoonId, garoImage);
             webtoon.setGaroThumbnail(garoImageUrl);
         }
         if (seroImage != null && !seroImage.isEmpty()) {
-            String seroImageUrl = null;
+            s3Service.deleteFile(webtoon.getSeroThumbnail());
+            String seroImageUrl = uploadSeroThumbnail(webtoonId, seroImage);
             webtoon.setSeroThumbnail(seroImageUrl);
         }
 
@@ -194,33 +237,38 @@ public class WebtoonService {
             webtoon.setGenre(webtoonRequest.getGenre());
             webtoon.setSummary(webtoonRequest.getSummary());
             webtoon.setAdaptable(webtoonRequest.getAdaptable());
+
+            // 기존 태그 삭제
+            List<Tag> oldTags = tagRepository.findByTagId_WebtoonId(webtoon.getWebtoonId());
+            tagRepository.deleteAll(oldTags);
+
+            // 새 태그 저장
+            webtoonRequest.getTags().forEach(tag -> {
+                TagId tagId = new TagId(webtoon.getWebtoonId(), tag);
+                tagRepository.save(new Tag(tagId));
+            });
         }
 
         // 저장
         Webtoon updatedWebtoon = webtoonRepository.save(webtoon);
 
         // 응답 DTO 생성
-        return WebtoonResponseDto.builder()
-                .webtoonId(updatedWebtoon.getWebtoonId())
-                .userId(updatedWebtoon.getUserId())
-                .webtoonName(updatedWebtoon.getWebtoonName())
-                .genre(updatedWebtoon.getGenre())
-                .summary(updatedWebtoon.getSummary())
-                .adaptable(updatedWebtoon.getAdaptable())
-                .garoThumbnail(updatedWebtoon.getGaroThumbnail())
-                .seroThumbnail(updatedWebtoon.getSeroThumbnail())
-                .build();
+        return toWebtoonDto(updatedWebtoon);
     }
 
     public void deleteWebtoon(Integer webtoonId, Integer userId) {
         // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
 
         // 삭제 권한 없음
         if (!webtoon.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("웹툰 삭제 권한이 없습니다.");
         }
+
+        // S3 이미지 삭제
+        s3Service.deleteFile(webtoon.getGaroThumbnail());
+        s3Service.deleteFile(webtoon.getSeroThumbnail());
 
         // 소프트 삭제
         webtoon.setDeleted("Y");

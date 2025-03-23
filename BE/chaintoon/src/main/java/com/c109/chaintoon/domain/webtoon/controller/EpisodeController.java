@@ -5,22 +5,21 @@ import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.EpisodeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/episodes")
 public class EpisodeController {
 
     private final EpisodeService episodeService;
-
-    public EpisodeController(EpisodeService episodeService) {
-        this.episodeService = episodeService;
-    }
 
     @GetMapping
     public ResponseEntity<?> getEpisodeList(
@@ -49,42 +48,45 @@ public class EpisodeController {
     }
 
     @GetMapping("/first")
-    public ResponseEntity<?> getFirstEpisode(@RequestParam int webtoonId) {
+    public ResponseEntity<?> getFirstEpisode(@RequestParam Integer webtoonId) {
         EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/latest")
-    public ResponseEntity<?> getLatestEpisode(@RequestParam int webtoonId) {
+    public ResponseEntity<?> getLatestEpisode(@RequestParam Integer webtoonId) {
         EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @PatchMapping("/{episodeId}")
     public ResponseEntity<?> updateEpisode(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer episodeId,
             @RequestPart(name = "episode", required = false) EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail", required = false) MultipartFile thumbnail,
-            @RequestPart(name = "images", required = false) List<ImageRequestDto> images
+            @RequestPart(name = "images", required = false) List<ImageRequestDto> images,
+            @RequestPart(name = "newImages", required = false) List<MultipartFile> newImages
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
-        EpisodeResponseDto episode = episodeService.updateEpisode(userId, episodeId, episodeRequest, thumbnail, images);
+        EpisodeResponseDto episode = episodeService.updateEpisode(userId, episodeId, episodeRequest, thumbnail, images, newImages);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @DeleteMapping("/{episodeId}")
-    public ResponseEntity<?> deleteEpisode(@PathVariable Integer episodeId) {
-        Integer userId = 0; // TODO: user 구현 후 변경
+    public ResponseEntity<?> deleteEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer episodeId
+    ) {
         episodeService.deletedEpisode(userId, episodeId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/{episodeId}/rating")
     public ResponseEntity<?> addEpisodeRating(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer episodeId,
             @RequestParam int rating
     ) {
-        Integer userId = 0; // TODO: user 구현 후 변경
         episodeService.addEpisodeRating(userId, episodeId, rating);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import WebtoonCard from './WebtoonCard'
 // carousel
 import Slider from 'react-slick'
 import 'slick-carousel/slick/slick.css'
@@ -9,7 +10,6 @@ import actionCover from '../../assets/defaultCover/action.webp'
 import romanceCover from '../../assets/defaultCover/romance.webp'
 import dramaCover from '../../assets/defaultCover/drama.webp'
 import historyCover from '../../assets/defaultCover/history.webp'
-import WebtoonCard from './WebtoonCard'
 
 const TodayRecommend = () => {
   // 배경 이미지
@@ -49,8 +49,8 @@ const TodayRecommend = () => {
           filter: 'blur(35px) brightness(0.5)',
         }}
       ></div>
-      <div className='relative w-[1160px]'>
-        <h1 className='mt-24 mb-5 text-2xl'>오늘의 추천 웹툰</h1>
+      <div className='relative w-[1000px]'>
+        <h1 className='mt-24 mb-5 text-xl'>오늘의 추천 웹툰</h1>
         <div>
           <Slider {...setting}>
             {webtoons.map((webtoon) => (
