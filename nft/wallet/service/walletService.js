@@ -74,7 +74,6 @@ export async function createWalletService({ user_email }) {
 
   // 3. DB에 지갑 정보 저장 (Data Access Layer 호출)
   const walletId = await walletRepository.createWallet({
-    user_id,
     user_email,
     wallet_address,
     private_key: encryptedPrivateKey,
