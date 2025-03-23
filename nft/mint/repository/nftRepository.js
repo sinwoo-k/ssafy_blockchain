@@ -1,12 +1,12 @@
 // repositories/nftRepository.js
 import { pool } from '../../db/db.js';
 
-export async function saveNftToDatabase({ webtoonId, userId, tokenId, type, typeId, tokenId, contractAddress, metadataUri }) {
+export async function saveNftToDatabase({ webtoonId, userId, type, typeId, tokenId, contractAddress, metadataUri }) {
   const query = `
-    INSERT INTO nft (webtoon_id, user_id, token_id, type, type_id, token_id, contract_address, metadata_uri)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO nft (webtoon_id, user_id, type, type_id, token_id, contract_address, metadata_uri)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  const [result] = await pool.execute(query, [webtoonId, userId, tokenId, type, typeId, tokenId, contractAddress, metadataUri]);
+  const [result] = await pool.execute(query, [webtoonId, userId, type, typeId, tokenId, contractAddress, metadataUri]);
   return { id: result.insertId };
 }
 

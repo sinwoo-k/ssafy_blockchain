@@ -74,12 +74,12 @@ export async function createWalletService({ user_email }) {
 
   // 3. DB에 지갑 정보 저장 (Data Access Layer 호출)
   const walletId = await walletRepository.createWallet({
+    user_id,
     user_email,
     wallet_address,
     private_key: encryptedPrivateKey,
     public_key,
     recovery_phrase: encryptedRecoveryPhrase,
-    coin_type: 'ETH'
   });
 
   // 4. 스마트 컨트랙트에 관리자의 adminRegisterWallet 함수 호출하여 새 지갑 등록
@@ -99,7 +99,6 @@ export async function createWalletService({ user_email }) {
     public_key,
     private_key,
     recovery_phrase,
-    coin_type: 'ETH',
     // initialFundingTxHash: txSend.hash // 초기 송금 트랜잭션 해시 반환
   };
 }

@@ -1,4 +1,4 @@
-import { mintNftService, getNftMetadata } from '../service/nftService.js';
+import { mintNftService, getNftMetadata, listNftService, buyNftService } from '../service/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 export async function mintNftController(req, res) {
@@ -6,8 +6,18 @@ export async function mintNftController(req, res) {
         const { webtoonId, userId, type, typeId, s3Url, originalCreator, registrant} = req.body;
 
         // 필수 파라미터 확인
-        if (!webtoonId || !userId || !type || !typeId) {
-            return res.status(400).json({ error: 'webtoonId, userId, type, type_id는 필수입니다.' });
+        if (!webtoonId ) {
+            return res.status(400).json({ error: 'webtoonId는 필수입니다.' });
+        } else if (!userId) {
+            return res.status(400).json({ error: 'userId는 필수입니다.' });
+        } else if (!type) {
+            return res.status(400).json({ error: 'type은 필수입니다.' });
+        } else if (!typeId) {
+            return res.status(400).json({ error: 'typeId는 필수입니다.' });
+        } else if (!originalCreator) {
+            return res.status(400).json({ error: 'originalCreator는 필수입니다.' });
+        } else if (!registrant) {
+            return res.status(400).json({ error: 'registrant는 필수입니다.' });
         }
 
         const result = await mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, registrant });
@@ -39,14 +49,17 @@ export const getNftDetails = async (req, res, next) => {
 
 export async function listNftController(req, res) {
     try {
-        const { tokenId, price } = req.body;
+        const { tokenId, price, privateKey } = req.body;
 
         // 필수 파라미터 확인
-        if (!tokenId || !price) {
-            return res.status(400).json({ error: 'tokenId와 price는 필수입니다.' });
+        if (!tokenId) {
+            return res.status(400).json({ error: 'tokenId는 필수입니다.' });
+        } else if (!price) {
+            return res.status(400).json({ error: 'price는 필수입니다.' });
         }
 
-        const result = await listNftService({ tokenId, price });
+
+        const result = await listNftService({ tokenId, price , privateKey});
         res.status(200).json(result);
     } catch (err) {
         console.error(err);
@@ -57,14 +70,16 @@ export async function listNftController(req, res) {
 
 export async function buyNftController(req, res) {
     try {
-        const { tokenId } = req.body;
+        const { tokenId, price, privateKey } = req.body;
 
         // 필수 파라미터 확인
         if (!tokenId) {
             return res.status(400).json({ error: 'tokenId는 필수입니다.' });
+        } else if (!price) {
+            return res.status(400).json({ error: 'price는 필수입니다.' });
         }
 
-        const result = await buyNftService({ tokenId });
+        const result = await buyNftService({ tokenId, price , privateKey});
         res.status(200).json(result);
     } catch (err) {
         console.error(err);

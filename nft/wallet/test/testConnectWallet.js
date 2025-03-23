@@ -5,7 +5,7 @@ import { connectWalletService } from "../service/walletService.js";
 // 테스트용 스크립트
 async function testConnectWallet() {
   try {
-    const user_email = "test@example.com";
+    const user_email = "wdse123@naver.com";
     
     // 1. Redis에 nonce 생성 및 저장
     const nonce = await generateAndStoreNonce(user_email);
@@ -13,7 +13,7 @@ async function testConnectWallet() {
     const message = nonce;
     
     // 2. 테스트용 지갑 생성 (MetaMask 대신 사용할 테스트 지갑)
-    const testPrivateKey = "0x5e6e13b102a02589a9006ede49a5e4c7a9f12b6573fd6ca2a2aa6221347e8601";
+    const testPrivateKey = "0x67c56a10157af5e5c6f50b13f2eb8d7804c88a53f113c28976886a49ef539a8a";
     const testWallet = new ethers.Wallet(testPrivateKey);
     const wallet_address = testWallet.address;
     

@@ -9,9 +9,9 @@ export async function findWalletByEmail(user_email) {
 }
 
 export async function createWallet(walletData) {
-  const { user_email, wallet_address, private_key, public_key, recovery_phrase, coin_type } = walletData;
+  const { user_id ,user_email, wallet_address, private_key, public_key, recovery_phrase } = walletData;
   const [result] = await pool.execute(
-    `INSERT INTO wallet (user_email, wallet_address, private_key, public_key, recovery_phrase, coin_type)
+    `INSERT INTO wallet (user_id,user_email, wallet_address, private_key, public_key, recovery_phrase)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [user_email, wallet_address, private_key, public_key, recovery_phrase, coin_type]
   );
