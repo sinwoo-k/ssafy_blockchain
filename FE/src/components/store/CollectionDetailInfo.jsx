@@ -78,16 +78,16 @@ const CollectionDetailInfo = ({ collection, tags }) => {
               </div>
               
               {/* 가격 정보 */}
-              <div className='text-xl font-bold'>
+              {/* <div className='text-xl font-bold'>
                 가격: {collection.price} ETH
-              </div>
+              </div> */}
               
               {/* 판매 상태 */}
-              {collection.status === 'notsell' && (
-                <div className='mt-2 rounded bg-red-500 p-2 text-center text-white'>
-                  현재 판매가 종료된 상품입니다.
+              {/* {collection.status === 'notsell' && (
+                <div className='mt-2 mb-5 rounded bg-red-500 p-2 text-center text-white'>
+                  현재 판매하지 않는 상품입니다.
                 </div>
-              )}
+              )} */}
             </div>
             
             {/* 태그 */}

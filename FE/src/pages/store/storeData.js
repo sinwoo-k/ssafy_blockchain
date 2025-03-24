@@ -1,3 +1,5 @@
+import { ColorLens } from "@mui/icons-material";
+
 // src/data/dummyData.js
 export const genres = [
     '판타지',
@@ -39,11 +41,12 @@ export const genres = [
       price: 0.35,
       status: 'sell',
       image: '/api/placeholder/300/302',
+      collectionId:13,
     },
     {
       id: 4,
-      title: '드라마 웹툰 포스터',
-      category: '굿즈',
+      title: '드라마 웹툰 ',
+      category: '웹툰',
       genre: '드라마',
       price: 0.08,
       status: 'notsell',
@@ -60,8 +63,8 @@ export const genres = [
     },
     {
       id: 6,
-      title: '코미디 캐릭터 인형',
-      category: '굿즈',
+      title: '코미디 웹툰',
+      category: '웹툰',
       genre: '코미디',
       price: 2.8,
       status: 'sell',
@@ -102,6 +105,7 @@ export const genres = [
       price: 1.8,
       status: 'sell',
       image: '/api/placeholder/300/309',
+      collectionId:20,
     },
     {
       id: 11,
@@ -111,6 +115,7 @@ export const genres = [
       price: 0.5,
       status: 'sell',
       image: '/api/placeholder/300/310',
+      collectionId : 1,
     },
     {
       id: 12,
@@ -120,6 +125,7 @@ export const genres = [
       price: 1.7,
       status: 'sell',
       image: '/api/placeholder/300/311',
+      collectionId:2,
     },
     {
       id: 13,
@@ -138,6 +144,7 @@ export const genres = [
       price: 2,
       status: 'notsell',
       image: '/api/placeholder/300/313',
+      collectionId:4
     },
     {
       id: 15,
@@ -156,6 +163,7 @@ export const genres = [
       price: 3.2,
       status: 'sell',
       image: '/api/placeholder/300/315',
+      collectionId:6
     },
     {
       id: 17,
@@ -165,6 +173,7 @@ export const genres = [
       price: 4,
       status: 'sell',
       image: '/api/placeholder/300/316',
+      collectionId:7,
     },
     {
       id: 18,
@@ -174,6 +183,7 @@ export const genres = [
       price: 0.9,
       status: 'notsell',
       image: '/api/placeholder/300/317',
+      collectionId: 8
     },
     {
       id: 19,
@@ -183,6 +193,7 @@ export const genres = [
       price: 2.3,
       status: 'sell',
       image: '/api/placeholder/300/318',
+      collectionId:9,
     },
     {
       id: 20,
