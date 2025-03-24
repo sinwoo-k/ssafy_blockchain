@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
 
 // 아이콘
@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
-const MyWebtoonCreate = () => {
+const MyWebtoonUpdate = () => {
   const [webtoonName, setWebtoonName] = useState('') // 웹툰명
   const genreList = [
     '판타지',
@@ -94,10 +94,32 @@ const MyWebtoonCreate = () => {
       console.log(payload)
     }
   }
+
+  const getWebtoonData = () => {
+    const response = {
+      webtoonName: '테스트',
+      genre: '판타지',
+      tags: ['태그1', '태그2'],
+      summary: '테스트 데이터입니다.',
+      adaptable: 'Y',
+    }
+    setWebtoonName(response.webtoonName)
+    setGenre(response.genre)
+    setTags(response.tags)
+    setSummary(response.summary)
+    setAdaptable(response.adaptable === 'Y' ? true : false)
+  }
+
+  useEffect(() => {
+    // mount
+    getWebtoonData()
+    // unmount
+    return () => {}
+  }, [])
   return (
     <div className='flex justify-center py-[60px]'>
       <div className='w-[1000px] py-20'>
-        <h1 className='mb-15 text-xl'>신규 웹툰 등록</h1>
+        <h1 className='mb-15 text-xl'>내 웹툰 수정하기</h1>
         <div className='flex flex-col gap-10'>
           {/* 웹툰 명 */}
           <div className='flex gap-3'>
@@ -298,41 +320,12 @@ const MyWebtoonCreate = () => {
               )}
             </div>
           </div>
-          {/* 약관 동의 */}
-          <div>
-            <p>
-              저작권 등 다른 사람의 권리를 침해하거나 명예를 훼손하는 게시물은
-              이용약관 및 관련 법률에 의해 제재를 받으실 수 있습니다.
-              <br />
-              성인물, 폭력물 등의 게시물은 통보없이 삭제될 수 있습니다.
-            </p>
-            <div className='flex items-center gap-3'>
-              <div className='flex h-[48px] items-center'>
-                {confirmAgreement ? (
-                  <div onClick={() => setConfirmAgreement(false)}>
-                    <CheckBoxIcon
-                      sx={{ fontSize: 40 }}
-                      className='text-chaintoon cursor-pointer'
-                    />
-                  </div>
-                ) : (
-                  <div onClick={() => setConfirmAgreement(true)}>
-                    <CheckBoxOutlineBlankIcon
-                      sx={{ fontSize: 40 }}
-                      className='cursor-pointer'
-                    />
-                  </div>
-                )}
-              </div>
-              <p className='text-lg'>동의합니다.</p>
-            </div>
-          </div>
           <div className='w-full'>
             <button
               className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
               onClick={submitWebtoonForm}
             >
-              등록하기
+              수정하기
             </button>
           </div>
         </div>
@@ -341,4 +334,4 @@ const MyWebtoonCreate = () => {
   )
 }
 
-export default MyWebtoonCreate
+export default MyWebtoonUpdate

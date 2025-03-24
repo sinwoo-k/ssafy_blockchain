@@ -84,7 +84,7 @@ const MyWebtoon = () => {
             </div>
           ) : (
             webtoons.map((webtoon) => (
-              <Link key={webtoon.id}>
+              <Link key={webtoon.id} to={`/myworks/webtoon/${webtoon.id}`}>
                 <MyWebtoonCard webtoon={webtoon} />
               </Link>
             ))
