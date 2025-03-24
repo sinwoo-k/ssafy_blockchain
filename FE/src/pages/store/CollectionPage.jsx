@@ -1,9 +1,8 @@
 // CollectionPage.jsx
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Loader from '../../components/common/Loader'
-import ProductList from '../../components/store/ProductList'
-import CollectionDetailInfo from '../../components/store/CollectionDetailInfo' // 별도 구현한 컬렉션 디테일 컴포넌트
+import CollectionDetailInfo from '../../components/store/CollectionDetailInfo'
 import { dummyProducts } from './storeData'
 
 // 더미 에피소드 데이터 생성 함수
@@ -15,7 +14,8 @@ const generateDummyEpisodes = (count, webtoonId, startId = 0) => {
     price: 0.05 + (Math.random() * 0.1).toFixed(2) * 1,
     uploadDate: `2025-0${Math.floor(Math.random() * 9) + 1}-${Math.floor(Math.random() * 28) + 1}`,
     image: `/api/placeholder/300/${320 + i}`,
-    status: Math.random() > 0.2 ? 'sell' : 'notsell'
+    status: Math.random() > 0.2 ? 'sell' : 'notsell',
+    category: '웹툰회차' // 웹툰 카테고리로 설정하여 구매 페이지에서 구분
   }))
 }
 
@@ -46,6 +46,7 @@ const generateDummyTags = (genre) => {
 
 const CollectionPage = () => {
   const { collectionId } = useParams()
+  const navigate = useNavigate()
   const [collection, setCollection] = useState(null)
   const [relatedItems, setRelatedItems] = useState([])
   const [episodes, setEpisodes] = useState([])
@@ -55,14 +56,11 @@ const CollectionPage = () => {
 
   useEffect(() => {
     console.log("CollectionPage mounted with ID:", collectionId);
-    console.log("Available products:", dummyProducts);
     
     // API 호출 지연 시뮬레이션
     setTimeout(() => {
       // 컬렉션 정보 가져오기 (실제로는 API 호출)
       const foundCollection = dummyProducts.find(p => p.id === parseInt(collectionId));
-      
-      console.log("Found collection:", foundCollection);
       
       if (foundCollection) {
         // 작가 정보 추가 (웹툰인 경우)
@@ -92,6 +90,11 @@ const CollectionPage = () => {
       setIsLoading(false)
     }, 800)
   }, [collectionId])
+
+  // 상품 페이지 이동 함수
+  const navigateToProduct = (productId) => {
+    navigate(`/store/product/${productId}`);
+  }
 
   if (isLoading) {
     return <Loader />
@@ -177,7 +180,7 @@ const CollectionPage = () => {
         
         {/* 컨텐츠 영역 */}
         {activeTab === '회차' ? (
-          // 회차 리스트 표시
+          // 회차 리스트 표시 - 피그마 디자인에 맞게 수정
           <div>
             <div className='mb-4 flex justify-between'>
               <span>총 {episodes.length}화</span>
@@ -190,9 +193,8 @@ const CollectionPage = () => {
             {episodes.length > 0 ? (
               <div className='border-t border-gray-700'>
                 {episodes.map((episode) => (
-                  <Link 
+                  <div 
                     key={episode.id} 
-                    to={`/store/product/${episode.id}`}
                     className='border-b border-gray-700 hover:bg-gray-800'
                   >
                     <div className='flex h-[150px] items-center gap-8 px-4'>
@@ -203,7 +205,7 @@ const CollectionPage = () => {
                           className='h-full w-full rounded-lg object-cover' 
                         />
                       </div>
-                      <div>
+                      <div className='flex-1'>
                         <h3 className='mb-2 text-xl'>{episode.title}</h3>
                         <div className='flex gap-4 text-gray-400'>
                           <span>{episode.price.toFixed(2)} ETH</span>
@@ -213,8 +215,22 @@ const CollectionPage = () => {
                           )}
                         </div>
                       </div>
+                      {/* 구매 버튼 - 상세 페이지로 이동하도록 수정 */}
+                      <div>
+                        <button 
+                          onClick={() => navigateToProduct(episode.id)}
+                          disabled={episode.status === 'notsell'}
+                          className={`flex items-center rounded-md px-4 py-2 ${
+                            episode.status === 'notsell'
+                              ? 'cursor-not-allowed bg-gray-700 text-gray-400'
+                              : 'bg-blue-600 hover:bg-blue-500'
+                          }`}
+                        >
+                          {episode.status === 'notsell' ? '판매 종료' : '구매하기'}
+                        </button>
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -231,7 +247,32 @@ const CollectionPage = () => {
             </h2>
             
             {getFilteredItems().length > 0 ? (
-              <ProductList products={getFilteredItems()} />
+              <div className='grid grid-cols-4 gap-6'>
+                {getFilteredItems().map(item => (
+                  <div key={item.id} className='overflow-hidden rounded-lg border border-gray-800 hover:border-gray-600'>
+                    <div className='relative h-[250px] w-full overflow-hidden'>
+                      <img 
+                        src={item.image} 
+                        alt={item.title} 
+                        className='h-full w-full object-cover transition duration-300 hover:scale-105' 
+                      />
+                    </div>
+                    <div className='p-4'>
+                      <h3 className='mb-2 text-lg font-medium'>{item.title}</h3>
+                      <div className='mb-3 flex items-center justify-between'>
+                        <span className='text-gray-400'>{item.genre}</span>
+                        <span className='font-bold'>{item.price.toFixed(2)} ETH</span>
+                      </div>
+                      <button 
+                        onClick={() => navigateToProduct(item.id)} 
+                        className='w-full rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500'
+                      >
+                        상세 보기
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className='py-10 text-center text-gray-400'>
                 <p>관련 {activeTab}가 없습니다.</p>

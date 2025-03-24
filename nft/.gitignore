@@ -17,9 +17,6 @@ build/
 # Solidity 커버리지 리포트 (테스트 커버리지 결과)
 coverage/
 
-# Express 빌드 결과 (예: dist 폴더 사용 시)
-dist/
-
 # IDE/에디터 관련 파일
 .vscode/
 .idea/
