@@ -6,7 +6,7 @@ import ReorderIcon from '@mui/icons-material/Reorder'
 
 const WebtoonViewerNavBar = ({ title, webtoon }) => {
   return (
-    <div className='border-text/50 fixed top-[60px] h-[60px] w-full border-b bg-black'>
+    <div className='border-text/50 fixed top-[60px] h-[60px] w-full border-b bg-neutral-800'>
       <div className='flex h-full justify-between px-5'>
         {/* 정보 */}
         <div className='flex items-center gap-5 text-lg'>

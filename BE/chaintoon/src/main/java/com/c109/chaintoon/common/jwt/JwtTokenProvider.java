@@ -1,6 +1,7 @@
 package com.c109.chaintoon.common.jwt;
 
 
+import com.c109.chaintoon.common.exception.ServerException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +108,7 @@ public class JwtTokenProvider {
             throw e; // 그대로 다시 던짐
         } catch (JwtException e) {
             log.error("Invalid token: {}", e.getMessage());
-            throw new RuntimeException("Invalid token", e);
+            throw new ServerException("유효하지 않은 토큰입니다.");
         }
     }
     /**

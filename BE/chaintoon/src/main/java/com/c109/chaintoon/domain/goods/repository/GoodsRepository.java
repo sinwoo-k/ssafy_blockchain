@@ -4,10 +4,11 @@ import com.c109.chaintoon.domain.goods.entity.Goods;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface GoodsRepository extends JpaRepository<Goods, Integer> {
+public interface GoodsRepository extends JpaRepository<Goods, Integer>, JpaSpecificationExecutor<Goods> {
 
     // 웹툰 id별 굿즈 총개수 조회
     int countByWebtoonId(Integer webtoonId);

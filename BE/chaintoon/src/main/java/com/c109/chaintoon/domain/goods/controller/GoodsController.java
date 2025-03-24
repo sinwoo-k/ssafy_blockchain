@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/goods")
 @RequiredArgsConstructor
@@ -58,4 +60,14 @@ public class GoodsController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    // 굿즈 검색
+    @GetMapping("/search")
+    public ResponseEntity<?> searchGoods(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize,
+            @RequestParam String keyword
+    ) {
+        List<GoodsListResponseDto> goodsList = goodsService.searchGoods(page, pageSize, keyword);
+        return new ResponseEntity<>(goodsList,HttpStatus.OK);
+    }
 }

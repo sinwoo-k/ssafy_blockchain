@@ -11,7 +11,7 @@ public class CommentRequestDto {
     private Integer commentId;
     private Integer userId;
     private Integer usageId;
-    private String usageType;
+    private String type;
     private Integer parentId;
     private String content;
 }
