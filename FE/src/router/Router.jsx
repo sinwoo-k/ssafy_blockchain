@@ -15,6 +15,9 @@ const MyWebtoon = lazy(() => import('../pages/myworks/MyWebtoon'))
 const MyWebtoonCreate = lazy(() => import('../pages/myworks/MyWebtoonCreate'))
 const MyWebtoonDetail = lazy(() => import('../pages/myworks/MyWebtoonDetail'))
 const MyWebtoonUpdate = lazy(() => import('../pages/myworks/MyWebtoonUpdate'))
+const MyWebtoonEpisodeCreate = lazy(
+  () => import('../pages/myworks/MyWebtoonEpisodeCreate'),
+)
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
@@ -91,6 +94,14 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Loader />}>
                 <MyWebtoonUpdate />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'webtoon/episode/create',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyWebtoonEpisodeCreate />
               </Suspense>
             ),
           },
