@@ -119,7 +119,7 @@ const MyWebtoonUpdate = () => {
   return (
     <div className='flex justify-center py-[60px]'>
       <div className='w-[1000px] py-20'>
-        <h1 className='mb-15 text-xl'>신규 웹툰 등록</h1>
+        <h1 className='mb-15 text-xl'>내 웹툰 수정하기</h1>
         <div className='flex flex-col gap-10'>
           {/* 웹툰 명 */}
           <div className='flex gap-3'>
