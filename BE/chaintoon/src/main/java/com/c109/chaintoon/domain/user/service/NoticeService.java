@@ -1,6 +1,6 @@
 package com.c109.chaintoon.domain.user.service;
 
-import com.c109.chaintoon.common.code.Codes;
+import com.c109.chaintoon.domain.user.code.NoticeType;
 import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
@@ -121,7 +121,7 @@ public class NoticeService {
 
             Notice notice = Notice.builder()
                     .userId(webtoon.getUserId()) // 원작자에게 알림 전송
-                    .type(Codes.NoticeType.SECONDARY_CREATE.getValue())
+                    .type(NoticeType.SECONDARY_CREATE.getValue())
                     .metadata(metadataJson)
                     .build();
 
@@ -146,7 +146,7 @@ public class NoticeService {
 
             Notice notice = Notice.builder()
                     .userId(auctionItem.getBidderId()) // 기존 입찰자에게 알림 전송
-                    .type(Codes.NoticeType.OVERBID.getValue())
+                    .type(NoticeType.OVERBID.getValue())
                     .metadata(metadataJson)
                     .build();
 
@@ -178,7 +178,7 @@ public class NoticeService {
 
             Notice notice = Notice.builder()
                     .userId(tradingHistory.getBuyerId()) // 구매자에게 알림 전송
-                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .type(NoticeType.NFT_PURCHASE.getValue())
                     .metadata(metadataJson)
                     .build();
 
@@ -204,7 +204,7 @@ public class NoticeService {
 
             Notice notice = Notice.builder()
                     .userId(tradingHistory.getSellerId()) // 판매자에게 알림 전송
-                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .type(NoticeType.NFT_PURCHASE.getValue())
                     .metadata(metadataJson)
                     .build();
 
@@ -230,7 +230,7 @@ public class NoticeService {
 
             Notice notice = Notice.builder()
                     .userId(webtoon.getUserId()) // 원작자에게 알림 전송
-                    .type(Codes.NoticeType.NFT_PURCHASE.getValue())
+                    .type(NoticeType.NFT_PURCHASE.getValue())
                     .metadata(metadataJson)
                     .build();
 
