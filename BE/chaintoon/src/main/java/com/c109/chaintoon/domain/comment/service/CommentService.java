@@ -49,13 +49,13 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> getCommentList(Integer usageId, String usageType, int page, int pageSize) {
+    public List<CommentResponseDto> getCommentList(Integer usageId, String type, int page, int pageSize) {
         // 페이징 처리를 위한 Pageable 객체 생성
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
-        // usageId, usageType 일치하고 삭제되지 않은 댓글 목록 조회
+        // usageId, type 일치하고 삭제되지 않은 댓글 목록 조회
         Page<Comment> commentPage = commentRepository
-                .findByUsageIdAndUsageTypeAndParentIdAndDeleted(usageId, usageType, 0,"N", pageable);
+                .findByUsageIdAndTypeAndParentIdAndDeleted(usageId, type, 0,"N", pageable);
 
         // Comment 엔티티 Dto 변환
         return commentPage.getContent().stream()
