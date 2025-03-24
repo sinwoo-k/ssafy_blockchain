@@ -72,7 +72,9 @@ const MyWebtoon = () => {
         </div>
         <div className='mb-1 flex items-end justify-between'>
           <p>총 {webtoons.length}개</p>
-          <Link className='hover:text-chaintoon'>신규 등록</Link>
+          <Link to={'/myworks/webtoon/create'} className='hover:text-chaintoon'>
+            신규 등록
+          </Link>
         </div>
         <div className='border-text border-t'>
           {webtoons.length === 0 ? (
