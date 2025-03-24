@@ -7,10 +7,9 @@ CREATE TABLE `auction_item` (
   `buy_now_price` double DEFAULT NULL,
   `start_time` datetime DEFAULT NULL,
   `end_time` datetime DEFAULT NULL,
-  `ended` varchar(1) DEFAULT NULL,
+  `ended` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `sucess` char(1) DEFAULT NULL,
-  `success` varchar(1) DEFAULT NULL,
+  `success` char(1) DEFAULT NULL,
   PRIMARY KEY (`auction_item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -22,7 +21,7 @@ CREATE TABLE `comment` (
   `type` varchar(50) DEFAULT NULL,
   `parent_id` int DEFAULT '0',
   `content` varchar(255) DEFAULT NULL,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `like_count` bigint DEFAULT NULL,
@@ -36,7 +35,7 @@ CREATE TABLE `comment_preference` (
   `liked_id` int NOT NULL AUTO_INCREMENT,
   `comment_id` int NOT NULL,
   `user_id` int NOT NULL,
-  `liked` varchar(1) DEFAULT NULL,
+  `liked` char(1) DEFAULT NULL,
   PRIMARY KEY (`liked_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -54,7 +53,7 @@ CREATE TABLE `episode` (
   `rating_count` bigint DEFAULT NULL,
   `previous_episode_id` int DEFAULT '0',
   `next_episode_id` int DEFAULT '0',
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`episode_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -65,7 +64,7 @@ CREATE TABLE `episode_image` (
   `episode_id` int NOT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `image_order` int DEFAULT NULL,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`episode_image_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -79,20 +78,20 @@ CREATE TABLE `fanart` (
   `description` varchar(255) DEFAULT NULL,
   `fanart_image` varchar(255) DEFAULT NULL,
   `comment` int DEFAULT '0',
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `like_count` int DEFAULT NULL,
   PRIMARY KEY (`fanart_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- fanart_preference: table
 CREATE TABLE `fanart_preference` (
   `liked_id` int NOT NULL AUTO_INCREMENT,
   `fanart_id` int NOT NULL,
-  `liked` varchar(1) DEFAULT NULL,
+  `liked` char(1) DEFAULT NULL,
   `user_id` int NOT NULL,
   PRIMARY KEY (`liked_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- favorite_webtoon: table
 CREATE TABLE `favorite_webtoon` (
@@ -116,10 +115,10 @@ CREATE TABLE `goods` (
   `goods_name` varchar(50) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   `goods_image` varchar(255) DEFAULT NULL,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`goods_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- nft: table
 CREATE TABLE `nft` (
@@ -141,12 +140,12 @@ CREATE TABLE `notice` (
   `user_id` int NOT NULL,
   `type` varchar(50) DEFAULT NULL,
   `item_id` int DEFAULT NULL,
-  `checked` varchar(1) DEFAULT NULL,
+  `checked` char(1) DEFAULT NULL,
   `metadata` json DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   PRIMARY KEY (`notice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- rating: table
 CREATE TABLE `rating` (
@@ -188,11 +187,11 @@ CREATE TABLE `user` (
   `follower` int DEFAULT NULL,
   `following` int DEFAULT NULL,
   `join_date` varchar(10) DEFAULT NULL,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` varchar(1) DEFAULT NULL,
+  `status` char(1) DEFAULT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- wallet: table
 CREATE TABLE `wallet` (
@@ -204,7 +203,7 @@ CREATE TABLE `wallet` (
   `recovery_phrase` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`wallet_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- webtoon: table
 CREATE TABLE `webtoon` (
@@ -213,7 +212,7 @@ CREATE TABLE `webtoon` (
   `webtoon_name` varchar(50) DEFAULT NULL,
   `genre` varchar(10) DEFAULT NULL,
   `summary` varchar(500) DEFAULT NULL,
-  `adaptable` varchar(1) DEFAULT NULL,
+  `adaptable` char(1) DEFAULT NULL,
   `garo_thumbnail` varchar(255) DEFAULT NULL,
   `sero_thumbnail` varchar(255) DEFAULT NULL,
   `last_upload_date` varchar(10) DEFAULT NULL,
@@ -221,7 +220,7 @@ CREATE TABLE `webtoon` (
   `view_count` bigint DEFAULT NULL,
   `rating_sum` bigint DEFAULT NULL,
   `rating_count` bigint DEFAULT NULL,
-  `deleted` varchar(1) DEFAULT NULL,
+  `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`webtoon_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
