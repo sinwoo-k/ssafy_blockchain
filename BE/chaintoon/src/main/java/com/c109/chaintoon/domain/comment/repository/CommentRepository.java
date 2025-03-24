@@ -11,7 +11,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
     Page<Comment> findByParentIdAndDeleted(Integer parentId, String deleted, Pageable pageable);
 
-    Page<Comment> findByUsageIdAndUsageTypeAndParentIdAndDeleted(Integer usageId, String usageType, Integer parentId, String deleted, Pageable pageable);
+    Page<Comment> findByUsageIdAndTypeAndParentIdAndDeleted(Integer usageId, String type, Integer parentId, String deleted, Pageable pageable);
 
     Optional<Comment> findByCommentIdAndDeleted(Integer commentId, String deleted);
 }
