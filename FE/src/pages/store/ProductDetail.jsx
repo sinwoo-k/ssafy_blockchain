@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom'
 import Loader from '../../components/common/Loader'
 import { useSelector } from 'react-redux'
 import { dummyProducts } from './storeData'
+import BidHistoryModal from '../../components/store/BidHistoryModal'
 
 // 아이콘
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
@@ -12,18 +13,21 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import StarIcon from '@mui/icons-material/Star'
 import BookmarkIcon from '@mui/icons-material/Bookmark'
 import VisibilityIcon from '@mui/icons-material/Visibility'
-import HistoryIcon from '@mui/icons-material/History'
-import CloseIcon from '@mui/icons-material/Close'
 
 // 더미 입찰 기록 생성 함수
 const generateBidHistory = (basePrice) => {
   const history = [];
   const baseDate = new Date();
   
-  for(let i = 0; i < 10; i++) {
+  for(let i = 0; i < 15; i++) { // 15개 데이터 생성
     const date = new Date(baseDate);
     date.setDate(date.getDate() - i);
+    date.setHours(Math.floor(Math.random() * 24));
+    date.setMinutes(Math.floor(Math.random() * 60));
+    date.setSeconds(Math.floor(Math.random() * 60));
+    
     const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const formattedTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
     
     // 랜덤 가격 (기본 가격의 ±10% 범위 내)
     const price = basePrice * (0.9 + Math.random() * 0.2);
@@ -33,6 +37,7 @@ const generateBidHistory = (basePrice) => {
     history.push({
       id: i + 1,
       date: formattedDate,
+      time: formattedTime,
       user,
       price: price.toFixed(2)
     });
@@ -143,10 +148,16 @@ const ProductDetail = () => {
     setTimeout(() => {
       alert(`${bidPrice} ETH 금액으로 입찰이 완료되었습니다!`);
       
+      // 현재 날짜와 시간 설정
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const formattedTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
       // 입찰 기록에 새 항목 추가 (임시)
       const newBid = {
         id: bidHistory.length + 1,
-        date: new Date().toISOString().split('T')[0],
+        date: formattedDate,
+        time: formattedTime,
         user: 'me',
         price: bidPrice.toFixed(2)
       };
@@ -199,7 +210,6 @@ const ProductDetail = () => {
     );
   }
 
-  // 모든 상품에 대해 동일한 UI 적용
   return (
     <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
       <div className='mx-auto w-[1160px]'>
@@ -262,13 +272,15 @@ const ProductDetail = () => {
               {/* 거래 기록 */}
               <div className='mb-4 flex items-center justify-between'>
                 <div className='text-lg font-medium'>거래 기록</div>
-                <button 
-                  onClick={() => setShowBidHistoryModal(true)}
-                  className='flex items-center text-sm text-[#3cc3ec] hover:text-[#2aabda]'
-                >
-                  <HistoryIcon sx={{ fontSize: 16, marginRight: 0.5 }} />
-                  기록보기
-                </button>
+                <div className='flex items-center'>
+                  <span className='mr-2'>15회</span>
+                  <button 
+                    onClick={() => setShowBidHistoryModal(true)}
+                    className='text-[#3cc3ec] hover:text-[#2aabda]'
+                  >
+                    [기록보기]
+                  </button>
+                </div>
               </div>
               
               {/* 입찰 단위 표시 */}
@@ -424,56 +436,15 @@ const ProductDetail = () => {
           </div>
         </div>
         
-        {/* 입찰 기록 모달 */}
-        {showBidHistoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-            <div className="w-[500px] rounded-lg bg-[#1a1a1a] p-5 text-white shadow-xl">
-              {/* 모달 헤더 */}
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold">입찰 기록</h2>
-                <button 
-                  onClick={() => setShowBidHistoryModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <CloseIcon />
-                </button>
-              </div>
-              
-              {/* 입찰 기록 테이블 */}
-              <div className="mb-4 max-h-[400px] overflow-y-auto">
-                <table className="w-full">
-                  <thead className="border-b border-gray-700">
-                    <tr>
-                      <th className="p-2 text-left">#</th>
-                      <th className="p-2 text-left">입찰 일자</th>
-                      <th className="p-2 text-left">사용자</th>
-                      <th className="p-2 text-right">가격</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bidHistory.map((record) => (
-                      <tr key={record.id} className="border-b border-gray-800">
-                        <td className="p-2">{record.id}</td>
-                        <td className="p-2">{record.date}</td>
-                        <td className="p-2">{record.user}</td>
-                        <td className="p-2 text-right">{record.price} ETH</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* 페이지네이션 (예시) */}
-              <div className="flex justify-center">
-                <button className="mx-1 rounded-md bg-gray-800 px-3 py-1 hover:bg-gray-700">1</button>
-                <button className="mx-1 rounded-md bg-gray-700 px-3 py-1 hover:bg-gray-600">2</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 입찰 기록 모달 컴포넌트 */}
+        <BidHistoryModal 
+          isOpen={showBidHistoryModal}
+          onClose={() => setShowBidHistoryModal(false)}
+          bidHistory={bidHistory}
+        />
       </div>
     </div>
   );
-}
+};
 
-export default ProductDetail
+export default ProductDetail;
