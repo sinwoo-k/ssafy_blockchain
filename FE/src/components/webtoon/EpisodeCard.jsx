@@ -16,14 +16,16 @@ const EpisodeCard = ({ episode }) => {
       {/* 회차 정보 */}
       <div className='flex h-[80px] flex-col justify-evenly'>
         <p className=''>{episode.title}</p>
-        <div className='flex items-center gap-5'>
+        <div className='flex items-center gap-2'>
           <span className='flex items-center gap-1'>
             <StarIcon sx={{ color: '#ffff19' }} />
             <span className='inline-block w-[45px] translate-y-[1px] transform'>
               4.56
             </span>
           </span>
-          <span className='text-text/50'>{episode.uploadDate}</span>
+          <span className='text-text/50 inline-block translate-y-[1px] transform'>
+            {episode.uploadDate}
+          </span>
         </div>
       </div>
     </div>

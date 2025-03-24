@@ -56,7 +56,7 @@ const MyWebtoonImageCropModal = ({ image, setImage, setShowModal, type }) => {
           </div>
           <div className='mt-2 flex justify-center gap-5'>
             <button className='text-chaintoon' onClick={handleCropConfirm}>
-              크롭 완료
+              이미지 등록
             </button>
             <button
               className='text-red-600'
