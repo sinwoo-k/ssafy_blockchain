@@ -21,11 +21,11 @@ public class CommentController {
     @GetMapping
     public ResponseEntity<?> getCommentList(
             @RequestParam Integer usageId,
-            @RequestParam String usageType,
+            @RequestParam String type,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<CommentResponseDto> commentList = commentService.getCommentList(usageId, usageType, page, pageSize);
+        List<CommentResponseDto> commentList = commentService.getCommentList(usageId, type, page, pageSize);
         return new ResponseEntity<>(commentList, HttpStatus.OK);
     }
 
