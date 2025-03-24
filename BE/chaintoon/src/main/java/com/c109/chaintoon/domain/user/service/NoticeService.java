@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.user.service;
 
+import com.c109.chaintoon.common.socket.service.SocketService;
 import com.c109.chaintoon.domain.user.code.NoticeType;
 import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final ObjectMapper objectMapper;
+    private final SocketService socketService;
 
     // JSON 문자열을 JsonNode 변환하는 메서드
     private JsonNode convertStringToJsonNode(String jsonString) {
@@ -130,6 +132,9 @@ public class NoticeService {
         catch (JsonProcessingException e) {
             throw new ServerException("알림 생성이 실패했습니다.");
         }
+
+        // 소켓 메시지 전송
+        socketService.sendNewNotice(webtoon.getUserId());
     }
 
     // TODO: 소연 - 경매장 기능 구현 후 알림 생성
@@ -155,6 +160,9 @@ public class NoticeService {
         catch (JsonProcessingException e) {
             throw new ServerException("알림 생성이 실패했습니다.");
         }
+
+        // 소켓 메시지 전송
+        socketService.sendNewNotice(auctionItem.getBidderId());
     }
 
     // 계약 체결 시 호출
@@ -187,6 +195,9 @@ public class NoticeService {
         catch (JsonProcessingException e) {
             throw new ServerException("알림 생성이 실패했습니다.");
         }
+
+        // 소켓 메시지 전송
+        socketService.sendNewNotice(tradingHistory.getBuyerId());
     }
 
     // 판매자에게 판매 알림
@@ -213,6 +224,9 @@ public class NoticeService {
         catch (JsonProcessingException e) {
             throw new ServerException("알림 생성이 실패했습니다.");
         }
+
+        // 소켓 메시지 전송
+        socketService.sendNewNotice(tradingHistory.getSellerId());
     }
 
     // 2차 창작물 판매 시 원작자에게 알림
@@ -239,6 +253,9 @@ public class NoticeService {
         catch (JsonProcessingException e) {
             throw new ServerException("알림 생성이 실패했습니다.");
         }
+
+        // 소켓 메시지 전송
+        socketService.sendNewNotice(webtoon.getUserId());
     }
 
     // TODO: 도현 - NFT 발행 기능 구현 후, 2차 창작물일 경우 알림 생성
