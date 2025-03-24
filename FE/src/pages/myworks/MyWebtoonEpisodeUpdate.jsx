@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
 
 // 아이콘
@@ -8,7 +9,9 @@ import MyWebtoonEpisodePreview from '../../components/myworks/MyWebtoonEpisodePr
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
-const MyWebtoonEpisodeCreate = () => {
+const MyWebtoonEpisodeUpdate = () => {
+  const params = useParams()
+
   const [episodeName, setEpisodeName] = useState('') // 회차명
   const [thumbnail, setThumbnail] = useState(null) // 썸네일
   const thumbnailRef = useRef(null)
@@ -77,7 +80,7 @@ const MyWebtoonEpisodeCreate = () => {
     })
   }
 
-  // 회차 등록 함수
+  // 회차 수정 함수
   const submitEpisodeForm = (event) => {
     event.preventDefault()
     if (episodeName.trim() === '') {
@@ -97,10 +100,25 @@ const MyWebtoonEpisodeCreate = () => {
       console.log(payload)
     }
   }
+
+  const getEpisodeData = () => {
+    console.log('에피소드 아이디:', params.episodeId)
+    setEpisodeName('테스트 데이터')
+    setWriterComment('테스트 데이터 입니다.')
+    setCommentable(true)
+  }
+
+  useEffect(() => {
+    // mount
+    getEpisodeData()
+    // unmount
+    return () => {}
+  }, [])
+
   return (
     <div className='flex justify-center py-[60px]'>
       <div className='w-[1000px] py-20'>
-        <h1 className='mb-15 text-xl'>신규 회차 등록</h1>
+        <h1 className='mb-15 text-xl'>회차 수정하기</h1>
         <div className='flex flex-col gap-10'>
           {/* 회차명 */}
           <div className='flex gap-3'>
@@ -172,7 +190,7 @@ const MyWebtoonEpisodeCreate = () => {
                     <p
                       key={`episode-image-${index}`}
                       className={`${selectEpisodeImage && selectEpisodeImage.name === img.name && 'bg-chaintoon text-black'} 
-                      cursor-pointer px-2`}
+                  cursor-pointer px-2`}
                       onClick={() =>
                         setSelectEpisodeImage({ name: img.name, index: index })
                       }
@@ -291,4 +309,4 @@ const MyWebtoonEpisodeCreate = () => {
   )
 }
 
-export default MyWebtoonEpisodeCreate
+export default MyWebtoonEpisodeUpdate
