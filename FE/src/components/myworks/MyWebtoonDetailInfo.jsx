@@ -7,7 +7,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
 
-const WebtoonDetailInfo = () => {
+const MyWebtoonDetailInfo = ({ webtoonId }) => {
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
 
@@ -109,33 +109,45 @@ const WebtoonDetailInfo = () => {
           </div>
         </div>
         {/* 버튼 */}
-        <div className='mt-10 flex gap-10 text-black'>
-          <button
-            className='bg-chaintoon h-[45px] w-[250px] 
-            cursor-pointer rounded'
-          >
-            관심 웹툰 등록
-          </button>
-          <Link>
+        <div className='mt-10 flex justify-between text-black'>
+          <div className='flex gap-10'>
+            <Link>
+              <button
+                className='bg-chaintoon h-[45px] w-[250px] 
+              cursor-pointer rounded'
+              >
+                신규 회차 등록
+              </button>
+            </Link>
+            <Link>
+              <button
+                className='bg-chaintoon h-[45px] w-[250px] 
+              cursor-pointer rounded'
+              >
+                굿즈 관리하기
+              </button>
+            </Link>
+          </div>
+          <div className='flex gap-5'>
+            <Link to={`/myworks/webtoon/${webtoonId}/update`}>
+              <button
+                className='bg-chaintoon h-[45px] w-[150px] 
+              cursor-pointer rounded'
+              >
+                작품 정보 수정
+              </button>
+            </Link>
             <button
-              className='bg-chaintoon h-[45px] w-[250px] 
+              className='bg-chaintoon h-[45px] w-[150px] 
               cursor-pointer rounded'
             >
-              팬아트 보러가기
+              작품 삭제
             </button>
-          </Link>
-          <Link>
-            <button
-              className='bg-chaintoon h-[45px] w-[250px] 
-              cursor-pointer rounded'
-            >
-              스토어 바로가기
-            </button>
-          </Link>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export default WebtoonDetailInfo
+export default MyWebtoonDetailInfo
