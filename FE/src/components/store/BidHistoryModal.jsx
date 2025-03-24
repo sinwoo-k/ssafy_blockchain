@@ -20,14 +20,14 @@ const BidHistoryModal = ({ isOpen, onClose, bidHistory }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-      <div className="w-[600px] rounded-lg bg-[#111111] p-6 text-white shadow-xl border border-gray-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+      <div className="w-[600px] rounded-lg bg-white p-6 text-black shadow-xl border border-gray-200">
         {/* 모달 헤더 */}
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">입찰 기록</h2>
+        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
+          <h2 className="text-xl font-bold">입찰 기록</h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-500 hover:text-gray-700 transition-colors"
           >
             <CloseIcon />
           </button>
@@ -36,20 +36,22 @@ const BidHistoryModal = ({ isOpen, onClose, bidHistory }) => {
         {/* 입찰 기록 테이블 */}
         <div className="mb-6">
           <table className="w-full">
-            <thead className="border-b border-gray-800">
-              <tr>
-                <th className="pb-3 text-left text-gray-400 font-medium">#</th>
-                <th className="pb-3 text-left text-gray-400 font-medium">입찰 일시</th>
-                <th className="pb-3 text-left text-gray-400 font-medium">사용자</th>
-                <th className="pb-3 text-right text-gray-400 font-medium">가격</th>
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="pb-3 text-left text-gray-600 font-medium">#</th>
+                <th className="pb-3 text-left text-gray-600 font-medium">입찰 일시</th>
+                <th className="pb-3 text-left text-gray-600 font-medium">사용자</th>
+                <th className="pb-3 text-right text-gray-600 font-medium">가격</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.map((record) => (
-                <tr key={record.id} className="border-b border-gray-800 hover:bg-gray-900/50 transition-colors">
+                <tr key={record.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="py-3">{record.id}</td>
-                  <td className="py-3">{record.date} <span className="text-gray-400">{record.time}</span></td>
-                  <td className="py-3 text-[#3cc3ec]">{record.user}</td>
+                  <td className="py-3">
+                    {record.date} <span className="text-gray-500">{record.time}</span>
+                  </td>
+                  <td className="py-3 text-blue-600">{record.user}</td>
                   <td className="py-3 text-right font-medium">{record.price} ETH</td>
                 </tr>
               ))}
@@ -65,8 +67,8 @@ const BidHistoryModal = ({ isOpen, onClose, bidHistory }) => {
                 key={pageNumber}
                 className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
                   currentPage === pageNumber 
-                    ? 'bg-[#3cc3ec] text-black font-medium' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                    ? 'bg-blue-500 text-white font-medium' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
                 onClick={() => handlePageChange(pageNumber)}
               >
