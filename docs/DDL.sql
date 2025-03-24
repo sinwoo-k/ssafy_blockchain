@@ -126,9 +126,10 @@ CREATE TABLE `nft` (
   `webtoon_id` int NOT NULL,
   `user_id` int NOT NULL,
   `type` varchar(50) DEFAULT NULL,
+  `type_id` int DEFAULT '0',
   `token_id` int DEFAULT '0',
-  `contract_address` int DEFAULT '0',
-  `metadata_uri` varchar(255) DEFAULT NULL,
+  `contract_address` varchar(255) DEFAULT '0',
+  `metadata_uri` varchar(1024) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`nft_id`)
