@@ -186,6 +186,14 @@ public class UserService {
     // 팔로우
     @Transactional
     public void addFollow(Integer followerId, Integer followeeId) {
+        // 자신을 팔로우할 수 없음
+        if(followerId.equals(followeeId)) {
+            return;
+        }
+
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+
         // 복합키 생성
         FollowingId id = new FollowingId(followerId, followeeId);
 
@@ -195,13 +203,11 @@ public class UserService {
         }
 
         // 팔로우, 팔로워 수 증가
-        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
         followee.setFollower(followee.getFollower() + 1);
-        userRepository.save(followee);
-
-        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
         follower.setFollowing(follower.getFollowing() + 1);
+        userRepository.save(followee);
         userRepository.save(follower);
+
 
         // Following 엔티티 생성
         Following following = new Following(id);
@@ -213,6 +219,14 @@ public class UserService {
     // 팔로우 취소
     @Transactional
     public void removeFollow(Integer followerId, Integer followeeId) {
+        // 자신을 팔로우 취소할 수 없음
+        if(followerId.equals(followeeId)) {
+            return;
+        }
+
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+
         // 복합키 생성
         FollowingId id = new FollowingId(followerId, followeeId);
 
@@ -222,12 +236,9 @@ public class UserService {
         }
 
         // 팔로우, 팔로워 수 감소
-        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
         followee.setFollower(followee.getFollower() - 1);
-        userRepository.save(followee);
-
-        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
         follower.setFollowing(follower.getFollowing() - 1);
+        userRepository.save(followee);
         userRepository.save(follower);
 
         // 데이터베이스에서 삭제

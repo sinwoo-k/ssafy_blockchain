@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -39,13 +40,17 @@ public class SecurityConfig {
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("Authorization", "Refresh-Token", "Content-Type"));
-            config.setExposedHeaders(List.of("Authorization", "Refresh-Token")); // 노출할 헤더
             config.setAllowCredentials(true); // 쿠키 허용 여부
+            config.setExposedHeaders(List.of("Set-Cookie", "X-XSRF-TOKEN")); // 쿠키 관련 헤더
+            config.setMaxAge(3600L); // Pre-flight 캐싱 시간
             return config;
         }));
 
-        // 2. CSRF 비활성화 (REST API 형태)
-        http.csrf(AbstractHttpConfigurer::disable);
+        // 2. CSRF 보호 활성화
+        http.csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/api/auth/**") // 인증 엔드포인트 예외 처리
+        );
 
         // 3. URL별 권한 설정
         http.authorizeHttpRequests(auth -> auth
