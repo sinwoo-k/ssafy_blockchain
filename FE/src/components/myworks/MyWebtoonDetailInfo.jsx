@@ -111,7 +111,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
         {/* 버튼 */}
         <div className='mt-10 flex justify-between text-black'>
           <div className='flex gap-10'>
-            <Link>
+            <Link to={'/myworks/webtoon/episode/create'}>
               <button
                 className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded'

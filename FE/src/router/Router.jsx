@@ -15,6 +15,12 @@ const MyWebtoon = lazy(() => import('../pages/myworks/MyWebtoon'))
 const MyWebtoonCreate = lazy(() => import('../pages/myworks/MyWebtoonCreate'))
 const MyWebtoonDetail = lazy(() => import('../pages/myworks/MyWebtoonDetail'))
 const MyWebtoonUpdate = lazy(() => import('../pages/myworks/MyWebtoonUpdate'))
+const MyWebtoonEpisodeCreate = lazy(
+  () => import('../pages/myworks/MyWebtoonEpisodeCreate'),
+)
+const MyWebtoonEpisodeUpdate = lazy(
+  () => import('../pages/myworks/MyWebtoonEpisodeUpdate'),
+)
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
@@ -38,7 +44,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/webtoon/:id',
+        path: '/webtoon/:webtoonId',
         element: (
           <Suspense fallback={<Loader />}>
             <WebtoonDetail />
@@ -79,7 +85,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'webtoon/:id',
+            path: 'webtoon/:webtoonId',
             element: (
               <Suspense fallback={<Loader />}>
                 <MyWebtoonDetail />
@@ -87,10 +93,26 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'webtoon/:id/update',
+            path: 'webtoon/:webtoonId/update',
             element: (
               <Suspense fallback={<Loader />}>
                 <MyWebtoonUpdate />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'webtoon/episode/create',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyWebtoonEpisodeCreate />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'webtoon/episode/:episodeId/update',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyWebtoonEpisodeUpdate />
               </Suspense>
             ),
           },
