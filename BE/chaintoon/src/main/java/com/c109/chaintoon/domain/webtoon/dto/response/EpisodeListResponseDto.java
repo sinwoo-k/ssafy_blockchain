@@ -12,6 +12,7 @@ public class EpisodeListResponseDto {
     private Integer webtoonId;
     private String episodeName;
     private String uploadDate;
+    private String thumbnail;
     private Long commentCount;
     private Double rating;
 }
