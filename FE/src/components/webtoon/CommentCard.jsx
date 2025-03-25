@@ -21,7 +21,7 @@ const CommentCard = ({ comment }) => {
         <div className='border-chaintoon rounded-full border'>
           <img
             src=''
-            alt=''
+            alt='유저 프로필'
             className='bg-text/50 h-[30px] w-[30px] rounded-full'
           />
         </div>

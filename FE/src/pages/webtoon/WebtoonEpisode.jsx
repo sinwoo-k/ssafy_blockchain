@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
 import WebtoonEpisodeComment from '../../components/webtoon/WebtoonEpisodeComment'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
+import { getEpisode } from '../../utils/api/webtoonAPI'
 
 const dummyData = {
   title: '테스트 에피소드',
@@ -19,9 +21,13 @@ const dummyData = {
     'https://picsum.photos/600/800.jpg?ramdom=8',
     'https://picsum.photos/600/800.jpg?ramdom=9',
   ],
+  writerComment: '.',
+  rating: 10.0,
 }
 
 const WebtoonEpisode = () => {
+  const params = useParams()
+
   // 에피소드 데이터
   const [episode, setEpisode] = useState(dummyData)
 
@@ -53,6 +59,18 @@ const WebtoonEpisode = () => {
       setNavbarShow(!navbarShow)
     }
   }
+
+  const getData = async () => {
+    try {
+      const data = await getEpisode(params.episodeId)
+      console.log(data)
+    } catch (error) {
+      console.error('회차 불러오기 실패: ', error)
+    }
+  }
+  useEffect(() => {
+    getData()
+  }, [])
   useEffect(() => {
     // mount
     if (inView) {
@@ -73,14 +91,17 @@ const WebtoonEpisode = () => {
         <WebtoonViewerNavBar title={episode.title} webtoon={episode.webtoon} />
       )}
       {/* 웹툰 뷰어 */}
-      <div ref={ref} className='mb-32'>
+      <div ref={ref} className='mb-24'>
         <WebtoonViewer
           handleClickViewer={handleClickViewer}
           images={episode.images}
         />
       </div>
       {/* 유틸 기능 */}
-      <WebtoonEpisodeUtility />
+      <WebtoonEpisodeUtility
+        writerComment={episode.writerComment}
+        rating={episode.rating}
+      />
       {/* 댓글 */}
       <WebtoonEpisodeComment />
     </div>

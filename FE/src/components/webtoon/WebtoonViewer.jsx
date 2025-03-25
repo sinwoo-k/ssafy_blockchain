@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ProgressBar from '../common/ProgressBar'
 
 const WebtoonViewer = ({ handleClickViewer, images }) => {
+  const [isLoading, setIsLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
   // 캔바스
   const canvasRef = useRef(null)
 
@@ -17,13 +20,21 @@ const WebtoonViewer = ({ handleClickViewer, images }) => {
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
+    setIsLoading(true)
+
+    const totalImages = images.length
+    let loadedImages = 0
 
     const promises = images.map((url) => {
       return new Promise((resolve, reject) => {
         const img = new Image()
         img.src = url
         // img.crossOrigin = 'anonymous'
-        img.onload = () => resolve(img)
+        img.onload = () => {
+          loadedImages++
+          setProgress(Math.round((loadedImages / totalImages) * 100))
+          resolve(img)
+        }
         img.onerror = (err) => reject(err)
       })
     })
@@ -48,6 +59,7 @@ const WebtoonViewer = ({ handleClickViewer, images }) => {
           ctx.drawImage(img, 0, currentY)
           currentY += img.height
         })
+        setIsLoading(false)
       })
       .catch((err) => {
         console.error('이미지 로드 에러', err)
@@ -56,12 +68,17 @@ const WebtoonViewer = ({ handleClickViewer, images }) => {
 
   return (
     <div
-      className='mt-[60px] flex justify-center'
+      className='mt-[60px] flex min-h-[300px] flex-col items-center justify-center'
       onClick={handleClickViewer}
       onContextMenuCapture={handleContextMenuCapture}
       onDragStartCapture={handleDragStartCapture}
     >
-      <canvas ref={canvasRef} />
+      {isLoading && (
+        <div className='mt-10 flex justify-center'>
+          <ProgressBar progress={progress} message={'웹툰 불러오는 중'} />
+        </div>
+      )}
+      <canvas className={`${isLoading && 'hidden'}`} ref={canvasRef} />
     </div>
   )
 }
