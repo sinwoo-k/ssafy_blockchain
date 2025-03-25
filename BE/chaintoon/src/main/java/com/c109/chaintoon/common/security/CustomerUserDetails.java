@@ -15,7 +15,6 @@ public class CustomerUserDetails implements UserDetails {
     }
 
 
-
     public Integer getId() {
         return user.getId();
     }
