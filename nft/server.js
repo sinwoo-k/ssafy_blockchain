@@ -3,9 +3,11 @@ import express from 'express';
 import walletRoutes from './wallet/routes/walletRoutes.js';
 import nonceRoutes from './nonce/routes/nonceRoutes.js';
 import nftRoutes from './mint/routes/nftRoutes.js';
+import { authenticateJWT } from './middleware/auth.js';
 
 const app = express();
 app.use(express.json());
+app.use('/api/nft', authenticateJWT);
 
 // 라우터 연결
 app.use('/api/nft', walletRoutes);
