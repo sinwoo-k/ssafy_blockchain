@@ -96,6 +96,20 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createReFreshToken(String email) {
+        Claims claims = Jwts.claims().setSubject(email);
+
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + refreshValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(refreshKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public Jws<Claims> parseToken(String token, boolean isAccessToken) {
         try {
             Key key = isAccessToken ? accessKey : refreshKey;

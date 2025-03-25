@@ -50,7 +50,7 @@ public class SecurityConfig {
         // 3. URL별 권한 설정
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-//                        HttpMethod.GET,
+                        HttpMethod.GET,
                         "/api/users/{userId}",
                         "/api/users/followers/{userId}",
                         "/api/users/following/{userId}",
@@ -69,7 +69,8 @@ public class SecurityConfig {
                         "/api/auth/**",
                         "/api/users/search",
                         "/api/search",
-                        "/api/redis/test"
+                        "/api/redis/test",
+                        "/api/sso/**"
                 ).permitAll()
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")  // 관리자만 접근
                 .requestMatchers("/api/**").authenticated()

@@ -9,8 +9,7 @@ import com.c109.chaintoon.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,15 +44,12 @@ public class UserController {
     // 회원 정보 수정
     @PatchMapping("/{userId}")
     public ResponseEntity<?> updateUser(
+            @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
     ){
-        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer userId = (Integer) authentication.getPrincipal();
-
-        UserResponseDto user = userService.updateUser(userId, userRequestDto, profileImage, backgroundImage);
+        UserResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -65,46 +61,35 @@ public class UserController {
 
     // 프로필 이미지 제거
     @DeleteMapping("/delete-profile")
-    public ResponseEntity<?> deleteProfile() {
-        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer userId = (Integer) authentication.getPrincipal();
-
-        UserResponseDto user = userService.deleteProfile(userId);
+    public ResponseEntity<?> deleteProfile(
+            @AuthenticationPrincipal Integer loginId) {
+        UserResponseDto user = userService.deleteProfile(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     // 배경 이미지 제거
     @DeleteMapping("/delete-background")
-    public ResponseEntity<?> deleteBackground() {
-        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer userId = (Integer) authentication.getPrincipal();
-
-        UserResponseDto user = userService.deleteBackground(userId);
+    public ResponseEntity<?> deleteBackground(
+            @AuthenticationPrincipal Integer loginId) {
+        UserResponseDto user = userService.deleteBackground(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     // 팔로우
     @PutMapping("/following/{userId}")
-    public ResponseEntity<?> following(@PathVariable Integer userId) {
-
-        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = (Integer) authentication.getPrincipal();
-
-        userService.addFollow(id, userId); //id: 로그인 중인(팔로우하는) 유저
+    public ResponseEntity<?> following(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId) {
+        userService.addFollow(loginId, userId); //id: 로그인 중인(팔로우하는) 유저
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 언팔로우
     @DeleteMapping("/following/{userId}")
-    public ResponseEntity<?> unfollowing(@PathVariable Integer userId) {
-        // 로그인하고 있는 유저의 아이디를 토큰에서 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Integer id = (Integer) authentication.getPrincipal();
-
-        userService.removeFollow(id, userId);
+    public ResponseEntity<?> unfollowing(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId) {
+        userService.removeFollow(loginId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

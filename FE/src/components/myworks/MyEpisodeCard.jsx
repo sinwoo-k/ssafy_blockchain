@@ -34,7 +34,7 @@ const MyEpisodeCard = ({ episode }) => {
           </div>
           <div className='flex items-center gap-3'>
             <button className='text-chaintoon cursor-pointer'>NFT 발행</button>
-            <Link>
+            <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
               <button className='cursor-pointer'>
                 <EditIcon className='text-blue-500' />
               </button>

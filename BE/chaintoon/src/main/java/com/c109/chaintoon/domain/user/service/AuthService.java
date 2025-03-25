@@ -5,6 +5,7 @@ import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
+import com.c109.chaintoon.domain.user.dto.request.SsoUserRequestDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
@@ -98,4 +99,50 @@ public class AuthService {
 
         return userRepository.save(newUser);
     }
+
+    public Integer saveUserIfAbsent(SsoUserRequestDto userRequest) {
+        // 이메일을 기준으로 사용자 조회
+        Optional<User> foundUser = this.userRepository.findByEmail(userRequest.getLoginId());
+
+        if (foundUser.isPresent()) {
+            // 사용자가 이미 존재하는 경우
+            User user = foundUser.get();
+            if (!user.getId().equals(userRequest.getUserId())) {
+                // 동일한 이메일이 다른 사용자에게 등록된 경우 예외 처리
+                throw new ServerException("동일한 Email이 다른 사용자에 등록되어 있어 등록이 불가능합니다.\n" + "userId: " + userRequest.getUserId() + ", email: " + userRequest.getLoginId());
+            }
+            return user.getId(); // 기존 사용자의 이메일 반환
+        } else {
+            // 사용자가 존재하지 않는 경우 새로 생성
+            Random rand = new Random();
+            int randomNumber = rand.nextInt(900000) + 100000;
+            String nickname = "Unnamed" + randomNumber;
+
+            // 닉네임 중복 체크 및 고유 닉네임 생성
+            while (userRepository.existsByNicknameAndDeleted(nickname, "N")) {
+                randomNumber = rand.nextInt(900000) + 100000;
+                nickname = "Unnamed" + randomNumber;
+            }
+
+            // 새로운 사용자 생성 및 초기화
+            User newUser = User.builder()
+                    .email(userRequest.getLoginId())
+                    .nickname(nickname)
+                    .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    .following(0)
+                    .follower(0)
+                    .introduction("")
+                    .deleted("N")
+                    .status("Y")
+                    .backgroundImage("")
+                    .profileImage("")
+                    .build();
+
+            // 사용자 저장
+            newUser = this.userRepository.save(newUser);
+
+            return newUser.getId(); // 새로 생성된 사용자의 이메일 반환
+        }
+    }
+
 }

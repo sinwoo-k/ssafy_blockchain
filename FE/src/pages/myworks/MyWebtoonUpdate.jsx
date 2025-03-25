@@ -31,7 +31,6 @@ const MyWebtoonUpdate = () => {
   const [tempImage, setTempImage] = useState(null) // 등록 전 이미지
   const [showSeroImageModal, setShowSeroImageModal] = useState(false)
   const [adaptable, setAdaptable] = useState(false) // 팬아트 허용
-  const [confirmAgreement, setConfirmAgreement] = useState(false) // 약관동의
 
   // 태그 등록 함수
   const handleTags = (event) => {
@@ -81,8 +80,6 @@ const MyWebtoonUpdate = () => {
       alert('줄거리를 입력해주세요.')
     } else if (garoImage === null || seroImage === null) {
       alert('이미지를 등록해주세요.')
-    } else if (!confirmAgreement) {
-      alert('약관에 동의해주세요.')
     } else {
       const payload = {
         webtoonName: webtoonName,
@@ -129,7 +126,7 @@ const MyWebtoonUpdate = () => {
             >
               웹툰명
             </label>
-            <div className='bg-text/50 border-chaintoon flex grow gap-1 rounded-lg border p-3'>
+            <div className='bg-text/50 flex grow gap-1 rounded-lg border p-3'>
               <input
                 type='text'
                 id='title-input'
@@ -153,7 +150,7 @@ const MyWebtoonUpdate = () => {
               장르
             </label>
             <div
-              className={`${genre === '' && 'text-text/75'} border-chaintoon bg-text/50 grow rounded-lg border px-3`}
+              className={`${genre === '' && 'text-text/75'} bg-text/50 grow rounded-lg border px-3`}
             >
               <select
                 id='genre-select'
@@ -180,35 +177,42 @@ const MyWebtoonUpdate = () => {
             >
               태그
             </label>
-            <div className='bg-text/50 border-chaintoon flex grow flex-wrap gap-1 rounded-lg border p-3'>
-              {tags.map((v, i) => (
-                <div
-                  key={`tag-${v}-${i}`}
-                  className='bg-chaintoon/50 rounded px-1.5'
-                >
-                  <span>{v}</span>
-                  <button
-                    className='cursor-pointer text-red-600'
-                    onClick={() => deleteTag(v, i)}
+            <div className='flex grow flex-col gap-3'>
+              <div className='bg-text/50 flex w-full flex-wrap gap-1 rounded-lg border p-3'>
+                {tags.map((v, i) => (
+                  <div
+                    key={`tag-${v}-${i}`}
+                    className='bg-chaintoon/50 rounded px-1.5'
                   >
-                    <CloseIcon sx={{ fontSize: 18 }} />
-                  </button>
-                </div>
-              ))}
-              <input
-                type='text'
-                id='tag-input'
-                className='placeholder:text-text/75 grow focus:outline-none'
-                placeholder={
-                  tags.length === 0
-                    ? '엔터키를 입력하시면 태그가 등록됩니다.'
-                    : ''
-                }
-                onKeyUp={handleTags}
-              />
-              <span className='w-[55px] flex-none text-end'>
-                {tags.length} / 10
-              </span>
+                    <span>{v}</span>
+                    <button
+                      className='cursor-pointer text-red-600'
+                      onClick={() => deleteTag(v, i)}
+                    >
+                      <CloseIcon sx={{ fontSize: 18 }} />
+                    </button>
+                  </div>
+                ))}
+                <input
+                  type='text'
+                  id='tag-input'
+                  className='placeholder:text-text/75 grow focus:outline-none'
+                  placeholder={
+                    tags.length === 0
+                      ? '엔터키를 입력하시면 태그가 등록됩니다.'
+                      : ''
+                  }
+                  onKeyUp={handleTags}
+                />
+                <span className='w-[55px] flex-none text-end'>
+                  {tags.length} / 10
+                </span>
+              </div>
+              <p className='text-text/50'>
+                태그는 최대 10개까지 등록이 가능합니다.
+                <br />
+                원하는 태그 입력 후 엔터키를 누르면 등록이 됩니다.
+              </p>
             </div>
           </div>
           {/* 줄거리 */}
@@ -219,7 +223,7 @@ const MyWebtoonUpdate = () => {
             >
               줄거리
             </label>
-            <div className='bg-text/50 border-chaintoon grow rounded-lg border p-3'>
+            <div className='bg-text/50 grow rounded-lg border p-3'>
               <textarea
                 id='summary-textarea'
                 className='placeholder:text-text/75 h-[150px] w-full resize-none focus:outline-none'
@@ -237,63 +241,69 @@ const MyWebtoonUpdate = () => {
               대표 이미지
             </label>
             <div className='flex gap-10'>
-              <div
-                className='bg-text/50 border-chaintoon h-[300px] w-[200px] overflow-hidden rounded-lg border'
-                onClick={() => handleImageInput('sero')}
-              >
-                {seroImage && (
-                  <img
-                    src={URL.createObjectURL(seroImage)}
-                    alt='세로 이미지'
-                    className='h-[300px] w-[200px]'
+              <div>
+                <p className='px-2'>포스터형 (200x300)</p>
+                <div
+                  className='bg-text/50 h-[300px] w-[200px] overflow-hidden rounded-lg border'
+                  onClick={() => handleImageInput('sero')}
+                >
+                  {seroImage && (
+                    <img
+                      src={URL.createObjectURL(seroImage)}
+                      alt='세로 이미지'
+                      className='h-[300px] w-[200px]'
+                    />
+                  )}
+                  <input
+                    type='file'
+                    accept='image/jpeg, image/jpg'
+                    onChange={(event) =>
+                      changeImageInput(event.target.files[0], 'sero')
+                    }
+                    className='hidden'
+                    ref={seroImageRef}
                   />
-                )}
-                <input
-                  type='file'
-                  accept='image/jpeg, image/jpg'
-                  onChange={(event) =>
-                    changeImageInput(event.target.files[0], 'sero')
-                  }
-                  className='hidden'
-                  ref={seroImageRef}
-                />
-                {showSeroImageModal && (
-                  <MyWebtoonImageCropModal
-                    image={tempImage}
-                    setImage={setSeroImage}
-                    setShowModal={setShowSeroImageModal}
-                    type={'sero'}
-                  />
-                )}
+                  {showSeroImageModal && (
+                    <MyWebtoonImageCropModal
+                      image={tempImage}
+                      setImage={setSeroImage}
+                      setShowModal={setShowSeroImageModal}
+                      type={'sero'}
+                    />
+                  )}
+                </div>
               </div>
-              <div
-                className='bg-text/50 border-chaintoon h-[300px] w-[400px] overflow-hidden rounded-lg border'
-                onClick={() => handleImageInput('garo')}
-              >
-                {garoImage && (
-                  <img
-                    src={URL.createObjectURL(garoImage)}
-                    alt='가로 이미지'
-                    className='h-[300px] w-[400px]'
+              <div>
+                <p className='px-2'>가로형 (400x300)</p>
+                <div
+                  className='bg-text/50 h-[300px] w-[400px] overflow-hidden rounded-lg border'
+                  onClick={() => handleImageInput('garo')}
+                >
+                  {garoImage && (
+                    <img
+                      src={URL.createObjectURL(garoImage)}
+                      alt='가로 이미지'
+                      className='h-[300px] w-[400px]'
+                    />
+                  )}
+                  <input
+                    type='file'
+                    accept='image/jpeg, image/jpg'
+                    onChange={(event) =>
+                      changeImageInput(event.target.files[0], 'garo')
+                    }
+                    className='hidden'
+                    ref={garoImageRef}
                   />
-                )}
-                <input
-                  type='file'
-                  accept='image/jpeg, image/jpg'
-                  onChange={(event) =>
-                    changeImageInput(event.target.files[0], 'garo')
-                  }
-                  className='hidden'
-                  ref={garoImageRef}
-                />
-                {showGaroImageModal && (
-                  <MyWebtoonImageCropModal
-                    image={tempImage}
-                    setImage={setGaroImage}
-                    setShowModal={setShowGaroImageModal}
-                    type={'garo'}
-                  />
-                )}
+                  {showGaroImageModal && (
+                    <MyWebtoonImageCropModal
+                      image={tempImage}
+                      setImage={setGaroImage}
+                      setShowModal={setShowGaroImageModal}
+                      type={'garo'}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
