@@ -8,6 +8,6 @@ router.post('/mint-nft', mintNftController);
 router.get('/nft-details/:tokenId', getNftDetails);
 router.get('/ipfs-image/:ipfsHash', getIpfsImage);
 router.post('/buy-nft', buyNftController);
-router.post('/list-nft', listNftController);
+router.post('/sell-nft', listNftController);
 
 export default router;
