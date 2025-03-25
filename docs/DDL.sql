@@ -197,7 +197,7 @@ CREATE TABLE `user` (
 -- wallet: table
 CREATE TABLE `wallet` (
   `wallet_id` int NOT NULL AUTO_INCREMENT,
-  `user_email` varchar(50) NOT NULL,
+  `user_id` int NOT NULL,
   `wallet_address` char(42) DEFAULT NULL,
   `private_key` varchar(255) DEFAULT NULL,
   `public_key` varchar(255) DEFAULT NULL,
