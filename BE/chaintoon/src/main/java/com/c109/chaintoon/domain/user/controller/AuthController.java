@@ -2,13 +2,11 @@ package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
-import com.c109.chaintoon.domain.user.dto.request.SsafyRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
 
@@ -37,17 +34,5 @@ public class AuthController {
         return ResponseEntity.ok(token);
     }
 
-    @PostMapping("/ssafy-login")
-    public ResponseEntity<String> login(
-            @RequestBody SsafyRequestDto ssafyRequestDto) {
-
-        Authentication authentication = this.authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(
-                        ssafyRequestDto.getEmail(),
-                        ssafyRequestDto.getPassword()
-                ));
-
-        return ResponseEntity.ok(jwtTokenProvider.createReFreshToken(authentication.getName()));
-    }
     
 }

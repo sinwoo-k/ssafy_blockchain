@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class SsoUserRequestDto {
     private String userId;
-    private String loginId;
+    private String loginId; //email
     private String name;
 
     public void setEmail(String email) {
