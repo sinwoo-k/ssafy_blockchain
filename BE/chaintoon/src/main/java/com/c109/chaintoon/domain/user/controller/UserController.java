@@ -1,13 +1,11 @@
 package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
-import com.c109.chaintoon.common.util.CookieUtils;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
 import com.c109.chaintoon.domain.user.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +22,6 @@ public class UserController {
 
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final CookieUtils cookieUtils;
 
     // 회원 검색 (목록)
     @GetMapping("/search")
@@ -45,14 +42,13 @@ public class UserController {
     }
 
     // 회원 정보 수정
-    @PatchMapping
+    @PatchMapping("/{userId}")
     public ResponseEntity<?> updateUser(
-            HttpServletRequest request,
+            @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
     ){
-        Integer loginId = cookieUtils.getUserIdFromCookie(request);
         UserResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -65,16 +61,16 @@ public class UserController {
 
     // 프로필 이미지 제거
     @DeleteMapping("/delete-profile")
-    public ResponseEntity<?> deleteProfile(HttpServletRequest request) {
-        Integer loginId = cookieUtils.getUserIdFromCookie(request);
+    public ResponseEntity<?> deleteProfile(
+            @AuthenticationPrincipal Integer loginId) {
         UserResponseDto user = userService.deleteProfile(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     // 배경 이미지 제거
     @DeleteMapping("/delete-background")
-    public ResponseEntity<?> deleteBackground(HttpServletRequest request) {
-        Integer loginId = cookieUtils.getUserIdFromCookie(request);
+    public ResponseEntity<?> deleteBackground(
+            @AuthenticationPrincipal Integer loginId) {
         UserResponseDto user = userService.deleteBackground(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -82,9 +78,8 @@ public class UserController {
     // 팔로우
     @PutMapping("/following/{userId}")
     public ResponseEntity<?> following(
-            HttpServletRequest request,
+            @AuthenticationPrincipal Integer loginId,
             @PathVariable Integer userId) {
-        Integer loginId = cookieUtils.getUserIdFromCookie(request);
         userService.addFollow(loginId, userId); //id: 로그인 중인(팔로우하는) 유저
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -92,9 +87,8 @@ public class UserController {
     // 언팔로우
     @DeleteMapping("/following/{userId}")
     public ResponseEntity<?> unfollowing(
-            HttpServletRequest request,
+            @AuthenticationPrincipal Integer loginId,
             @PathVariable Integer userId) {
-        Integer loginId = cookieUtils.getUserIdFromCookie(request);
         userService.removeFollow(loginId, userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -118,8 +112,5 @@ public class UserController {
         List<FollowingResponseDto> followerList = userService.getFollowerList(userId, page, pageSize);
         return new ResponseEntity<>(followerList, HttpStatus.OK);
     }
-
-    // 거래 내역 조회
-
 
 }

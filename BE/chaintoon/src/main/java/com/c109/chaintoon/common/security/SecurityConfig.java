@@ -47,7 +47,7 @@ public class SecurityConfig {
         }));
 
         // 2. CSRF 보호 활성화
-        http.csrf().disable();
+        http.csrf(AbstractHttpConfigurer::disable);
 
         // 3. URL별 권한 설정
         http.authorizeHttpRequests(auth -> auth

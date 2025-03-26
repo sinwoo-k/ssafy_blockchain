@@ -62,13 +62,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-//        // 토큰이 없을 경우
-//        // 인터셉터 개발
-//        if () {
-//        }else{
-//
-//        }
-
         chain.doFilter(request, response);
     }
 
