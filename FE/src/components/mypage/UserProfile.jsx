@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import ProfileEditModal from './ProfileEdit';
 import FollowModal from './FollowModal';
-import userService from '../../API/userApi';
-import nftService from '../../API/nftApi';
+import userService from '../../api/userApi';
+import nftService from '../../api/nftApi';
 
 const UserProfile = () => {
   // 로그인한 사용자 정보 가져오기

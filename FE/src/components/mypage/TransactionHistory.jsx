@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import nftService from '../../API/nftApi';
+import nftService from '../../api/nftApi';
 
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
