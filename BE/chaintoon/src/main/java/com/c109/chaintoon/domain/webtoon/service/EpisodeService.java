@@ -6,6 +6,7 @@ import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
+import com.c109.chaintoon.domain.webtoon.dto.response.ImageResponseDto;
 import com.c109.chaintoon.domain.webtoon.entity.*;
 import com.c109.chaintoon.domain.webtoon.exception.EpisodeImageNotFoundException;
 import com.c109.chaintoon.domain.webtoon.exception.EpisodeNotFoundException;
@@ -45,10 +46,14 @@ public class EpisodeService {
     }
 
     // 이미지 URL 목록 조회
-    private List<String> getImageUrls(Integer episodeId) {
+    private List<ImageResponseDto> getImageUrls(Integer episodeId) {
         List<EpisodeImage> episodeImages = episodeImageRepository.findByEpisodeIdAndDeletedOrderByImageOrderAsc(episodeId, "N");
         return episodeImages.stream()
-                .map(EpisodeImage::getImageUrl)
+                .map(episodeImage -> ImageResponseDto.builder()
+                        .imageId(episodeImage.getEpisodeId())
+                        .imageUrl(episodeImage.getImageUrl())
+                        .fileSize(episodeImage.getFileSize())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -75,7 +80,7 @@ public class EpisodeService {
 
     private EpisodeResponseDto buildEpisodeResponseDto(Episode episode) {
         // 이미지 URL 목록 조회
-        List<String> imageUrls = getImageUrls(episode.getEpisodeId());
+        List<ImageResponseDto> imageUrls = getImageUrls(episode.getEpisodeId());
 
         // 평균 평점 계산
         double rating = calculateRating(episode);
@@ -157,9 +162,11 @@ public class EpisodeService {
 
         // 원고 이미지 S3 & DB 저장
         for (int i = 0; i < images.size(); i++) {
-            String imageUrl = uploadManuscript(savedEpisode.getEpisodeId(), images.get(i));
+            MultipartFile image = images.get(i);
+            String imageUrl = uploadManuscript(savedEpisode.getEpisodeId(), image);
             EpisodeImage episodeImage = EpisodeImage.builder()
                     .episodeId(savedEpisode.getEpisodeId())
+                    .fileSize((int) image.getSize())
                     .imageUrl(imageUrl)
                     .imageOrder(i + 1)
                     .build();
@@ -270,6 +277,7 @@ public class EpisodeService {
 
                     String newImageUrl = uploadManuscript(episodeId, newImageFile);
                     EpisodeImage newEpisodeImage = EpisodeImage.builder()
+                            .fileSize((int) newImageFile.getSize())
                             .episodeId(episodeId)
                             .imageUrl(newImageUrl)
                             .imageOrder(i + 1) // 순서 업데이트
