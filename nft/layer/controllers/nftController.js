@@ -1,4 +1,4 @@
-import { mintNftService, getNftMetadata, listNftService, buyNftService, getMyNftsService } from '../services/nftService.js';
+import { mintNftService, getNftMetadata, sellNftService, buyNftService, getMyNftsService } from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 
@@ -48,7 +48,7 @@ export const getNftDetails = async (req, res, next) => {
     }
 };
 
-export async function listNftController(req, res) {
+export async function sellNftController(req, res) {
     try {
         const { tokenId, price, privateKey } = req.body;
 
@@ -60,7 +60,7 @@ export async function listNftController(req, res) {
         }
 
 
-        const result = await listNftService({ tokenId, price , privateKey});
+        const result = await sellNftService({ tokenId, price , privateKey});
         res.status(200).json(result);
     } catch (err) {
         console.error(err);

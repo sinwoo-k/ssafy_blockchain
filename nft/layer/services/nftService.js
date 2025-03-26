@@ -10,7 +10,7 @@ import {
   getGoodsById,
   getNftById,
   getNftsByUserId,
-  getAllNfts
+  getAllNfts,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -156,7 +156,6 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
         // 해당 log가 NFTMarketplace의 이벤트가 아닐 경우 파싱 실패 -> 무시
       }
     }
-
     if (!tokenId) {
       throw new AppError('NFTMinted 이벤트를 찾을 수 없습니다.', 500);
     }
@@ -208,7 +207,7 @@ export async function getNftMetadata(tokenId) {
  * @param {string|number} price 판매 가격(ETH 단위로 입력)
  * @param {string} privateKey 판매자 지갑 프라이빗키
  */
-export async function listNftService({ tokenId, price, privateKey }) {
+export async function sellNftService({ tokenId, price, privateKey }) {
   try {
     const nftArtifactPath = path.join(process.cwd(), 'dist', 'contracts', 'NFTMarketplace.json');
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
@@ -324,7 +323,7 @@ export async function getAllNftsService() {
 export default {
   mintNftService,
   getNftMetadata,
-  listNftService,
+  sellNftService,
   buyNftService,
   getMyNftsService,
 };
