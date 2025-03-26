@@ -62,6 +62,7 @@ CREATE TABLE `episode` (
 CREATE TABLE `episode_image` (
   `episode_image_id` int NOT NULL AUTO_INCREMENT,
   `episode_id` int NOT NULL,
+  `file_size` int DEFAULT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `image_order` int DEFAULT NULL,
   `deleted` char(1) DEFAULT NULL,
