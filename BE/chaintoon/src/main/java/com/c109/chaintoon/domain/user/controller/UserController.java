@@ -113,7 +113,4 @@ public class UserController {
         return new ResponseEntity<>(followerList, HttpStatus.OK);
     }
 
-    // 거래 내역 조회
-
-
 }

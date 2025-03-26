@@ -15,6 +15,7 @@ import com.c109.chaintoon.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -73,6 +74,7 @@ public class UserService {
     }
 
     // 회원 정보 수정
+    @PreAuthorize("hasRole('USER')")
     public UserResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile backgroundImage) {
         // 기존 유저 조회
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
@@ -84,7 +86,7 @@ public class UserService {
 
         // 프로필 이미지 업데이트
         if (profileImage != null && !profileImage.isEmpty()) {
-            if(userRequestDto.getProfileImage() != null) {
+            if (userRequestDto.getProfileImage() != null && !userRequestDto.getProfileImage().equals("")) {
                 s3Service.deleteFile(user.getProfileImage());
             }
             String profileUrl = uploadProfile(userId, profileImage);
@@ -93,7 +95,7 @@ public class UserService {
 
         // 배경 이미지 업데이트
         if(backgroundImage != null && !backgroundImage.isEmpty()) {
-            if (user.getBackgroundImage() != null) {
+            if (user.getBackgroundImage() != null&& !user.getBackgroundImage().equals("")) {
                 s3Service.deleteFile(user.getBackgroundImage());
             }
             String backgroundUrl = uploadBackground(userId, backgroundImage);
@@ -131,12 +133,14 @@ public class UserService {
 
     // 닉네임 중복 확인
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('USER')")
     public boolean checkNickname(String nickname){
         return userRepository.existsByNicknameAndDeleted(nickname, "N");
     }
 
     // 프로필 이미지 제거
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public UserResponseDto deleteProfile(Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
@@ -161,6 +165,7 @@ public class UserService {
 
     // 배경 이미지 제거
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public UserResponseDto deleteBackground(Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
@@ -185,7 +190,16 @@ public class UserService {
 
     // 팔로우
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public void addFollow(Integer followerId, Integer followeeId) {
+        // 자신을 팔로우할 수 없음
+        if(followerId.equals(followeeId)) {
+            return;
+        }
+
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+
         // 복합키 생성
         FollowingId id = new FollowingId(followerId, followeeId);
 
@@ -195,13 +209,11 @@ public class UserService {
         }
 
         // 팔로우, 팔로워 수 증가
-        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
         followee.setFollower(followee.getFollower() + 1);
-        userRepository.save(followee);
-
-        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
         follower.setFollowing(follower.getFollowing() + 1);
+        userRepository.save(followee);
         userRepository.save(follower);
+
 
         // Following 엔티티 생성
         Following following = new Following(id);
@@ -212,7 +224,16 @@ public class UserService {
 
     // 팔로우 취소
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public void removeFollow(Integer followerId, Integer followeeId) {
+        // 자신을 팔로우 취소할 수 없음
+        if(followerId.equals(followeeId)) {
+            return;
+        }
+
+        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
+        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
+
         // 복합키 생성
         FollowingId id = new FollowingId(followerId, followeeId);
 
@@ -222,12 +243,9 @@ public class UserService {
         }
 
         // 팔로우, 팔로워 수 감소
-        User followee = userRepository.findById(followeeId).orElseThrow(() -> new UserIdNotFoundException(followeeId));
         followee.setFollower(followee.getFollower() - 1);
-        userRepository.save(followee);
-
-        User follower = userRepository.findById(followerId).orElseThrow(() -> new UserIdNotFoundException(followerId));
         follower.setFollowing(follower.getFollowing() - 1);
+        userRepository.save(followee);
         userRepository.save(follower);
 
         // 데이터베이스에서 삭제

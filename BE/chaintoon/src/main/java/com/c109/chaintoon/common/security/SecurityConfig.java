@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -22,7 +23,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -40,12 +40,13 @@ public class SecurityConfig {
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("Authorization", "Refresh-Token", "Content-Type"));
-            config.setExposedHeaders(List.of("Authorization", "Refresh-Token")); // 노출할 헤더
             config.setAllowCredentials(true); // 쿠키 허용 여부
+            config.setExposedHeaders(List.of("Set-Cookie", "X-XSRF-TOKEN")); // 쿠키 관련 헤더
+            config.setMaxAge(3600L); // Pre-flight 캐싱 시간
             return config;
         }));
 
-        // 2. CSRF 비활성화 (REST API 형태)
+        // 2. CSRF 보호 활성화
         http.csrf(AbstractHttpConfigurer::disable);
 
         // 3. URL별 권한 설정
@@ -73,7 +74,6 @@ public class SecurityConfig {
                         "/api/redis/test",
                         "/api/sso/**"
                 ).permitAll()
-                .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")  // 관리자만 접근
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         );

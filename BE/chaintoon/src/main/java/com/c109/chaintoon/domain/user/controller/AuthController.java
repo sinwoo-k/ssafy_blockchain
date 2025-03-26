@@ -4,11 +4,12 @@ import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,10 +30,26 @@ public class AuthController {
 
     // 인증코드 검증
     @PostMapping("/verify-code")
-    public ResponseEntity<String> verifyAuthCode(@RequestBody VerifyAuthRequestDto verifyAuthRequestDto) {
+    public ResponseEntity<String> verifyAuthCode(
+            @RequestBody VerifyAuthRequestDto verifyAuthRequestDto,
+            HttpServletResponse response) {
         String token = authService.verifyEmailCode(verifyAuthRequestDto.getEmail(), verifyAuthRequestDto.getCode());
-        return ResponseEntity.ok(token);
+
+        // HttpOnly & Secure 쿠키 설정
+        ResponseCookie cookie = ResponseCookie.from("jwt", token)
+                .httpOnly(true)
+                .secure(true) // HTTPS 환경에서만 사용
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
+                .sameSite("Lax") // CSRF 보호
+//                .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok("인증 성공");
     }
+
 
     
 }

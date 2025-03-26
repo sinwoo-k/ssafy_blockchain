@@ -2,15 +2,23 @@ package com.c109.chaintoon.common.jwt;
 
 
 import com.c109.chaintoon.common.exception.ServerException;
+import com.c109.chaintoon.domain.user.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.security.Key;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -48,7 +56,6 @@ public class JwtTokenProvider {
      */
     public String createAccessToken(Integer userId, String role) {
         Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
-        // role 클레임 추가
         claims.put("role", role);
 
         Date now = new Date();
@@ -61,54 +68,7 @@ public class JwtTokenProvider {
                 .signWith(accessKey, SignatureAlgorithm.HS256)
                 .compact();
     }
-    public String createTemporaryAccessToken(Integer userId) {
-        Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
-        // 임시 토큰임을 나타내는 클레임 추가
-        claims.put("temp", true);
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + temporaryTokenValidityInMilliseconds);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(accessKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    /**
-     * Refresh Token 생성
-     * @param userId
-     * @return
-     */
-    public String createReFreshToken(Integer userId) {
-        Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
-
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshValidityInMilliseconds);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(refreshKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public String createReFreshToken(String email) {
-        Claims claims = Jwts.claims().setSubject(email);
-
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshValidityInMilliseconds);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(refreshKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
 
     public Jws<Claims> parseToken(String token, boolean isAccessToken) {
         try {
@@ -152,18 +112,29 @@ public class JwtTokenProvider {
         return Integer.valueOf(claims.getSubject());
     }
 
-    public boolean isTemporaryToken(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(accessKey)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            Boolean isTemp = claims.get("temp", Boolean.class);
-            return isTemp != null && isTemp;
-        } catch (JwtException e) {
-            log.error("임시 토큰 판별 실패: {}", e.getMessage());
-            return false;
-        }
+    public Authentication getAuthentication(String token) {
+        // 키 변수명 수정 (accessKey 사용)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(accessKey)  // key -> accessKey
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        // 권한 정보 추출 방식 변경
+        String role = claims.get("role", String.class);
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
+
+        // 사용자 식별 정보 설정 (User 대신 userId 사용)
+        Integer userId = Integer.valueOf(claims.getSubject());
+
+        return new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                authorities
+        );
     }
+
+
 }
