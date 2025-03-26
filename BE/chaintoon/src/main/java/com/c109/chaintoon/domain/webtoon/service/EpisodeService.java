@@ -67,6 +67,7 @@ public class EpisodeService {
                 .webtoonId(episode.getWebtoonId())
                 .episodeName(episode.getEpisodeName())
                 .uploadDate(episode.getUploadDate())
+                .thumbnail(episode.getThumbnail())
                 .commentCount(episode.getCommentCount())
                 .rating(rating)
                 .build();
