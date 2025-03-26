@@ -1,4 +1,4 @@
-import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService } from '../service/walletService.js';
+import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService } from '../services/walletService.js';
 
 export async function createWallet(req, res) {
   try {

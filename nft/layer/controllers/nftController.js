@@ -1,4 +1,4 @@
-import { mintNftService, getNftMetadata, listNftService, buyNftService } from '../service/nftService.js';
+import { mintNftService, getNftMetadata, listNftService, buyNftService } from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 export async function mintNftController(req, res) {

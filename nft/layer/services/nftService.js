@@ -9,7 +9,7 @@ import {
   getEpisodeById, getFanartById,
   getGoodsById,
   getNftById
-} from '../repository/nftRepository.js';
+} from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
 import { Readable } from 'stream';
