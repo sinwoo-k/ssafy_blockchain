@@ -9,6 +9,9 @@ import com.c109.chaintoon.domain.comment.entity.CommentPreference;
 import com.c109.chaintoon.domain.comment.exception.CommentNotFoundException;
 import com.c109.chaintoon.domain.comment.repository.CommentPreferenceRepository;
 import com.c109.chaintoon.domain.comment.repository.CommentRepository;
+import com.c109.chaintoon.domain.user.entity.User;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,15 +30,22 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final CommentPreferenceRepository commentPreferenceRepository;
+    private final UserRepository userRepository;
 
     private CommentResponseDto convertToDto(Comment comment) {
         // 날짜와 시간을 포맷팅
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+        User user = userRepository.findById(comment.getUserId()).orElseThrow(
+                () -> new UserIdNotFoundException(comment.getUserId())
+        );
+
         return CommentResponseDto.builder()
                 .commentId(comment.getCommentId())
                 .userId(comment.getUserId())
+                .nickname(user.getNickname())
+                .profileImage(user.getProfileImage())
                 .usageId(comment.getUsageId())
                 .type(comment.getType())
                 .parentId(comment.getParentId())

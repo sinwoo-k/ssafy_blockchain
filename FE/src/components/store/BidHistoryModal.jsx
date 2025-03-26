@@ -20,7 +20,7 @@ const BidHistoryModal = ({ isOpen, onClose, bidHistory }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85">
       <div className="w-[600px] rounded-lg bg-white p-6 text-black shadow-xl border border-gray-200">
         {/* 모달 헤더 */}
         <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
