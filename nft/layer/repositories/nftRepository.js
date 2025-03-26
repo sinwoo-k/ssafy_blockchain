@@ -49,3 +49,13 @@ export async function getGoodsById(typeId) {
   const [result] = await pool.execute(query, [typeId]);
   return result[0];
 }
+export async function getNftsByUserId(userId) {
+  const query = 'SELECT * FROM nfts WHERE userId = ?';
+  const nfts = await pool.query(query, [userId]);
+  return nfts;
+}
+export async function getAllNfts() {
+  const query = 'SELECT * FROM nfts';
+  const nfts = await pool.query(query);
+  return nfts;
+}
