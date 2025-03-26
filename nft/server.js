@@ -1,17 +1,18 @@
 import 'dotenv/config';
 import express from 'express';
-import walletRoutes from './wallet/routes/walletRoutes.js';
-import nonceRoutes from './nonce/routes/nonceRoutes.js';
-import nftRoutes from './mint/routes/nftRoutes.js';
+import walletRoutes from './layer/routes/walletRoutes.js';
+import nftRoutes from './layer/routes/nftRoutes.js';
+import nonceRoutes from './layer/routes/nonceRoutes.js';
 import { authenticateJWT } from './middleware/auth.js';
 
 const app = express();
 app.use(express.json());
-app.use('/api/nft', authenticateJWT);
 
 // 라우터 연결
-app.use('/api/nft', walletRoutes);
 app.use('/api/nft', nonceRoutes);
+app.use('/api/nft', walletRoutes);
+
+app.use('/api/nft', authenticateJWT);
 app.use('/api/nft', nftRoutes);
 
 const PORT = process.env.PORT || 3000;

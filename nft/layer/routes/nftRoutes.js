@@ -1,6 +1,6 @@
 import express from 'express';
-import { mintNftController, getNftDetails, buyNftController, listNftController } from '../controller/nftController.js';
-import { getIpfsImage } from '../controller/ipfsController.js';
+import { mintNftController, getNftDetails, buyNftController, listNftController } from '../controllers/nftController.js';
+import { getIpfsImage } from '../controllers/ipfsController.js';
 
 const router = express.Router();
 

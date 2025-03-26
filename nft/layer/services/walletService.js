@@ -4,9 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { encrypt, decrypt } from '../../cryptoHelper.js';
-import * as walletRepository from '../repository/walletRepository.js';
+import * as walletRepository from '../repositories/walletRepository.js';
 import AppError from '../../utils/AppError.js';
-import { getNonce, deleteNonce } from '../../nonce/service/nonceService.js';
+import { getNonce, deleteNonce } from './nonceService.js';
+import { get } from 'http';
 
 // __dirname 대체 (ES Module 환경)
 const __filename = fileURLToPath(import.meta.url);
@@ -26,14 +27,24 @@ const WALLET_CONTRACT_ADDRESS = process.env.WALLET_CONTRACT_ADDRESS;
 const walletManagerContract = new ethers.Contract(WALLET_CONTRACT_ADDRESS, CONTRACT_ABI, serverWallet);
 
 
-export async function connectWalletService({ walletAddress, signature, message }) {
+export async function connectWalletService({ walletAddress, signature }) {
 
-  // 메시지 서명 검증 (서명된 메시지와 제공된 지갑 주소 비교)
+  const storedNonce = await getNonce(walletAddress);
+  if (!storedNonce) {
+    throw new AppError('해당 지갑 주소에 대한 nonce가 존재하지 않습니다.', 400);
+  }
+  // 클라이언트에서 전달받은 message가 저장된 nonce와 일치하는지 확인
+  if (storedNonce !== message) {
+    throw new AppError('전달된 메시지가 유효하지 않습니다.', 400);
+  }
   const recoveredAddress = ethers.verifyMessage(message, signature);
   console.log(recoveredAddress);
   if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
     throw new AppError('서명이 유효하지 않습니다.', 401);
   }
+  
+  await deleteNonce(walletAddress);
+
   const randomNumber = Math.floor(Math.random() * 1000000);
   const nickname = `Metamask${randomNumber}`;
   const joinDate = new Date().toISOString().split('T')[0];
@@ -47,7 +58,7 @@ export async function connectWalletService({ walletAddress, signature, message }
   if (!userId) {
     throw new AppError('User not found', 404);
   }
-  const createMetamaskWallet = await walletRepository.createMetamaskWallet(walletAddress, userId);
+  await walletRepository.createMetamaskWallet(walletAddress, userId);
 
   return { walletAddress, message: 'Wallet connected successfully.' };
 }
