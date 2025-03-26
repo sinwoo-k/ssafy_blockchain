@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import NFTSellModal from './NFTSellModal';
-import nftService from '../../API/nftApi';
+import nftService from '../../api/nftApi';
 
 const MyNFTList = () => {
   const [transactions, setTransactions] = useState([]);
