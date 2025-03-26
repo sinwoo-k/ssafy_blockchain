@@ -13,6 +13,18 @@ CREATE TABLE `auction_item` (
   PRIMARY KEY (`auction_item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- bidding_history: table
+create table bidding_history
+(
+    bidding_history_id int auto_increment
+        primary key,
+    auction_item_id    int         null,
+    bid_time           datetime(6) null,
+    bidding_price      double      null,
+    user_id            int         null,
+    wallet_id          int         null
+);
+
 -- comment: table
 CREATE TABLE `comment` (
   `comment_id` int NOT NULL AUTO_INCREMENT,
