@@ -21,5 +21,5 @@ public class EpisodeResponseDto {
     private Double rating;
     private Integer previousEpisodeId;
     private Integer nextEpisodeId;
-    private List<String> images;
+    private List<ImageResponseDto> images;
 }

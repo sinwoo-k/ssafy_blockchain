@@ -22,6 +22,9 @@ public class EpisodeImage {
     @Column(name = "episode_id", nullable = false)
     private Integer episodeId;
 
+    @Column(name = "file_size")
+    private Integer fileSize;
+
     @Column(name = "image_url")
     private String imageUrl;
 
