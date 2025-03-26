@@ -74,6 +74,7 @@ public class SecurityConfig {
                         "/api/redis/test",
                         "/api/sso/**"
                 ).permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         );
 

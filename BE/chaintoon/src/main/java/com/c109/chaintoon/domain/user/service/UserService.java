@@ -86,7 +86,7 @@ public class UserService {
 
         // 프로필 이미지 업데이트
         if (profileImage != null && !profileImage.isEmpty()) {
-            if(userRequestDto.getProfileImage() != null) {
+            if (userRequestDto.getProfileImage() != null && !userRequestDto.getProfileImage().equals("")) {
                 s3Service.deleteFile(user.getProfileImage());
             }
             String profileUrl = uploadProfile(userId, profileImage);
@@ -95,7 +95,7 @@ public class UserService {
 
         // 배경 이미지 업데이트
         if(backgroundImage != null && !backgroundImage.isEmpty()) {
-            if (user.getBackgroundImage() != null) {
+            if (user.getBackgroundImage() != null&& !user.getBackgroundImage().equals("")) {
                 s3Service.deleteFile(user.getBackgroundImage());
             }
             String backgroundUrl = uploadBackground(userId, backgroundImage);
