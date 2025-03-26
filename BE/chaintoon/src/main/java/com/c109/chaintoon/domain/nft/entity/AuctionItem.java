@@ -48,6 +48,9 @@ public class AuctionItem {
 
     @PrePersist
     protected void onCreate() {
+        if (bidderId == null) {
+            bidderId = 0;
+        }
         startTime = LocalDateTime.now();
         ended = "N";
         createdAt = LocalDateTime.now();
