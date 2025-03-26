@@ -69,7 +69,9 @@ const NavBar = () => {
             </Link>
           </div>
           <div className='flex h-full w-[100px] items-center justify-center'>
-            <Link className='text-lg'>팬아트</Link>
+            <Link to={'/fanart'} className='text-lg'>
+              팬아트
+            </Link>
           </div>
         </div>
         {/* 회원 관련 */}
