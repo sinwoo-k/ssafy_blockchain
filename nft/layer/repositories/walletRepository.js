@@ -31,7 +31,7 @@ export async function createUser(userData){
   const { nickname , joinDate, deleted } = userData;
   const [result] = await pool.execute(
     `INSERT INTO user (email, nickname, introduction, profile_image, background_image, follower, following, join_date, deleted ,status)
-     VALUES (?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ["", nickname, "", "", "", 0, 0, joinDate, deleted, "Y"]
   );
   return result.insertId;
