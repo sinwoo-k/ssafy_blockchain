@@ -82,9 +82,6 @@ public class EpisodeService {
         // 이미지 URL 목록 조회
         List<ImageResponseDto> imageUrls = getImageUrls(episode.getEpisodeId());
 
-        // 평균 평점 계산
-        double rating = calculateRating(episode);
-
         // DTO 변환
         return EpisodeResponseDto.builder()
                 .episodeId(episode.getEpisodeId())
@@ -95,7 +92,8 @@ public class EpisodeService {
                 .uploadDate(episode.getUploadDate())
                 .thumbnail(episode.getThumbnail())
                 .commentCount(episode.getCommentCount())
-                .rating(rating)
+                .ratingSum(episode.getRatingSum())
+                .ratingCount(episode.getRatingCount())
                 .previousEpisodeId(episode.getPreviousEpisodeId())
                 .nextEpisodeId(episode.getNextEpisodeId())
                 .images(imageUrls)
