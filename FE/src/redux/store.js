@@ -1,9 +1,14 @@
-import { configureStore } from '@reduxjs/toolkit'
-import userReducer from './reducers/userSlice'
+// redux/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import userReducer from './reducers/userSlice';
+import authReducer from './reducers/authSlice';
 
-export default configureStore({
+export const store = configureStore({
   reducer: {
-    // user 관련 기능
     user: userReducer,
-  },
-})
+    auth: authReducer,
+    // 다른 리듀서들...
+  }
+});
+
+export default store;
