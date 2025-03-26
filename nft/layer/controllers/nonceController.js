@@ -2,9 +2,9 @@ import { generateAndStoreNonce } from '../services/nonceService.js';
 
 export async function getNonce(req, res) {
   try {
-    const { walletAddress } = req.query;
+    const walletAddress = req.params;
     if (!walletAddress) {
-      return res.status(400).json({ error: 'user_email이 필요합니다.' });
+      return res.status(400).json({ error: '지갑 주소가 필요합니다.' });
     }
     const nonce = await generateAndStoreNonce(walletAddress);
     res.status(200).json({ nonce });
