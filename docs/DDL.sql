@@ -13,6 +13,16 @@ CREATE TABLE `auction_item` (
   PRIMARY KEY (`auction_item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- bidding_history: table
+CREATE TABLE `bidding_history` (
+  `bidding_history_id` int NOT NULL AUTO_INCREMENT,
+  `auction_item_id` int DEFAULT NULL,
+  `bid_time` datetime(6) DEFAULT NULL,
+  `bidding_price` double DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  PRIMARY KEY (`bidding_history_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- comment: table
 CREATE TABLE `comment` (
   `comment_id` int NOT NULL AUTO_INCREMENT,
@@ -62,6 +72,7 @@ CREATE TABLE `episode` (
 CREATE TABLE `episode_image` (
   `episode_image_id` int NOT NULL AUTO_INCREMENT,
   `episode_id` int NOT NULL,
+  `file_size` int DEFAULT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `image_order` int DEFAULT NULL,
   `deleted` char(1) DEFAULT NULL,
@@ -126,12 +137,12 @@ CREATE TABLE `nft` (
   `webtoon_id` int NOT NULL,
   `user_id` int NOT NULL,
   `type` varchar(50) DEFAULT NULL,
-  `type_id` int DEFAULT '0',
   `token_id` int DEFAULT '0',
   `contract_address` varchar(255) DEFAULT '0',
   `metadata_uri` varchar(1024) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` varchar(10) DEFAULT NULL,
+  `type_id` int NOT NULL COMMENT '타입 아이디값',
   PRIMARY KEY (`nft_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -197,7 +208,7 @@ CREATE TABLE `user` (
 -- wallet: table
 CREATE TABLE `wallet` (
   `wallet_id` int NOT NULL AUTO_INCREMENT,
-  `user_email` varchar(50) NOT NULL,
+  `user_id` int NOT NULL,
   `wallet_address` char(42) DEFAULT NULL,
   `private_key` varchar(255) DEFAULT NULL,
   `public_key` varchar(255) DEFAULT NULL,

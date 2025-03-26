@@ -1,19 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import NFTSellModal from './NFTSellModal';
-import { nftData } from '../../pages/mypage/data';
+import nftService from '../../api/nftApi';
 
 const MyNFTList = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // 판매 모달 상태
   const [showSellModal, setShowSellModal] = useState(false);
   const [selectedNft, setSelectedNft] = useState(null);
 
   useEffect(() => {
-    // 실제 구현에서는 API 호출하여 NFT 데이터 가져오기
-    setTransactions(nftData);
+    // API 호출하여 NFT 데이터 가져오기
+    fetchMyNFTs();
   }, []);
+
+  // 내 NFT 목록 가져오기
+  const fetchMyNFTs = async () => {
+    try {
+      setLoading(true);
+      const response = await nftService.getMyNFTs();
+      setTransactions(response || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('NFT 목록 로드 오류:', err);
+      setError('NFT 목록을 불러오는 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  };
 
   // NFT 판매 버튼 클릭 핸들러
   const handleSellClick = (nft) => {
@@ -28,18 +44,32 @@ const MyNFTList = () => {
   };
   
   // NFT 판매 처리 핸들러
-  const handleSellNft = (sellInfo) => {
-    console.log('NFT 판매 정보:', sellInfo);
-    // 실제 구현에서는 판매 API 호출
-    
-    // 판매 중인 상태로 UI 업데이트
-    setTransactions(prev => 
-      prev.map(item => 
-        item.id === sellInfo.nftId
-          ? { ...item, isOnSale: true, sellInfo }
-          : item
-      )
-    );
+  const handleSellNft = async (sellInfo) => {
+    try {
+      // API 호출하여 NFT 판매 등록
+      await nftService.sellNFT({
+        tokenId: sellInfo.nftId,
+        startPrice: sellInfo.startPrice,
+        endPrice: sellInfo.endPrice,
+        category: sellInfo.category,
+        endTime: sellInfo.auctionEndDate
+      });
+      
+      // 판매 중인 상태로 UI 업데이트
+      setTransactions(prev => 
+        prev.map(item => 
+          item.id === sellInfo.nftId
+            ? { ...item, isOnSale: true, sellInfo }
+            : item
+        )
+      );
+      
+      // 모달 닫기
+      handleCloseSellModal();
+    } catch (err) {
+      console.error('NFT 판매 등록 오류:', err);
+      // 에러 처리 로직 추가
+    }
   };
 
   // 검색어 입력 처리
@@ -52,6 +82,24 @@ const MyNFTList = () => {
     item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.owner?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // 로딩 중 표시
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#3cc3ec]"></div>
+      </div>
+    );
+  }
+
+  // 에러 표시
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-40 text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -90,13 +138,19 @@ const MyNFTList = () => {
           filteredTransactions.map((item) => (
             <div key={item.id} className="grid grid-cols-7 items-center py-3 border-b border-gray-800">
               <div className="flex items-center pl-2">
-                <div className="h-10 w-10 bg-gray-700 rounded"></div>
+                <div className="h-10 w-10 bg-gray-700 rounded overflow-hidden">
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-gray-700"></div>
+                  )}
+                </div>
               </div>
               <div className="text-sm font-medium truncate pr-2">{item.title || '웹툰 이름'}</div>
-              <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[80px]">{item.price} ETH</div>
-              <div className="text-sm text-center">{item.ethPrice} ETH</div>
-              <div className="text-sm text-center">{item.owner}</div>
-              <div className="text-sm text-center">{item.time}</div>
+              <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[80px]">{item.price || '0'} ETH</div>
+              <div className="text-sm text-center">{item.lastPrice || '0'} ETH</div>
+              <div className="text-sm text-center">{item.owner || '나'}</div>
+              <div className="text-sm text-center">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-'}</div>
               <div className="text-center">
                 {item.isOnSale ? (
                   <span className="text-xs text-[#3cc3ec]">판매 중</span>
@@ -113,12 +167,12 @@ const MyNFTList = () => {
           ))
         ) : (
           <div className="text-center py-8 text-gray-400">
-            검색 결과가 없습니다.
+            {searchTerm ? '검색 결과가 없습니다.' : 'NFT가 없습니다.'}
           </div>
         )}
       </div>
       
-      {/* NFT 판매 모달 - 별도 컴포넌트로 분리 */}
+      {/* NFT 판매 모달 */}
       <NFTSellModal 
         isOpen={showSellModal}
         onClose={handleCloseSellModal}

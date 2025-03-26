@@ -18,8 +18,9 @@ public class EpisodeResponseDto {
     private String uploadDate;
     private String thumbnail;
     private Long commentCount;
-    private Double rating;
+    private Long ratingSum;
+    private Long ratingCount;
     private Integer previousEpisodeId;
     private Integer nextEpisodeId;
-    private List<String> images;
+    private List<ImageResponseDto> images;
 }

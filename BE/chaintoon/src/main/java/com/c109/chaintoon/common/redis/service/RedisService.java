@@ -34,4 +34,11 @@ public class RedisService {
                 .orElse(null);
 
     }
+
+    public boolean isTokenBlacklisted(String tokenId) {
+        return Optional.ofNullable(redisTemplate.opsForValue().get(tokenId))
+                .map(value -> "blacklisted".equals(value.toString()))
+                .orElse(false);
+    }
+
 }

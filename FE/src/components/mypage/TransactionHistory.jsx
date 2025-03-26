@@ -1,21 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { transactionData } from '../../pages/mypage/data';
+import nftService from '../../api/nftApi';
 
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 실제 구현에서는 API 호출하여 거래 내역 데이터 가져오기
+    // API 호출하여 거래 내역 데이터 가져오기
     fetchTransactionData();
   }, []);
 
-  // 거래 내역 데이터 가져오기 (실제로는 API 호출)
-  const fetchTransactionData = () => {
-    // 데이터 로딩 시뮬레이션
-    setTimeout(() => {
-      setTransactions(transactionData);
-    }, 300);
+  // 거래 내역 데이터 가져오기
+  const fetchTransactionData = async () => {
+    try {
+      setLoading(true);
+      const response = await nftService.getMyTradingHistory();
+      setTransactions(response || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('거래 내역 로드 오류:', err);
+      setError('거래 내역을 불러오는 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
   };
+
+  // 로딩 중 표시
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#3cc3ec]"></div>
+      </div>
+    );
+  }
+
+  // 에러 표시
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-40 text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -36,19 +62,25 @@ const TransactionHistory = () => {
           transactions.map((item) => (
             <div key={item.id} className="grid grid-cols-7 items-center py-3 border-b border-gray-800">
               <div className="flex items-center pl-2">
-                <div className="h-10 w-10 bg-gray-700 rounded"></div>
+                <div className="h-10 w-10 bg-gray-700 rounded overflow-hidden">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-gray-700"></div>
+                  )}
+                </div>
               </div>
               <div className="text-sm font-medium truncate pr-2">{item.name || '웹툰 이름'}</div>
               <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[80px]">{item.price} ETH</div>
-              <div className="text-sm text-center">{item.quantity}</div>
+              <div className="text-sm text-center">{item.quantity || 1}</div>
               <div className="text-sm text-center truncate" title={item.from}>{item.from}</div>
               <div className="text-sm text-center truncate" title={item.to}>{item.to}</div>
-              <div className="text-sm text-center">{item.time}</div>
+              <div className="text-sm text-center">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</div>
             </div>
           ))
         ) : (
           <div className="flex justify-center items-center h-40 text-gray-500">
-            거래 내역을 불러오는 중...
+            거래 내역이 없습니다.
           </div>
         )}
       </div>

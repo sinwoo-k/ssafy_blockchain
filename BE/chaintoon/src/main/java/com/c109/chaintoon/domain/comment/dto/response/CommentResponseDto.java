@@ -10,6 +10,8 @@ import lombok.*;
 public class CommentResponseDto {
     private Integer commentId;
     private Integer userId;
+    private String nickname;
+    private String profileImage;
     private Integer usageId;
     private String type;
     private Integer parentId;
