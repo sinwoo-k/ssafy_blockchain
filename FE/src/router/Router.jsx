@@ -29,6 +29,9 @@ const MyPage = lazy(() => import('../pages/mypage/Mypage'))
 const StoreMain = lazy(() => import('../pages/store/StoreMain'))
 const ProductDetail = lazy(() => import('../pages/store/ProductDetail'))
 
+// 팬아트 section
+const FanartMain = lazy(() => import('../pages/fanart/FanartMain'))
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -149,6 +152,15 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <CollectionPage />
+          </Suspense>
+        ),
+      },
+      // 팬아트 section
+      {
+        path: '/fanart',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartMain />
           </Suspense>
         ),
       },
