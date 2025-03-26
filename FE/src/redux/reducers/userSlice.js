@@ -1,47 +1,52 @@
-// redux/reducers/userSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+// src/redux/reducers/userSlice.js
+import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   isAuthenticated: false,
-  user: null,
-  token: localStorage.getItem('token') || null,
-  loading: false,
-  error: null
-};
+  walletAddress: null,
+  walletType: null, // 'metamask', 'email', 'ssafy' 등
+  userData: null,
+  token: null
+}
 
-const userSlice = createSlice({
+export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     setAuthenticated: (state, action) => {
-      state.isAuthenticated = action.payload;
-    },
-    setUser: (state, action) => {
-      state.user = action.payload;
-    },
-    setToken: (state, action) => {
-      state.token = action.payload;
-      // 토큰을 로컬 스토리지에도 저장
-      if (action.payload) {
-        localStorage.setItem('token', action.payload);
-      } else {
-        localStorage.removeItem('token');
+      state.isAuthenticated = action.payload
+      // 로그아웃 시 모든 상태 초기화
+      if (!action.payload) {
+        state.walletAddress = null
+        state.walletType = null
+        state.userData = null
+        state.token = null
       }
     },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
+    setWalletAddress: (state, action) => {
+      state.walletAddress = action.payload
     },
-    setError: (state, action) => {
-      state.error = action.payload;
+    setWalletType: (state, action) => {
+      state.walletType = action.payload
+    },
+    setUserData: (state, action) => {
+      state.userData = action.payload
+    },
+    setToken: (state, action) => {
+      state.token = action.payload
     },
     logout: (state) => {
-      state.isAuthenticated = false;
-      state.user = null;
-      state.token = null;
-      localStorage.removeItem('token');
+      state.isAuthenticated = false
+      state.walletAddress = null
+      state.walletType = null
+      state.userData = null
+      state.token = null
+      // 토큰 제거
+      localStorage.removeItem('token')
     }
   }
-});
+})
 
-export const userReducerActions = userSlice.actions;
-export default userSlice.reducer;
+export const userReducerActions = userSlice.actions
+
+export default userSlice.reducer
