@@ -30,7 +30,7 @@ export async function createMetamaskWallet(walletAddress, userId) {
 export async function createUser(userData){
   const { nickname , joinDate, deleted } = userData;
   const [result] = await pool.execute(
-    `INSERT INTO user (email, nickname, introduction, profile_image, background_image, follwer, following, join_date, deleted ,status)
+    `INSERT INTO user (email, nickname, introduction, profile_image, background_image, follower, following, join_date, deleted ,status)
      VALUES (?, ?, ?)`,
     ["", nickname, "", "", "", 0, 0, joinDate, deleted, "Y"]
   );
