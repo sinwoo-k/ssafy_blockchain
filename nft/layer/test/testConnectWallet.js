@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import { generateAndStoreNonce } from "../../nonce/service/nonceService.js";
-import { connectWalletService } from "../service/walletService.js";
+import { generateAndStoreNonce } from "../services/nonceService.js";
+import { connectWalletService } from "../services/walletService.js";
 
 // 테스트용 스크립트
 async function testConnectWallet() {

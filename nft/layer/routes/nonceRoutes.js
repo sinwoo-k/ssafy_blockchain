@@ -1,5 +1,5 @@
 import express from 'express';
-import { getNonce } from '../controller/nonceController.js';
+import { getNonce } from '../controllers/nonceController.js';
 
 const router = express.Router();
 

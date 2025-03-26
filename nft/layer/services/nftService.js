@@ -8,8 +8,10 @@ import {
   saveNftToDatabase,
   getEpisodeById, getFanartById,
   getGoodsById,
-  getNftById
-} from '../repository/nftRepository.js';
+  getNftById,
+  getNftsByUserId,
+  getAllNfts
+} from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
 import { Readable } from 'stream';
@@ -303,9 +305,26 @@ export async function buyNftService({ tokenId, price, privateKey }) {
   }
 }
 
+export async function getMyNftsService(userId) {
+  const nfts = await getNftsByUserId(userId);
+  if (!nfts || nfts.length === 0) {
+    throw new AppError('보유한 NFT가 없습니다.', 404);
+  }
+  return nfts;
+}
+
+export async function getAllNftsService() {
+  const nfts = await getAllNfts();
+  if (!nfts || nfts.length === 0) {
+    throw new AppError('NFT가 없습니다.', 404);
+  }
+  return nfts;
+}
+
 export default {
   mintNftService,
   getNftMetadata,
   listNftService,
   buyNftService,
+  getMyNftsService,
 };

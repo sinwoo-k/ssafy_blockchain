@@ -35,7 +35,8 @@ public class SecurityConfig {
                     "http://i12c209.p.ssafy.io",
                     "http://i12c209.p.ssafy.io:5000",
                     "https://i12c209.p.ssafy.io",
-                    "https://i12c209.p.ssafy.io:5000"
+                    "https://i12c209.p.ssafy.io:5000",
+                    "https://min9805.github.io"
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("Authorization", "Refresh-Token", "Content-Type"));
@@ -58,7 +59,7 @@ public class SecurityConfig {
                         "/api/webtoons/search"
                         ,"/api/webtoons/{webtoonId}"
                         ,"/api/episodes/**",
-                        "/api/comments",
+                        "/api/comments/**",
                         "/api/goods/**",
                         "/api/fanarts/**",
                         "/api/nfts",

@@ -1,15 +1,16 @@
-import { mintNftService, getNftMetadata, listNftService, buyNftService } from '../service/nftService.js';
+import { mintNftService, getNftMetadata, listNftService, buyNftService, getMyNftsService } from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
+
 
 export async function mintNftController(req, res) {
     try {
-        const { webtoonId, userId, type, typeId, s3Url, originalCreator, registrant} = req.body;
+        const userId = req.user.sub;
+
+        const { webtoonId, type, typeId, s3Url, originalCreator, registrant} = req.body;
 
         // 필수 파라미터 확인
         if (!webtoonId ) {
             return res.status(400).json({ error: 'webtoonId는 필수입니다.' });
-        } else if (!userId) {
-            return res.status(400).json({ error: 'userId는 필수입니다.' });
         } else if (!type) {
             return res.status(400).json({ error: 'type은 필수입니다.' });
         } else if (!typeId) {
@@ -87,3 +88,23 @@ export async function buyNftController(req, res) {
         res.status(status).json({ error: err.message || 'NFT 구매 중 오류가 발생했습니다.' });
     }
 }
+
+export async function getMyNftsController(req, res, next) {
+    try {
+      // 예시: 인증 미들웨어에서 req.user에 사용자 정보가 담겨 있다고 가정
+      const userId = req.user.id;
+      const nfts = await getMyNftsService(userId);
+      res.status(200).json({ nfts });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  export async function getAllNftsController(req, res, next) {
+    try {
+      const nfts = await getAllNftsService();
+      res.status(200).json({ nfts });
+    } catch (error) {
+      next(error);
+    }
+  }

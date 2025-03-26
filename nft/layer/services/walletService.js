@@ -4,9 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { encrypt, decrypt } from '../../cryptoHelper.js';
-import * as walletRepository from '../repository/walletRepository.js';
+import * as walletRepository from '../repositories/walletRepository.js';
 import AppError from '../../utils/AppError.js';
-import { getNonce, deleteNonce } from '../../nonce/service/nonceService.js';
+import { getNonce, deleteNonce } from './nonceService.js';
+import { get } from 'http';
 
 // __dirname 대체 (ES Module 환경)
 const __filename = fileURLToPath(import.meta.url);
@@ -28,12 +29,22 @@ const walletManagerContract = new ethers.Contract(WALLET_CONTRACT_ADDRESS, CONTR
 
 export async function connectWalletService({ walletAddress, signature, message }) {
 
-  // 메시지 서명 검증 (서명된 메시지와 제공된 지갑 주소 비교)
+  const storedNonce = await getNonce(walletAddress);
+  if (!storedNonce) {
+    throw new AppError('해당 지갑 주소에 대한 nonce가 존재하지 않습니다.', 400);
+  }
+  // 클라이언트에서 전달받은 message가 저장된 nonce와 일치하는지 확인
+  if (storedNonce !== message) {
+    throw new AppError('전달된 메시지가 유효하지 않습니다.', 400);
+  }
   const recoveredAddress = ethers.verifyMessage(message, signature);
   console.log(recoveredAddress);
   if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
     throw new AppError('서명이 유효하지 않습니다.', 401);
   }
+  
+  await deleteNonce(walletAddress);
+
   const randomNumber = Math.floor(Math.random() * 1000000);
   const nickname = `Metamask${randomNumber}`;
   const joinDate = new Date().toISOString().split('T')[0];
@@ -47,23 +58,12 @@ export async function connectWalletService({ walletAddress, signature, message }
   if (!userId) {
     throw new AppError('User not found', 404);
   }
-  const createMetamaskWallet = await walletRepository.createMetamaskWallet(walletAddress, userId);
+  await walletRepository.createMetamaskWallet(walletAddress, userId);
 
   return { walletAddress, message: 'Wallet connected successfully.' };
 }
 
-export async function createWalletService({ token }) {
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  } catch (error) {
-    throw new AppError('유효하지 않은 토큰입니다.', 401);
-  }
-  const userId = decoded.sub;
-  if (!userId) {
-    throw new AppError('토큰에 사용자 정보가 포함되어 있지 않습니다.', 401);
-  }
-
+export async function createWalletService({ userId }) {
   // 1. 새 지갑 생성 (랜덤 지갑 생성)
   const newWallet = ethers.Wallet.createRandom();
   const walletAddress = newWallet.address;
@@ -105,14 +105,7 @@ export async function createWalletService({ token }) {
   };
 }
 
-export async function getWalletInfoService({ token }) {
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  } catch (error) {
-    throw new AppError('유효하지 않은 토큰입니다.', 401);
-  }
-  const userId = decoded.sub;
+export async function getWalletInfoService({ userId }) {
 
   // DB에서 지갑 정보 조회
   const wallet = await walletRepository.findWalletByUserId(userId);
@@ -120,10 +113,6 @@ export async function getWalletInfoService({ token }) {
   const walletAddress = wallet.wallet_address;
   // 온체인 지갑 정보 조회
   const result = await walletManagerContract.getWalletInfo(walletAddress);
-
-  // 개인키 및 복구 구문 복호화
-  const decryptedPrivateKey = decrypt(wallet.private_key);
-  const decryptedRecoveryPhrase = decrypt(wallet.recovery_phrase);
 
   // ETH 잔고 조회
   const ethBalanceWei = await provider.getBalance(walletAddress);
@@ -133,8 +122,6 @@ export async function getWalletInfoService({ token }) {
     walletId: wallet.wallet_id,
     walletAddress: wallet.wallet_address,
     publicKey: wallet.public_key,
-    privateKey: decryptedPrivateKey,
-    recoveryPhrase: decryptedRecoveryPhrase,
     coinType: wallet.coin_type,
     isRegistered: result[0],
     contractPublicKey: result[1],
@@ -145,6 +132,7 @@ export async function getWalletInfoService({ token }) {
 }
 
 export async function sendTransactionService({ fromAddress, toAddress, amount }) {
+  // fromAddress에 해당하는 지갑 정보 조회
   const wallet = await walletRepository.findWalletByAddress(fromAddress);
   if (!wallet) {
     throw new Error('Wallet not found');
@@ -152,18 +140,30 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
 
   // 송금 금액을 Wei로 변환 (Ethers v6 구문)
   const amountToSend = ethers.parseEther(amount.toString());
+  console.log("Amount to send (wei):", amountToSend.toString());
 
-  // 서버에 개인키가 저장되어 있는 경우
+  // 트랜잭션 실행 전, 가스 가격 및 가스 한도 정보 조회 (Ethers v6)
+  const feeData = await provider.getFeeData();
+  const gasPrice = feeData.gasPrice; // BigInt (wei 단위)
+  // gasPrice를 Gwei 단위의 10진수 문자열로 변환
+  const gasPriceGwei = ethers.formatUnits(gasPrice, "gwei");
+  const gasLimit = 21000; // 기본 ETH 송금의 가스 한도
+  console.log("Gas Price (Gwei):", gasPriceGwei);
+  console.log("Gas Limit:", gasLimit.toString());
+
+  // 서버에 개인키가 저장되어 있는 경우: 해당 지갑으로 직접 서명하여 송금
   if (wallet.private_key) {
     // 개인키 복호화 후 Wallet 객체 생성
     const decryptedPrivateKey = decrypt(wallet.private_key);
     const userWallet = new ethers.Wallet(decryptedPrivateKey, provider);
 
     try {
-      // 트랜잭션 생성 및 전송
+      // 트랜잭션 생성 및 전송 (가스 정보도 함께 지정)
       const tx = await userWallet.sendTransaction({
         to: toAddress,
         value: amountToSend,
+        gasPrice: gasPrice,
+        gasLimit: gasLimit,
       });
       // 트랜잭션 확인 대기
       const receipt = await tx.wait();
@@ -180,30 +180,32 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
       throw new AppError('트랜잭션 전송 중 오류가 발생했습니다.', 500);
     }
   } else {
-    // Metamask 연동된 계정의 경우: 서버에는 개인키가 없으므로 클라이언트에서 서명하도록 트랜잭션 정보를 반환
+    const adminWallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);
+    try {
+      const tx = await adminWallet.sendTransaction({
+        to: toAddress,
+        value: amountToSend,
+        gasPrice: gasPrice,
+        gasLimit: gasLimit,
+      });
+      const receipt = await tx.wait();
 
-    // 필요한 트랜잭션 정보 구성
-    const nonce = await provider.getTransactionCount(fromAddress);
-    const gasPrice = await provider.getGasPrice();
-    const gasLimit = 21000; // 기본 ETH 송금의 가스 한도
-
-    // 클라이언트에서 Metamask로 서명 요청할 때 사용될 트랜잭션 객체 구성
-    const transactionPayload = {
-      from: fromAddress,
-      to: toAddress,
-      value: amountToSend.toString(), // 일반적으로 wei 단위의 문자열
-      nonce,
-      gasPrice: gasPrice.toHexString(),
-      gasLimit: '0x5208'  // 21000의 16진수 표현 (0x5208)
-    };
-
-    return {
-      metamask_required: true,
-      message: '개인키가 없으므로, Metamask를 통해 트랜잭션 서명이 필요합니다.',
-      transactionPayload
-    };
+      return {
+        // fallback인 경우 실제 송금은 adminWallet으로 진행됨
+        from: adminWallet.address,
+        to: toAddress,
+        amount: `${amount} ETH`,
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        note: "Sent using admin wallet as fallback"
+      };
+    } catch (error) {
+      console.error("Fallback 트랜잭션 전송 중 오류:", error);
+      throw new AppError('트랜잭션 전송 중 오류가 발생했습니다.', 500);
+    }
   }
 }
+
 
 
 export default {
