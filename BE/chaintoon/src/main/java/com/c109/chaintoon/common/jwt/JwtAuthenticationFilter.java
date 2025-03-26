@@ -36,25 +36,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        String token = resolveToken(request);
+        // 1. 쿠키에서 토큰 추출
+        String token = null;
+        if (request.getCookies() != null) { // Null 체크 추가
+            token = Arrays.stream(request.getCookies())
+                    .filter(cookie -> "jwt".equals(cookie.getName()))
+                    .findFirst()
+                    .map(Cookie::getValue)
+                    .orElse(null);
+        }
 
+        // 2. 헤더 토큰 추출 로직 간소화
+        if (token == null) {
+            token = resolveToken(request);
+        }
+
+        // 3. 인증 처리 로직
         try {
             if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token, true)) {
-                String tokenId = jwtTokenProvider.getTokenId(token);
-
-                // 블랙리스트 검증 추가
-                if (redisService.isTokenBlacklisted(tokenId)) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Blacklisted token");
-                    return;
-                }
-
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
             return;
         }
+
+//        // 토큰이 없을 경우
+//        // 인터셉터 개발
+//        if () {
+//        }else{
+//
+//        }
 
         chain.doFilter(request, response);
     }

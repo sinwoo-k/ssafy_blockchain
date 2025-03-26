@@ -24,7 +24,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -48,10 +47,7 @@ public class SecurityConfig {
         }));
 
         // 2. CSRF 보호 활성화
-        http.csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/api/auth/**") // 인증 엔드포인트 예외 처리
-        );
+        http.csrf().disable();
 
         // 3. URL별 권한 설정
         http.authorizeHttpRequests(auth -> auth
@@ -78,8 +74,6 @@ public class SecurityConfig {
                         "/api/redis/test",
                         "/api/sso/**"
                 ).permitAll()
-                .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")  // 관리자만 접근
-                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         );
 

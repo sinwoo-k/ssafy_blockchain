@@ -42,13 +42,14 @@ public class AuthController {
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
                 .sameSite("Lax") // CSRF 보호
-                .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
+//                .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok("인증 성공");
     }
+
 
     
 }
