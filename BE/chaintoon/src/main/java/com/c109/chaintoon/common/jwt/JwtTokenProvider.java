@@ -175,29 +175,33 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String token) {
-        // 키 변수명 수정 (accessKey 사용)
+    public String getTokenId(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(accessKey)  // key -> accessKey
+                .setSigningKey(accessKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("tokenId", String.class);
+    }
+
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(accessKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
-        // 권한 정보 추출 방식 변경
+        // 사용자 권한 정보 추출
         String role = claims.get("role", String.class);
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_" + role)
         );
 
-        // 사용자 식별 정보 설정 (User 대신 userId 사용)
+        // 사용자 ID 추출 및 Authentication 객체 생성
         Integer userId = Integer.valueOf(claims.getSubject());
-
-        return new UsernamePasswordAuthenticationToken(
-                userId,
-                null,
-                authorities
-        );
+        return new UsernamePasswordAuthenticationToken(userId, null, authorities);
     }
+
 
 
 }
