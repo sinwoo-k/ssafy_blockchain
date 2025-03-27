@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 3. 인증 처리 로직
         try {
-            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token, true)) {
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -76,6 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
     private void setAuthentication(Integer userId, String role) {
         List<SimpleGrantedAuthority> authorities;
         if ("ADMIN".equalsIgnoreCase(role)) {
