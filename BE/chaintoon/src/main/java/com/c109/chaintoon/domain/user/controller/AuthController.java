@@ -50,6 +50,5 @@ public class AuthController {
         return ResponseEntity.ok("인증 성공");
     }
 
-
     
 }
