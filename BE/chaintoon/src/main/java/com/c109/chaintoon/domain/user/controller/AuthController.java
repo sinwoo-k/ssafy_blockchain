@@ -4,6 +4,7 @@ import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +52,17 @@ public class AuthController {
         return ResponseEntity.ok("인증 성공");
     }
 
-    
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // JWT 쿠키 제거
+        Cookie jwtCookie = new Cookie("jwt", null); // 쿠키 이름은 "jwt"
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true); // HTTPS 환경에서만 동작
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0); // 쿠키 즉시 삭제
+        response.addCookie(jwtCookie);
+
+        return ResponseEntity.ok("로그아웃 성공");
+    }
 }
