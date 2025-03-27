@@ -31,7 +31,7 @@ const NewFanartCard = ({ fanart }) => {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
     >
-      <Link onClick={handleClick}>
+      <Link to={`/fanart/${fanart.fanartId}`} onClick={handleClick}>
         <div>
           <img
             src={fanart.fanartImage}
