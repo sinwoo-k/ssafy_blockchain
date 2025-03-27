@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import WebtoonDetailInfo from '../../components/webtoon/WebtoonDetailInfo'
 import WebtoonDetailEpisodeList from '../../components/webtoon/WebtoonDetailEpisodeList'
-import { getWebtoon } from '../../utils/api/webtoonAPI'
+import { getWebtoon } from '../../api/webtoonAPI'
 
 const WebtoonDetail = () => {
   const params = useParams()

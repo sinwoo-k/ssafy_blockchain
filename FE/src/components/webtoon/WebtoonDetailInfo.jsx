@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { formattingNumber } from '../../utils/formatting'
+
 // 디폴트 이미지
 import fantasyCover from '../../assets/defaultCover/fantasy.webp'
 // 아이콘
@@ -8,6 +10,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
 
 const WebtoonDetailInfo = ({ webtoon }) => {
+  console.log(webtoon)
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
 
@@ -34,23 +37,23 @@ const WebtoonDetailInfo = ({ webtoon }) => {
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}
-            <div className='flex items-center justify-evenly'>
+            <div className='grid grid-cols-3 gap-2'>
               <div className='flex items-center gap-1'>
                 <FavoriteIcon sx={{ fontSize: 25, color: '#ff1919' }} />
-                <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  109
+                <span className='inline-block  translate-y-[1px] transform'>
+                  {formattingNumber(109000)}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <VisibilityIcon sx={{ fontSize: 30, color: '#3cc3ec' }} />
-                <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  {webtoon.viewCount}
+                <span className='] inline-block translate-y-[1px] transform'>
+                  {formattingNumber(webtoon.viewCount)}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
-                <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  4.56
+                <span className='inline-block  translate-y-[1px] transform'>
+                  {(webtoon.rating / 2).toFixed(2)}
                 </span>
               </div>
             </div>

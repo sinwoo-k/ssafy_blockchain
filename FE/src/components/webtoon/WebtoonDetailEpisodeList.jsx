@@ -4,7 +4,7 @@ import EpisodeCard from './EpisodeCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-import { getEpisodeList } from '../../utils/api/webtoonAPI'
+import { getEpisodeList } from '../../api/webtoonAPI'
 
 const WebtoonDetailEpisodeList = () => {
   const params = useParams()

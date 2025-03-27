@@ -3,7 +3,6 @@ import React from 'react'
 import StarIcon from '@mui/icons-material/Star'
 
 const EpisodeCard = ({ episode }) => {
-  console.log(episode)
   return (
     <div className='border-text flex h-[100px] items-center gap-10 border-b px-3'>
       {/* 썸네일 이미지 */}
@@ -24,7 +23,7 @@ const EpisodeCard = ({ episode }) => {
           <span className='flex items-center gap-1'>
             <StarIcon sx={{ color: '#ffff19' }} />
             <span className='inline-block w-[45px] translate-y-[1px] transform'>
-              {episode.rating}
+              {(episode.rating / 2).toFixed(2)}
             </span>
           </span>
           <span className='text-text/50 inline-block translate-y-[1px] transform'>

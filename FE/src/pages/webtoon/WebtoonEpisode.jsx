@@ -5,25 +5,12 @@ import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
 import WebtoonEpisodeComment from '../../components/webtoon/WebtoonEpisodeComment'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
-import { getEpisode } from '../../utils/api/webtoonAPI'
+import { getEpisode } from '../../API/webtoonAPI'
 
-const dummyData = {
-  title: '테스트 에피소드',
-  webtoon: '웹툰',
-  images: [
-    'https://picsum.photos/600/800.jpg?ramdom=1',
-    'https://picsum.photos/600/800.jpg?ramdom=2',
-    'https://picsum.photos/600/800.jpg?ramdom=3',
-    'https://picsum.photos/600/800.jpg?ramdom=4',
-    'https://picsum.photos/600/800.jpg?ramdom=5',
-    'https://picsum.photos/600/800.jpg?ramdom=6',
-    'https://picsum.photos/600/800.jpg?ramdom=7',
-    'https://picsum.photos/600/800.jpg?ramdom=8',
-    'https://picsum.photos/600/800.jpg?ramdom=9',
-  ],
-  writerComment: '.',
-  rating: 10.0,
-}
+const dummyData = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+  23, 24, 25, 26, 27, 28, 29, 30,
+].map((num) => `https://picsum.photos/600/800.jpg?ramdom=${num}`)
 
 const WebtoonEpisode = () => {
   const params = useParams()
@@ -63,7 +50,7 @@ const WebtoonEpisode = () => {
   const getData = async () => {
     try {
       const data = await getEpisode(params.episodeId)
-      console.log(data)
+      setEpisode(data)
     } catch (error) {
       console.error('회차 불러오기 실패: ', error)
     }
@@ -88,13 +75,16 @@ const WebtoonEpisode = () => {
     <div className='relative py-[60px]'>
       {/* 웹툰 내비바 */}
       {navbarShow && (
-        <WebtoonViewerNavBar title={episode.title} webtoon={episode.webtoon} />
+        <WebtoonViewerNavBar
+          title={episode.episodeName}
+          webtoon={episode.webtoon}
+        />
       )}
       {/* 웹툰 뷰어 */}
       <div ref={ref} className='mb-24'>
         <WebtoonViewer
           handleClickViewer={handleClickViewer}
-          images={episode.images}
+          images={dummyData}
         />
       </div>
       {/* 유틸 기능 */}
@@ -103,7 +93,7 @@ const WebtoonEpisode = () => {
         rating={episode.rating}
       />
       {/* 댓글 */}
-      <WebtoonEpisodeComment />
+      <WebtoonEpisodeComment episodeId={params.episodeId} />
     </div>
   )
 }

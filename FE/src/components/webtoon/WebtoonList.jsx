@@ -7,7 +7,7 @@ import {
 } from 'react-virtualized'
 import 'react-virtualized/styles.css'
 import WebtoonCard from './WebtoonCard'
-import { getWebtoonList } from '../../utils/api/webtoonAPI'
+import { getWebtoonList } from '../../api/webtoonAPI'
 
 const WebtoonList = () => {
   const [webtoons, setWebtoons] = useState([]) // 웹툰 리스트
