@@ -32,6 +32,7 @@ public class SecurityConfig {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(
                     "http://localhost:5173",
+                    "https://localhost:5173",
                     "http://i12c209.p.ssafy.io",
                     "http://i12c209.p.ssafy.io:5000",
                     "https://i12c209.p.ssafy.io",
