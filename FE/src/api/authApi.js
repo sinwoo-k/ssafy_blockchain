@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://j12c109.p.ssafy.io';
+const BASE_URL = 'https://j12c109.p.ssafy.io/api';
 
 const authApi = axios.create({
   baseURL: BASE_URL,
@@ -9,22 +9,22 @@ const authApi = axios.create({
 });
 
 export const requestEmailVerification = async (email) => {
-  const res = await authApi.post('/api/auth/email-login', { email });
+  const res = await authApi.post('/auth/email-login', { email });
   return res.data;
 };
 
 export const verifyEmailCode = async (email, code) => {
-  const res = await authApi.post('/api/auth/verify-code', { email, code });
+  const res = await authApi.post('/auth/verify-code', { email, code });
   return res.data;
 };
 
 export const requestMetaMaskNonce = async (address) => {
-  const res = await authApi.get(`/api/nft/nonce?walletAddress=${address}`);
+  const res = await authApi.get(`/nft/nonce?walletAddress=${address}`);
   return res.data.nonce;
 };
 
 export const verifyMetaMaskSignature = async (address, signature, nonce) => {
-  const res = await authApi.post('/api/nft/connect-wallet', {
+  const res = await authApi.post('/nft/connect-wallet', {
     walletAddress: address,
     signature,
     message: nonce,
@@ -33,7 +33,7 @@ export const verifyMetaMaskSignature = async (address, signature, nonce) => {
 };
 
 export const logout = async () => {
-  const res = await authApi.post('/api/auth/logout');
+  const res = await authApi.post('/auth/logout');
   return res.data;
 };
 

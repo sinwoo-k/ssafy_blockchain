@@ -27,6 +27,7 @@ export const userSlice = createSlice({
       state.walletType = action.payload;
     },
     setUserData: (state, action) => {
+      console.log(action.payload)
       state.userData = action.payload;
     },
     setUser:(state,action) =>{

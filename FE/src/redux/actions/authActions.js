@@ -8,12 +8,22 @@ import { getMyUserInfo } from '../../api/userApi';
 export const fetchMyUserInfo = () => async (dispatch) => {
   try {
     const userData = await getMyUserInfo();
-    dispatch(userReducerActions.setAuthenticated(true));
-    dispatch(userReducerActions.setUser(userData));
-    return userData; // ✅ 추가: 호출 측에서 활용 가능
+    console.log('Fetched user data:', userData); // 받아온 데이터 확인
+    
+    if (userData) {
+      dispatch(userReducerActions.setAuthenticated(true));
+      dispatch(userReducerActions.setUser(userData)); // userData가 제대로 전달되는지 확인
+      console.log('User data stored in Redux');
+      return userData;
+    } else {
+      console.warn('No user data received');
+      dispatch(userReducerActions.logout());
+      return null;
+    }
   } catch (error) {
+    console.error('사용자 정보 로드 실패:', error);
     dispatch(userReducerActions.logout());
-    throw error; // ✅ 추가: 호출 측에서 에러 핸들링 가능
+    return null;
   }
 };
 
@@ -79,9 +89,13 @@ export const metaMaskLoginAction = () => async (dispatch) => {
 // 인증상태 체크 (새롭게 추가)
 export const checkAuthStatus = () => async (dispatch) => {
   try {
-    const res = await authService.get('/api/auth/status');
-    dispatch(userReducerActions.setAuthenticated(res.data.isAuthenticated));
-    dispatch(userReducerActions.setUser(res.data.user));
+    const userData = await getMyUserInfo();
+    if (userData){
+      dispatch(userReducerActions.setAuthenticated(true));
+      dispatch(userReducerActions.setUser(userData));
+    }else{
+      dispatch(userReducerActions.logout());
+    }
   } catch {
     dispatch(userReducerActions.logout());
   }

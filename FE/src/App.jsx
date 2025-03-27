@@ -36,13 +36,17 @@ function App() {
 
     // 3️⃣ JWT 쿠키로 로그인 상태 유지 (fetchMyUserInfo는 한 번만 호출됨)
     dispatch(fetchMyUserInfo())
-      .then((data) => {
-        console.log('✅ 내 정보 로딩 성공:', data);
-      })
-      .catch((err) => {
-        console.error('🚨 내 정보 로딩 실패:', err);
-        dispatch(logout());
-      });
+    .then((data) => {
+      console.log('✅ 내 정보 로딩 성공:', data);
+      if (data) {
+        console.log('사용자 ID:', data.id);
+        console.log('사용자 이메일:', data.email);
+      }
+    })
+    .catch((err) => {
+      console.error('🚨 내 정보 로딩 실패:', err);
+      dispatch(userReducerActions.logout());
+    });
 
     // 4️⃣ 리스너 제거
     return () => {

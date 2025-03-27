@@ -1,7 +1,7 @@
 // userApi.js (최종 최적화 코드)
 import axios from 'axios';
 
-const BASE_URL = 'https://j12c109.p.ssafy.io';
+const BASE_URL = 'https://j12c109.p.ssafy.io/api';
 
 const userApi = axios.create({
   baseURL: BASE_URL,
@@ -11,14 +11,14 @@ const userApi = axios.create({
 
 // 사용자 정보 조회
 const getUserInfo = async (userId) => {
-  const res = await userApi.get(`/api/users/${userId}`);
+  const res = await userApi.get(`/users/${userId}`);
   return res.data;
 };
 
 // 내 정보 조회 API
 export const getMyUserInfo = async () => {
   try {
-    const res = await userApi.get('/api/users/myInfo');
+    const res = await userApi.get('/users/myInfo');
     console.log(res)
     return res.data;
     
