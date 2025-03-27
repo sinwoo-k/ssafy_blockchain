@@ -28,25 +28,18 @@ public class JwtTokenProvider {
     @Value("${jwt.secret-key-access}")
     private String accessSecretKey;
 
-    @Value("${jwt.secret-key-refresh}")
-    private String refreshSecretKey;
-
     @Value("${jwt.access-token-validity-in-ms}")
     private long accessTokenValidityInMilliseconds;
 
     @Value("${jwt.refresh-token-validity-in-ms}")
     private long refreshValidityInMilliseconds;
 
-    private long temporaryTokenValidityInMilliseconds = 6000 * 100;
-
     private Key accessKey;
-    private Key refreshKey;
 
     @PostConstruct
     public void init() {
         // 시크릿키를 Key 객체로 변환
         this.accessKey = Keys.hmacShaKeyFor(accessSecretKey.getBytes());
-        this.refreshKey = Keys.hmacShaKeyFor(refreshSecretKey.getBytes());
     }
 
     /**
@@ -70,28 +63,12 @@ public class JwtTokenProvider {
     }
 
 
-    public Jws<Claims> parseToken(String token, boolean isAccessToken) {
-        try {
-            Key key = isAccessToken ? accessKey : refreshKey;
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-        } catch (ExpiredJwtException e) {
-            log.error("Token expired: {}", e.getMessage());
-            throw e; // 그대로 다시 던짐
-        } catch (JwtException e) {
-            log.error("Invalid token: {}", e.getMessage());
-            throw new ServerException("유효하지 않은 토큰입니다.");
-        }
-    }
     /**
      * 토큰 유효성 & 만료일자 확인
      */
-    public boolean validateToken(String token, boolean isAccessToken) {
+    public boolean validateToken(String token) {
         try {
-            Key keyToUse = isAccessToken ? accessKey : refreshKey;
-            Jwts.parserBuilder().setSigningKey(keyToUse).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(accessKey).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Invalid or expired JWT token", e);
@@ -99,18 +76,6 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * JWT에서 userId(Subject) 추출
-     */
-    public Integer getUserId(String token, boolean isAccessToken) {
-        Key key = isAccessToken ? accessKey : refreshKey;
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return Integer.valueOf(claims.getSubject());
-    }
 
     public Authentication getAuthentication(String token) {
         // 키 변수명 수정 (accessKey 사용)
