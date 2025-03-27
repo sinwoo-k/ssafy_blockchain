@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import jwt from 'jsonwebtoken';
 import { encrypt, decrypt } from '../../cryptoHelper.js';
 import * as walletRepository from '../repositories/walletRepository.js';
 import AppError from '../../utils/AppError.js';
