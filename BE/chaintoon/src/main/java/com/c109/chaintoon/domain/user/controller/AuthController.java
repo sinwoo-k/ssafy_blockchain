@@ -5,6 +5,7 @@ import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,7 @@ public class AuthController {
 
     // 이메일로 로그인 (인증코드 전송)
     @PostMapping("/email-login")
-    public ResponseEntity<?> emailLogin(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<?> emailLogin(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         authService.emailLogin(loginRequestDto.getEmail());
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -31,7 +32,7 @@ public class AuthController {
     // 인증코드 검증
     @PostMapping("/verify-code")
     public ResponseEntity<String> verifyAuthCode(
-            @RequestBody VerifyAuthRequestDto verifyAuthRequestDto,
+            @Valid @RequestBody VerifyAuthRequestDto verifyAuthRequestDto,
             HttpServletResponse response) {
         String token = authService.verifyEmailCode(verifyAuthRequestDto.getEmail(), verifyAuthRequestDto.getCode());
 
