@@ -22,9 +22,6 @@ public class AuctionItem {
     @Column(name = "nft_id")
     private Integer nftId;
 
-    @Column(name = "bidder_id")
-    private Integer bidderId;
-
     @Column(name = "bidding_price")
     private Double biddingPrice;
 
@@ -48,9 +45,6 @@ public class AuctionItem {
 
     @PrePersist
     protected void onCreate() {
-        if (bidderId == null) {
-            bidderId = 0;
-        }
         startTime = LocalDateTime.now();
         ended = "N";
         createdAt = LocalDateTime.now();
