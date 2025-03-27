@@ -31,9 +31,6 @@ public class JwtTokenProvider {
     @Value("${jwt.access-token-validity-in-ms}")
     private long accessTokenValidityInMilliseconds;
 
-    @Value("${jwt.refresh-token-validity-in-ms}")
-    private long refreshValidityInMilliseconds;
-
     private Key accessKey;
 
     @PostConstruct
@@ -62,7 +59,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-
     /**
      * 토큰 유효성 & 만료일자 확인
      */
@@ -75,7 +71,6 @@ public class JwtTokenProvider {
             return false;
         }
     }
-
 
     public Authentication getAuthentication(String token) {
         // 키 변수명 수정 (accessKey 사용)
