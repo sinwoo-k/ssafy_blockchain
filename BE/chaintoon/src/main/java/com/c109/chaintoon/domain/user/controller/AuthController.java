@@ -40,7 +40,7 @@ public class AuthController {
         // HttpOnly & Secure 쿠키 설정
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true)
-                .secure(true) // HTTPS 환경에서만 사용
+                .secure(false)) // HTTPS 환경에서만 사용
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
                 .sameSite("Lax") // CSRF 보호
