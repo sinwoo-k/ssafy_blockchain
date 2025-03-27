@@ -2,7 +2,7 @@ import { createWalletService, getWalletInfoService, connectWalletService, sendTr
 
 export async function createWallet(req, res) {
   try {
-    const userId = req.user.sub;
+    const { userId } = req.params;
     const walletData = await createWalletService({ userId });
     res.status(201).json({
       ...walletData,
@@ -17,8 +17,7 @@ export async function createWallet(req, res) {
 
 export async function getWalletInfo(req, res) {
   try {
-    const userId = req.user.sub;
-
+    const { userId } = req.params;
     const info = await getWalletInfoService({ userId });
     res.status(200).json(info);
   } catch (err) {
