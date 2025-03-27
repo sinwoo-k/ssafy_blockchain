@@ -48,7 +48,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         address originalCreator,
         address registrant,
         address adminWallet
-    ) public onlyOwner returns (uint256) {
+    ) public returns (uint256) {
         require(bytes(tokenURI).length > 0, "Token URI cannot be empty");
 
         _tokenIds++;

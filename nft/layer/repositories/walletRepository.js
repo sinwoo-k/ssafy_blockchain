@@ -10,7 +10,7 @@ export async function createWallet(walletData) {
   return result.insertId;
 }
 
-export async function findWalletByUserId(userId) {
+export async function getWalletByUserId(userId) {
   const [result] = await pool.execute(
     `SELECT * FROM wallet WHERE user_id = ?`,
     [userId]

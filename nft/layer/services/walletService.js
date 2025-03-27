@@ -107,7 +107,7 @@ export async function createWalletService({ userId }) {
 export async function getWalletInfoService({ userId }) {
 
   // DB에서 지갑 정보 조회
-  const wallet = await walletRepository.findWalletByUserId(userId);
+  const wallet = await walletRepository.getWalletByUserId(userId);
   if (!wallet) throw new Error('Wallet not found');
   const walletAddress = wallet.wallet_address;
   // 온체인 지갑 정보 조회
@@ -116,7 +116,20 @@ export async function getWalletInfoService({ userId }) {
   // ETH 잔고 조회
   const ethBalanceWei = await provider.getBalance(walletAddress);
   const ethBalance = ethers.formatEther(ethBalanceWei); // Wei를 ETH로 변환
-
+  if (wallet.private_key) {
+    return {
+      walletId: wallet.wallet_id,
+      walletAddress: wallet.wallet_address,
+      publicKey: wallet.public_key,
+      private_key: decrypt(wallet.private_key),
+      coinType: wallet.coin_type,
+      isRegistered: result[0],
+      contractPublicKey: result[1],
+      balances: {
+        eth: `${ethBalance} ETH`
+      }
+    };
+  }
   return {
     walletId: wallet.wallet_id,
     walletAddress: wallet.wallet_address,
