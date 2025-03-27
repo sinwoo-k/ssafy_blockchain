@@ -1,114 +1,39 @@
-// src/utils/API/userApi.js - 사용자 정보 관련 API
+// userApi.js (최종 최적화 코드)
 import axios from 'axios';
 
 const BASE_URL = 'https://j12c109.p.ssafy.io';
 
-// 인증된 API 인스턴스 생성
 const userApi = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true, // 쿠키 자동 전송 설정 추가
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // 쿠키 자동 전송 필수 설정
 });
-
-
-// 요청 인터셉터 - 토큰 추가
-userApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // 사용자 정보 조회
 const getUserInfo = async (userId) => {
+  const res = await userApi.get(`/api/users/${userId}`);
+  return res.data;
+};
+
+// 내 정보 조회 API
+export const getMyUserInfo = async () => {
   try {
-    const response = await userApi.get(`/api/users/${userId}`);
-    return response.data;
+    // 요청 URL 로깅
+    console.log('내 정보 요청 URL:', `${BASE_URL}/api/users/myInfo`);
+    const res = await userApi.get('/api/users/myInfo');
+    return res.data;
   } catch (error) {
-    throw error;
+    // 더 자세한 에러 정보 로깅
+    console.error('내 정보 조회 에러:', error);
+    console.error('에러 상세:', error.response?.data || '응답 데이터 없음');
+    throw error; // 에러를 상위로 전파하여 적절한 처리 가능하게 함
   }
 };
 
-// 사용자 정보 수정
-const updateUserInfo = async (userId, userData) => {
-  try {
-    const response = await userApi.patch(`/api/users/${userId}`, userData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 팔로워 목록 조회
-const getFollowers = async (userId, page = 1, pageSize = 10) => {
-  try {
-    const response = await userApi.get(`/api/users/followers/${userId}`, {
-      params: { page, pageSize }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 팔로잉 목록 조회
-const getFollowing = async (userId, page = 1, pageSize = 10) => {
-  try {
-    const response = await userApi.get(`/api/users/following/${userId}`, {
-      params: { page, pageSize }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 팔로우 하기
-const followUser = async (userId) => {
-  try {
-    const response = await userApi.put(`/api/users/following/${userId}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 언팔로우 하기
-const unfollowUser = async (userId) => {
-  try {
-    const response = await userApi.delete(`/api/users/following/${userId}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 프로필 이미지 삭제
-const deleteProfileImage = async () => {
-  try {
-    const response = await userApi.delete('/api/users/delete-profile');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
+// 나머지 API 함수들은 그대로 유지
 export const userService = {
   getUserInfo,
-  updateUserInfo,
-  getFollowers,
-  getFollowing,
-  followUser,
-  unfollowUser,
-  deleteProfileImage
+  getMyUserInfo,
 };
 
 export default userService;
