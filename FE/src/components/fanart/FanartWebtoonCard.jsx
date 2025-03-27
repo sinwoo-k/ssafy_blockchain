@@ -34,7 +34,7 @@ const FanartWebtoonCard = ({ webtoon }) => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
       >
-        <Link to={`/webtoon/${webtoon.webtoonId}`} onClick={handleClick}>
+        <Link to={`/fanart/webtoon/${webtoon.webtoonId}`} onClick={handleClick}>
           <img
             src={webtoon.seroThumbnail}
             alt={`${webtoon.webtoonName} 대표 이미지`}
