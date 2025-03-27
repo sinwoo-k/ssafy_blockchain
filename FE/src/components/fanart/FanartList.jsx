@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
 import { Link } from 'react-router-dom'
+import BarLoader from 'react-spinners/BarLoader'
 
 const FanartList = ({ fanarts }) => {
+  const [isLoading, setIsLoding] = useState(true)
   return (
     <div className='flex justify-center'>
       <div className='w-[1000px]'>
@@ -17,7 +19,12 @@ const FanartList = ({ fanarts }) => {
             </button>
           </div>
         </div>
-        <MasonryInfiniteGrid align='center' gap={10}>
+        <MasonryInfiniteGrid
+          align='center'
+          gap={10}
+          column={5}
+          onRenderComplete={() => setIsLoding(false)}
+        >
           {fanarts.map((fanart) => (
             <div className='item' key={fanart.fanartId}>
               <Link to={`/fanart/${fanart.fanartId}`}>
@@ -31,6 +38,16 @@ const FanartList = ({ fanarts }) => {
             </div>
           ))}
         </MasonryInfiniteGrid>
+        {isLoading && (
+          <div className='flex justify-center py-10'>
+            <BarLoader
+              color='#3cc3ec'
+              width={500}
+              height={5}
+              speedMultiplier={0.5}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

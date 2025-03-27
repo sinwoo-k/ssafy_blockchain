@@ -3,8 +3,9 @@ import React from 'react'
 // 아이콘
 import StarIcon from '@mui/icons-material/Star'
 import EditIcon from '@mui/icons-material/Edit'
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
+import DeleteIcon from '@mui/icons-material/Delete'
 import { Link } from 'react-router-dom'
+import IconButton from '../common/IconButton'
 
 const MyEpisodeCard = ({ episode }) => {
   return (
@@ -35,13 +36,17 @@ const MyEpisodeCard = ({ episode }) => {
           <div className='flex items-center gap-3'>
             <button className='text-chaintoon cursor-pointer'>NFT 발행</button>
             <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
-              <button className='cursor-pointer'>
-                <EditIcon className='text-blue-500' />
-              </button>
+              <IconButton
+                Icon={EditIcon}
+                tooltip={'수정하기'}
+                style={{ color: '#2599ff' }}
+              />
             </Link>
-            <button className='cursor-pointer'>
-              <DeleteForeverIcon className='text-red-500' />
-            </button>
+            <IconButton
+              Icon={DeleteIcon}
+              tooltip={'삭제하기'}
+              style={{ color: '#ff5050' }}
+            />
           </div>
         </div>
       </div>
