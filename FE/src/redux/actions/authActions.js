@@ -7,32 +7,13 @@ import { getMyUserInfo } from '../../api/userApi';
 // 내 정보를 가져와서 리덕스에 저장하는 액션
 export const fetchMyUserInfo = () => async (dispatch) => {
   try {
-    // API 호출 전 로딩 상태 설정 (선택적)
-    dispatch(authActions.setLoading(true));
-    
     const userData = await getMyUserInfo();
-    
-    // 유효한 응답인지 확인
-    if (userData) {
-      dispatch(userReducerActions.setAuthenticated(true));
-      dispatch(userReducerActions.setUser(userData));
-      return userData;
-    } else {
-      throw new Error('사용자 데이터가 없습니다');
-    }
+    dispatch(userReducerActions.setAuthenticated(true));
+    dispatch(userReducerActions.setUser(userData));
+    return userData; // ✅ 추가: 호출 측에서 활용 가능
   } catch (error) {
-    console.error('사용자 정보 조회 실패:', error.message || error);
-    
-    // 인증 관련 에러 처리
     dispatch(userReducerActions.logout());
-    
-    // 선택적: 에러 메시지 설정
-    dispatch(authActions.setErrorMessage('로그인 세션이 만료되었거나 인증에 실패했습니다'));
-    
-    throw error;
-  } finally {
-    // 로딩 상태 해제 (선택적)
-    dispatch(authActions.setLoading(false));
+    throw error; // ✅ 추가: 호출 측에서 에러 핸들링 가능
   }
 };
 
@@ -102,6 +83,26 @@ export const checkAuthStatus = () => async (dispatch) => {
     dispatch(userReducerActions.setAuthenticated(res.data.isAuthenticated));
     dispatch(userReducerActions.setUser(res.data.user));
   } catch {
+    dispatch(userReducerActions.logout());
+  }
+};
+
+export const logoutAction = () => async (dispatch) => {
+  try {
+    // 백엔드에 로그아웃 요청하여 쿠키 삭제
+    await authService.logout();
+    // 로컬 스토리지 클리어
+    if (localStorage.getItem('authMethod')) {
+      localStorage.removeItem('authMethod');
+    }
+    // 리덕스 상태 초기화
+    dispatch(userReducerActions.logout());
+  } catch (error) {
+    console.error('로그아웃 처리 중 오류 발생:', error);
+    // 오류가 발생해도 프론트 상태는 초기화
+    if (localStorage.getItem('authMethod')) {
+      localStorage.removeItem('authMethod');
+    }
     dispatch(userReducerActions.logout());
   }
 };

@@ -18,15 +18,12 @@ const getUserInfo = async (userId) => {
 // 내 정보 조회 API
 export const getMyUserInfo = async () => {
   try {
-    // 요청 URL 로깅
-    console.log('내 정보 요청 URL:', `${BASE_URL}/api/users/myInfo`);
     const res = await userApi.get('/api/users/myInfo');
+    console.log(res)
     return res.data;
+    
   } catch (error) {
-    // 더 자세한 에러 정보 로깅
-    console.error('내 정보 조회 에러:', error);
-    console.error('에러 상세:', error.response?.data || '응답 데이터 없음');
-    throw error; // 에러를 상위로 전파하여 적절한 처리 가능하게 함
+    console.log(error)
   }
 };
 

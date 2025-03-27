@@ -32,11 +32,18 @@ export const verifyMetaMaskSignature = async (address, signature, nonce) => {
   return res.data;
 };
 
+export const logout = async () => {
+  const res = await authApi.post('/api/auth/logout');
+  return res.data;
+};
+
+
 export const authService = {
   requestEmailVerification,
   verifyEmailCode,
   requestMetaMaskNonce,
   verifyMetaMaskSignature,
+  logout
 };
 
 export default authApi;
