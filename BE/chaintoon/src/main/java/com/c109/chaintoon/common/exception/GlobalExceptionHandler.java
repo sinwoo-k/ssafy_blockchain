@@ -2,6 +2,8 @@ package com.c109.chaintoon.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -13,6 +15,24 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     // 400 Bad Request (잘못된 요청)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException e) {
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        // DTO 필드별로 설정된 message 추출
+        e.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            fieldErrors.put(fieldName, errorMessage);
+        });
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Invalid Request");
+        response.put("messages", fieldErrors); // 필드별 오류 메시지
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException e) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Request", e.getMessage());
