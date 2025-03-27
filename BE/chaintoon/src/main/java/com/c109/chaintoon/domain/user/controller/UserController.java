@@ -3,6 +3,7 @@ package com.c109.chaintoon.domain.user.controller;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
+import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
 import com.c109.chaintoon.domain.user.service.UserService;
@@ -41,8 +42,16 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    // 내 정보 조회
+    @GetMapping("/myInfo")
+    public ResponseEntity<?> getMyInfo(
+            @AuthenticationPrincipal Integer loginId) {
+        MyInfoResponseDto user = userService.getMyInfo(loginId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
     // 회원 정보 수정
-    @PatchMapping("/{userId}")
+    @PatchMapping()
     public ResponseEntity<?> updateUser(
             @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,

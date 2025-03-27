@@ -4,6 +4,7 @@ import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
+import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
 import com.c109.chaintoon.domain.user.entity.Following;
@@ -61,6 +62,24 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
         return UserResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .introduction(user.getIntroduction())
+                .profileImage(user.getProfileImage())
+                .backgroundImage(user.getBackgroundImage())
+                .follower(user.getFollower())
+                .following(user.getFollowing())
+                .joinDate(user.getJoinDate())
+                .build();
+    }
+
+    // 내 정보 조회
+    @Transactional
+    public MyInfoResponseDto getMyInfo(Integer loginId){
+        User user = userRepository.findById(loginId).orElseThrow(() -> new UserIdNotFoundException(loginId));
+
+        return MyInfoResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
