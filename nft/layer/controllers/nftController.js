@@ -4,9 +4,8 @@ import AppError from '../../utils/AppError.js';
 
 export async function mintNftController(req, res) {
     try {
-        const userId = req.user.sub;
 
-        const { webtoonId, type, typeId, s3Url, originalCreator, registrant} = req.body;
+        const { webtoonId, type, userId , typeId, s3Url, originalCreator, registrant} = req.body;
 
         // 필수 파라미터 확인
         if (!webtoonId ) {
@@ -92,7 +91,10 @@ export async function buyNftController(req, res) {
 export async function getMyNftsController(req, res, next) {
     try {
       // 예시: 인증 미들웨어에서 req.user에 사용자 정보가 담겨 있다고 가정
-      const userId = req.user.id;
+      const { userId } = req.parmas;
+      if (!userId) {
+        return res.status(400).json({ error: 'userId는 필수입니다.' });
+      }
       const nfts = await getMyNftsService(userId);
       res.status(200).json({ nfts });
     } catch (error) {
