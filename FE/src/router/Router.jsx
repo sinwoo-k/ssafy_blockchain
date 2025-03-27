@@ -31,6 +31,8 @@ const ProductDetail = lazy(() => import('../pages/store/ProductDetail'))
 
 // 팬아트 section
 const FanartMain = lazy(() => import('../pages/fanart/FanartMain'))
+const FanartDetail = lazy(() => import('../pages/fanart/FanartDetail'))
+const FanartWebtoon = lazy(() => import('../pages/fanart/FanartWebtoon'))
 
 const router = createBrowserRouter([
   {
@@ -161,6 +163,22 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <FanartMain />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/fanart/:fanartId',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartDetail />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/fanart/webtoon/:webtoonId/',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartWebtoon />
           </Suspense>
         ),
       },
