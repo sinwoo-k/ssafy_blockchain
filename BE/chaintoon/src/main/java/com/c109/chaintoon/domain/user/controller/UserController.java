@@ -58,7 +58,7 @@ public class UserController {
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
     ){
-        UserResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
+        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -72,7 +72,7 @@ public class UserController {
     @DeleteMapping("/delete-profile")
     public ResponseEntity<?> deleteProfile(
             @AuthenticationPrincipal Integer loginId) {
-        UserResponseDto user = userService.deleteProfile(loginId);
+        MyInfoResponseDto user = userService.deleteProfile(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -80,7 +80,7 @@ public class UserController {
     @DeleteMapping("/delete-background")
     public ResponseEntity<?> deleteBackground(
             @AuthenticationPrincipal Integer loginId) {
-        UserResponseDto user = userService.deleteBackground(loginId);
+        MyInfoResponseDto user = userService.deleteBackground(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

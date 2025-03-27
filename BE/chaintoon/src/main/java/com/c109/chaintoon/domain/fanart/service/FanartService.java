@@ -4,9 +4,8 @@ import com.c109.chaintoon.common.exception.DuplicatedException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.fanart.dto.request.FanartRequestDto;
-import com.c109.chaintoon.domain.fanart.dto.response.FanartDetailResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartResponseDto;
-import com.c109.chaintoon.domain.fanart.dto.response.WebtoonFanartResponseDto;
+import com.c109.chaintoon.domain.fanart.dto.response.FanartListResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.FanartPreference;
 import com.c109.chaintoon.domain.fanart.exception.FanartPreferenceNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartPreferenceRepository;
@@ -15,7 +14,6 @@ import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.user.service.NoticeService;
-import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
 import com.c109.chaintoon.domain.fanart.exception.FanartNotFoundException;
@@ -33,7 +31,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,59 +46,50 @@ public class FanartService {
     private final S3Service s3Service;
     private final NoticeService noticeService;
 
+    private String uploadFanartImage(Integer fanartId, MultipartFile file) {
+        return s3Service.uploadFile(file, "fanart/" + fanartId + "/image");
+    }
+
+    private FanartListResponseDto toFanartListResponseDto(Fanart fanart) {
+        return FanartListResponseDto.builder()
+                .fanartId(fanart.getFanartId())
+                .webtoonId(fanart.getWebtoonId())
+                .fanartName(fanart.getFanartName())
+                .fanartImage(s3Service.getPresignedUrl(fanart.getFanartImage()))
+                .build();
+    }
+
+    private FanartResponseDto toFanartResponseDto(Fanart fanart, User user, Webtoon webtoon) {
+        return FanartResponseDto.builder()
+                .fanartId(fanart.getFanartId())
+                .userId(fanart.getUserId())
+                .nickname(user.getNickname())
+                .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
+                .webtoonId(webtoon.getWebtoonId())
+                .webtoonName(webtoon.getWebtoonName())
+                .fanartName(fanart.getFanartName())
+                .fanartImage(fanart.getFanartImage())
+                .commentCount(fanart.getComment())
+                .likeCount(fanart.getLikeCount())
+                .build();
+    }
+
     // 1. 팬아트 메인 목록 조회
     // 1-1. 가장 최근에 등록된 팬아트 7개 조회
-    public List<FanartResponseDto> getLatestSevenFanarts(int page, int pageSize, String orderBy) {
+    public List<FanartListResponseDto> getLatestSevenFanarts(int page, int pageSize, String orderBy) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Fanart> fanartPage = fanartRepository.findAllByDeleted("N", pageable);
 
-        List<FanartResponseDto> dtos = new ArrayList<>();
-        for(Fanart fanart : fanartPage.getContent()) {
-            FanartResponseDto dto = FanartResponseDto.builder()
-                    .fanartId(fanart.getFanartId())
-                    .userId(fanart.getUserId())
-                    .webtoonId(fanart.getWebtoonId())
-                    .fanartImage(fanart.getFanartImage())
-                    .fanartName(fanart.getFanartName())
-                    .build();
-            dtos.add(dto);
-        }
-        return dtos;
-    }
-
-    //1-2. 웹툰별 팬아트 목록 조회
-    public List<WebtoonListResponseDto> getWebtoonGrid(int page, String orderBy) {
-        int pageSize = 8;
-        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<Webtoon> webtoonPage = webtoonRepository.findAll(pageable);
-        List<WebtoonListResponseDto> dtos = new ArrayList<>();
-        for (Webtoon webtoon : webtoonPage.getContent()) {
-            // TODO: 유저 구현 시 변경
-            String writer = null;
-            double rating = webtoon.getRatingCount() == 0 ? 0.0 :
-                    Math.round((webtoon.getRatingSum() / (double) webtoon.getRatingCount()) * 100) / 100.0;
-
-            WebtoonListResponseDto dto = WebtoonListResponseDto.builder()
-                    .webtoonId(webtoon.getWebtoonId())
-                    .userId(webtoon.getUserId())
-                    .writer(writer)
-                    .webtoonName(webtoon.getWebtoonName())
-                    .garoThumbnail(webtoon.getGaroThumbnail())
-                    .seroThumbnail(webtoon.getSeroThumbnail())
-                    .build();
-            dtos.add(dto);
-        }
-        return dtos;
+        return fanartPage.getContent().stream()
+                .map(this::toFanartListResponseDto)
+                .toList();
     }
 
     // 웹툰별 팬아트 목록 조회
-    public WebtoonFanartResponseDto getFanartByWebtoon(Integer webtoonId, int page, int pageSize, String orderBy) {
+    public List<FanartListResponseDto> getFanartByWebtoon(Integer webtoonId, int page, int pageSize, String orderBy) {
         // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+        webtoonRepository.findById(webtoonId)
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
-
-        // Todo : 유저 구현 시 변경
-        String writer = null;
 
         // Pageable 객체 생성 (최신순 정렬 적용)
         Pageable pageable = PageRequest.of(page -1, pageSize, getSort(orderBy));
@@ -109,38 +97,25 @@ public class FanartService {
         // 웹툰에 속한 팬아트 목록 조회
         Page<Fanart> fanarts = fanartRepository.findAllByWebtoonIdAndDeleted(webtoonId, "N", pageable);
 
-        // 팬아트 이미지 경로만 추출
-        List<String> fanartImages = fanarts.stream()
-                .map(Fanart::getFanartImage)
-                .collect(Collectors.toList());
-
         // DTO 생성
-        return WebtoonFanartResponseDto.builder()
-                .webtoonId(webtoon.getWebtoonId())
-                .webtoonName(webtoon.getWebtoonName())
-                .writer(writer)
-                .genre(webtoon.getGenre())
-                .summary(webtoon.getSummary())
-                .garoThumbnail(webtoon.getGaroThumbnail())
-                .seroThumbnail(webtoon.getSeroThumbnail())
-                .webtoonFanartCount((int) fanarts.getTotalElements())
-                .fanartImages(fanartImages)
-                .build();
+        return fanarts.getContent().stream()
+                .map(this::toFanartListResponseDto)
+                .toList();
     }
 
     // 팬아트 등록
-    public FanartDetailResponseDto createFanart(FanartRequestDto fanartRequestDto, MultipartFile fanartImage) {
+    public FanartResponseDto createFanart(Integer userId, FanartRequestDto fanartRequestDto, MultipartFile fanartImage) {
         // 웹툰 조회
         Webtoon webtoon = webtoonRepository.findById(fanartRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanartRequestDto.getWebtoonId()));
 
         // 등록한 사용자 조회 (닉네임 가져오기)
-        User user = userRepository.findById(fanartRequestDto.getUserId())
-                .orElseThrow(() -> new UserIdNotFoundException(fanartRequestDto.getUserId()));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException(userId));
 
         // 팬아트 엔티티 생성
         Fanart fanart = Fanart.builder()
-                .userId(fanartRequestDto.getUserId())
+                .userId(userId)
                 .webtoonId(fanartRequestDto.getWebtoonId())
                 .fanartName(fanartRequestDto.getFanartName())
                 .description(fanartRequestDto.getDescription())
@@ -149,30 +124,19 @@ public class FanartService {
         // 팬아트 저장
         Fanart savedFanart = fanartRepository.save(fanart);
 
+        // 팬아트 이미지 저장
         String fanartImageUrl = uploadFanartImage(savedFanart.getFanartId(), fanartImage);
         savedFanart.setFanartImage(fanartImageUrl);
         fanartRepository.save(savedFanart);
 
+        // 팬아트 생성 알림
         noticeService.addSecondaryCreateNotice(webtoon, fanart, user);
 
-        return FanartDetailResponseDto.builder()
-                .fanartId(savedFanart.getFanartId())
-                .userId(savedFanart.getUserId())
-                .webtoonId(savedFanart.getWebtoonId())
-                .fanartImage(savedFanart.getFanartImage())
-                .fanartName(savedFanart.getFanartName())
-                .webtoonName(webtoon.getWebtoonName())
-                .userNickname(user.getNickname())
-                .description(savedFanart.getDescription())
-                .build();
-    }
-
-    private String uploadFanartImage(Integer fanartId, MultipartFile file) {
-        return s3Service.uploadFile(file, "fanart/" + fanartId + "/image");
+        return toFanartResponseDto(fanart, user, webtoon);
     }
 
     // 팬아트 상세 조회
-    public FanartDetailResponseDto getFanartDetail(Integer fanartId) {
+    public FanartResponseDto getFanartDetail(Integer fanartId) {
         // 팬아트 조회
         Fanart fanart = fanartRepository.findById(fanartId)
                 .orElseThrow(() -> new FanartNotFoundException(fanartId));
@@ -181,85 +145,49 @@ public class FanartService {
         Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanart.getWebtoonId()));
 
-        // 사용자 닉네임 (User 연동 시)
-        // String userNickname = userRepository.findById(fanart.getUserId())
-        //         .map(User::getNickname)
-        //         .orElse(null);
+        // 유저 조회
+        User user = userRepository.findById(fanart.getUserId())
+                .orElseThrow(() -> new UserIdNotFoundException(fanart.getUserId()));
 
-        // 현재는 userNickname = null 로 처리
-        String userNickname = null;
-
-        return FanartDetailResponseDto.builder()
-                .fanartId(fanart.getFanartId())
-                .userId(fanart.getUserId())
-                .webtoonId(fanart.getWebtoonId())
-                .fanartImage(fanart.getFanartImage())
-                .fanartName(fanart.getFanartName())
-                .webtoonName(webtoon.getWebtoonName())
-                .userNickname(userNickname)
-                .description(fanart.getDescription())
-                .likeCount(fanart.getLikeCount())
-                .build();
+        // 팬아트 dto 반환
+        return toFanartResponseDto(fanart, user, webtoon);
     }
 
     // 내 팬아트 목록 조회
-    public List<FanartResponseDto> getMyFanartList(Integer userId, int page, int pageSize, String orderBy) {
+    public List<FanartListResponseDto> getMyFanartList(Integer userId, int page, int pageSize, String orderBy) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Fanart> fanartPage = fanartRepository.findByUserIdAndDeleted(userId, "N", pageable);
 
-        List<FanartResponseDto> dtos = new ArrayList<>();
-        for(Fanart fanart : fanartPage.getContent()) {
-            Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId()).orElse(null);
-            String webtoonName = (webtoon != null) ? webtoon.getWebtoonName() : null;
-            String garoThumbnail = (webtoon != null) ? webtoon.getGaroThumbnail() : null;
-            String seroThumbnail = (webtoon != null) ? webtoon.getSeroThumbnail() : null;
-
-            FanartResponseDto dto = FanartResponseDto.builder()
-                    .fanartId(fanart.getFanartId())
-                    .userId(fanart.getUserId())
-                    .webtoonId(fanart.getWebtoonId())
-                    .fanartImage(fanart.getFanartImage())
-                    .fanartName(fanart.getFanartName())
-                    .garoThumbnail(garoThumbnail)
-                    .seroThumbnail(seroThumbnail)
-                    .webtoonName(webtoonName)
-                    .build();
-
-            dtos.add(dto);
-        }
-        return dtos;
+        return fanartPage.getContent().stream()
+                .map(this::toFanartListResponseDto)
+                .toList();
     }
 
     // 팬아트 수정
-    public FanartDetailResponseDto updateFanart(FanartRequestDto fanartRequestDto, MultipartFile fanartImage) {
+    public FanartResponseDto updateFanart(Integer userId, Integer fanartId, FanartRequestDto fanartRequestDto, MultipartFile fanartImage) {
         // 기존 팬아트 조회
-        Fanart fanart = fanartRepository.findById(fanartRequestDto.getFanartId())
-                .orElseThrow(() -> new FanartNotFoundException(fanartRequestDto.getFanartId()));
+        Fanart fanart = fanartRepository.findById(fanartId)
+                .orElseThrow(() -> new FanartNotFoundException(fanartId));
 
         // 수정 권한 없음
-        if(!fanart.getUserId().equals(fanartRequestDto.getUserId())) {
+        if(!fanart.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("팬아트 수정 권한이 없습니다");
         }
 
+        // 웹툰 조회
         Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanart.getWebtoonId()));
 
         // 이미지 업데이트
         if (fanartImage != null && !fanartImage.isEmpty()) {
-            if(fanart.getFanartImage() != null) {
-                s3Service.deleteFile(fanart.getFanartImage());
-            }
+            s3Service.deleteFile(fanart.getFanartImage());
             String fanartImageUrl = uploadFanartImage(fanart.getFanartId(), fanartImage);
             fanart.setFanartImage(fanartImageUrl);
-        } else if (fanartRequestDto.getFanartImage() != null) {
-            fanart.setFanartImage(fanartRequestDto.getFanartImage());
         }
 
         // 팬아트 정보 업데이트
-        if (fanartRequestDto.getFanartName() != null) {
+        if (fanartRequestDto != null) {
             fanart.setFanartName(fanartRequestDto.getFanartName());
-        }
-        if (fanartRequestDto.getDescription() != null) {
             fanart.setDescription(fanartRequestDto.getDescription());
         }
 
@@ -270,16 +198,7 @@ public class FanartService {
                 .orElseThrow(() -> new UserIdNotFoundException(savedFanart.getUserId()));
 
         // 응답 DTO 생성
-        return FanartDetailResponseDto.builder()
-                .fanartId(savedFanart.getFanartId())
-                .userId(savedFanart.getUserId())
-                .webtoonId(savedFanart.getWebtoonId())
-                .fanartImage(savedFanart.getFanartImage())
-                .fanartName(savedFanart.getFanartName())
-                .webtoonName(webtoon.getWebtoonName())
-                .userNickname(user.getNickname())
-                .description(savedFanart.getDescription())
-                .build();
+        return toFanartResponseDto(savedFanart, user, webtoon);
     }
 
     // 팬아트 삭제
@@ -304,7 +223,7 @@ public class FanartService {
     }
 
     // 팬아트 검색
-    public List<FanartDetailResponseDto> searchFanarts(int page, int pageSize, String keyword) {
+    public List<FanartResponseDto> searchFanarts(int page, int pageSize, String keyword) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
         // 키워드에 대해 제목이나 설명이 포함되는 조건을 specification으로 구성
@@ -315,30 +234,18 @@ public class FanartService {
         // 검색 결과를 페이징 처리하여 조회하고 결과 리스트 반환
         Page<Fanart> resultPage = fanartRepository.findAll(spec, pageable);
 
-        // 결과 엔티티를 FanartDetailResponseDto로 매핑
-        List<FanartDetailResponseDto> dtos = resultPage.getContent().stream().map(fanart -> {
-            // 웹툰 조회하여 웹툰명 가져오기
-            Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId()).orElse(null);
-            String webtoonName = (webtoon != null) ? webtoon.getWebtoonName() : null;
+        // 결과 엔티티를 FanartResponseDto로 매핑
+        return resultPage.getContent().stream().map(fanart -> {
+            // 웹툰 조회
+            Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId())
+                    .orElseThrow(() -> new WebtoonNotFoundException(fanart.getWebtoonId()));
 
-            // 사용자 조회하여 사용자 닉네임 가져오기
-            User user = userRepository.findById(fanart.getUserId()).orElse(null);
-            String userNickname = (user != null) ? user.getNickname() : null;
+            // 사용자 조회
+            User user = userRepository.findById(fanart.getUserId())
+                    .orElseThrow(() -> new UserIdNotFoundException(fanart.getUserId()));
 
-            return FanartDetailResponseDto.builder()
-                    .fanartId(fanart.getFanartId())
-                    .userId(fanart.getUserId())
-                    .webtoonId(fanart.getWebtoonId())
-                    .fanartImage(fanart.getFanartImage())
-                    .fanartName(fanart.getFanartName())
-                    .webtoonName(webtoonName)
-                    .userNickname(userNickname)
-                    .description(fanart.getDescription())
-                    .likeCount(fanart.getLikeCount())
-                    .build();
+            return toFanartResponseDto(fanart, user, webtoon);
         }).collect(Collectors.toList());
-
-        return dtos;
     }
 
     // 좋아요 증가
@@ -393,10 +300,9 @@ public class FanartService {
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
-            case "latest":
-                return Sort.by(Sort.Direction.DESC, "createdAt");
             case "oldest":
                 return Sort.by(Sort.Direction.ASC, "createdAt");
+            case "latest":
             default:
                 return Sort.by(Sort.Direction.DESC, "createdAt");
         }

@@ -4,6 +4,7 @@ import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.WebtoonService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,12 +36,11 @@ public class WebtoonController {
     @PostMapping
     public ResponseEntity<?> addWebtoon(
             @AuthenticationPrincipal Integer userId,
-            @RequestPart("webtoon") WebtoonRequestDto webtoonRequest,
+            @Valid @RequestPart("webtoon") WebtoonRequestDto webtoonRequest,
             @RequestPart("garoImage") MultipartFile garoImage,
             @RequestPart("seroImage") MultipartFile seroImage
     ) {
-        webtoonRequest.setUserId(userId);
-        WebtoonResponseDto webtoon = webtoonService.addWebtoon(webtoonRequest, garoImage, seroImage);
+        WebtoonResponseDto webtoon = webtoonService.addWebtoon(userId, webtoonRequest, garoImage, seroImage);
         return new ResponseEntity<>(webtoon, HttpStatus.CREATED);
     }
 
@@ -86,7 +86,7 @@ public class WebtoonController {
     public ResponseEntity<?> updateWebtoon(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId,
-            @RequestPart(value = "webtoon", required = false) WebtoonRequestDto webtoonRequest,
+            @Valid @RequestPart(value = "webtoon", required = false) WebtoonRequestDto webtoonRequest,
             @RequestPart(value = "garoImage", required = false) MultipartFile garoImage,
             @RequestPart(value = "seroImage", required = false) MultipartFile seroImage) {
         WebtoonResponseDto webtoon = webtoonService.updateWebtoon(webtoonId, userId, webtoonRequest, garoImage, seroImage);
