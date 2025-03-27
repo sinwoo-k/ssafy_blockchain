@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.comment.controller;
 
 import com.c109.chaintoon.domain.comment.dto.request.CommentRequestDto;
+import com.c109.chaintoon.domain.comment.dto.request.CommentUpdateDto;
 import com.c109.chaintoon.domain.comment.dto.response.CommentResponseDto;
 import com.c109.chaintoon.domain.comment.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,7 @@ public class CommentController {
             @AuthenticationPrincipal Integer userId,
             @RequestBody CommentRequestDto commentRequestDto
     ) {
-        commentRequestDto.setUserId(userId);
-        CommentResponseDto comment = commentService.addComment(commentRequestDto);
+        CommentResponseDto comment = commentService.addComment(userId, commentRequestDto);
         return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
 
@@ -53,11 +53,9 @@ public class CommentController {
     public ResponseEntity<?> updateComment(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId,
-            @RequestBody CommentRequestDto commentRequestDto
+            @RequestBody CommentUpdateDto commentUpdateDto
     ) {
-        commentRequestDto.setUserId(userId);
-        commentRequestDto.setCommentId(commentId);
-        CommentResponseDto comment = commentService.updateComment(commentRequestDto);
+        CommentResponseDto comment = commentService.updateComment(userId, commentId, commentUpdateDto);
         return new ResponseEntity<>(comment, HttpStatus.OK);
     }
 

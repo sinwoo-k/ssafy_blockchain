@@ -68,7 +68,9 @@ const MyWebtoon = () => {
         <div className='mb-10 flex items-center gap-3'>
           <h1 className='text-chaintoon text-2xl'>내 웹툰</h1>
           <span className='text-2xl'>|</span>
-          <Link className='text-text/75 text-xl'>내 팬아트</Link>
+          <Link to={'/myworks/fanart'} className='text-text/75 text-xl'>
+            내 팬아트
+          </Link>
         </div>
         <div className='mb-1 flex items-end justify-between'>
           <p>총 {webtoons.length}개</p>

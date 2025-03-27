@@ -2,10 +2,8 @@ package com.c109.chaintoon.domain.goods.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
-import com.c109.chaintoon.domain.fanart.entity.Fanart;
-import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
 import com.c109.chaintoon.domain.goods.dto.request.GoodsRequestDto;
-import com.c109.chaintoon.domain.goods.dto.response.GoodsListResponseDto;
+import com.c109.chaintoon.domain.goods.dto.response.GoodsResponseDto;
 import com.c109.chaintoon.domain.goods.dto.response.WebtoonGoodsResponseDto;
 import com.c109.chaintoon.domain.goods.entity.Goods;
 import com.c109.chaintoon.domain.goods.exception.GoodsNotFoundException;
@@ -26,7 +24,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,19 +36,29 @@ public class GoodsService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
 
+    private GoodsResponseDto toGoodsResponseDto(Goods goods) {
+        return GoodsResponseDto.builder()
+                .goodsId(goods.getGoodsId())
+                .userId(goods.getUserId())
+                .webtoonId(goods.getWebtoonId())
+                .goodsName(goods.getGoodsName())
+                .goodsImage(s3Service.getPresignedUrl(goods.getGoodsImage()))
+                .build();
+    }
+
     // 굿즈 등록
-    public GoodsListResponseDto createGoods(GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
+    public GoodsResponseDto createGoods(Integer userId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
         // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(goodsRequestDto.getWebtoonId())
+        webtoonRepository.findById(goodsRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(goodsRequestDto.getWebtoonId()));
 
-        // 등록한 사람 정보 조회 (예: 닉네임)
-        User user = userRepository.findById(goodsRequestDto.getUserId())
-                .orElseThrow(() -> new UserIdNotFoundException(goodsRequestDto.getUserId()));
+        // 유저 조회
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException(userId));
 
         // 굿즈 엔티티 생성
         Goods goods = Goods.builder()
-                .userId(goodsRequestDto.getUserId())
+                .userId(userId)
                 .webtoonId(goodsRequestDto.getWebtoonId())
                 .goodsName(goodsRequestDto.getGoodsName())
                 .build();
@@ -63,13 +70,7 @@ public class GoodsService {
         savedGoods.setGoodsImage(goodsImageUrl);
         goodsRepository.save(savedGoods);
 
-        return GoodsListResponseDto.builder()
-                .goodsId(savedGoods.getGoodsId())
-                .userId(savedGoods.getUserId())
-                .webtoonId(savedGoods.getWebtoonId())
-                .goodsName(savedGoods.getGoodsName())
-                .goodsImage(savedGoods.getGoodsImage())
-                .build();
+        return toGoodsResponseDto(savedGoods);
     }
 
     private String uploadGoodsImage(Integer goodsId, MultipartFile file) {
@@ -94,14 +95,8 @@ public class GoodsService {
         Page<Goods> goodsPage = goodsRepository.findAllByWebtoonIdAndDeleted(webtoonId, "N", pageable);
 
         // 5. Goods 엔티티를 GoodsListResponseDto로 변환 (굿즈 목록)
-        List<GoodsListResponseDto> goodsList = goodsPage.getContent().stream()
-                .map(goods -> GoodsListResponseDto.builder()
-                        .goodsId(goods.getGoodsId())
-                        .userId(goods.getUserId())
-                        .webtoonId(goods.getWebtoonId())
-                        .goodsName(goods.getGoodsName())
-                        .goodsImage(goods.getGoodsImage())
-                        .build())
+        List<GoodsResponseDto> goodsList = goodsPage.getContent().stream()
+                .map(this::toGoodsResponseDto)
                 .collect(Collectors.toList());
 
         // 6. WebtoonGoodsResponseDto 생성하여 반환
@@ -110,26 +105,26 @@ public class GoodsService {
                 .webtoonName(webtoon.getWebtoonName())
                 .writer(writer)
                 .genre(webtoon.getGenre())
-                .garoThumbnail(webtoon.getGaroThumbnail())
-                .seroThumbnail(webtoon.getSeroThumbnail())
+                .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                 .totalGoodsCount((int) goodsPage.getTotalElements())
                 .goodsList(goodsList)
                 .build();
     }
 
     // 굿즈 수정
-    public GoodsListResponseDto updateGoods(Integer goodsId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
+    public GoodsResponseDto updateGoods(Integer userId, Integer goodsId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
         // 수정할 굿즈 조회
         Goods goods = goodsRepository.findById(goodsId)
                 .orElseThrow(() -> new GoodsNotFoundException(goodsId)); // GoodsNotFoundException은 별도 정의 필요
 
         // 요청한 사용자가 굿즈를 등록한 사람과 일치하는지 확인
-        if (!goods.getUserId().equals(goodsRequestDto.getUserId())) {
+        if (!goods.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("수정 권한이 없습니다.");
         }
 
         // 굿즈가 속한 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(goods.getWebtoonId())
+        webtoonRepository.findById(goods.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(goods.getWebtoonId()));
 
         // 수정 가능한 필드 업데이트
@@ -145,22 +140,13 @@ public class GoodsService {
             }
             String goodsImageUrl = uploadGoodsImage(goods.getGoodsId(), goodsImage);
             goods.setGoodsImage(goodsImageUrl);
-        } else if (goodsRequestDto.getGoodsImage() != null) {
-            // 이미지 파일 없이 이미지 URL만 변경하는 경우
-            goods.setGoodsImage(goodsRequestDto.getGoodsImage());
         }
 
         // 굿즈 수정 저장
         Goods updatedGoods = goodsRepository.save(goods);
 
         // 개별 굿즈 정보를 담은 DTO 생성
-        return GoodsListResponseDto.builder()
-                .goodsId(updatedGoods.getGoodsId())
-                .userId(updatedGoods.getUserId())
-                .webtoonId(updatedGoods.getWebtoonId())
-                .goodsName(updatedGoods.getGoodsName())
-                .goodsImage(updatedGoods.getGoodsImage())
-                .build();
+        return toGoodsResponseDto(updatedGoods);
     }
 
     // 굿즈 삭제
@@ -180,7 +166,7 @@ public class GoodsService {
     }
 
     // 굿즈 검색
-    public List<GoodsListResponseDto> searchGoods(int page, int pageSize, String keyword) {
+    public List<GoodsResponseDto> searchGoods(int page, int pageSize, String keyword) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
         // 키워드에 대해 제목이 포함되는 조건을 specification으로 구성
@@ -189,17 +175,9 @@ public class GoodsService {
 
         Page<Goods> resultPage = goodsRepository.findAll(spec, pageable);
 
-        List<GoodsListResponseDto> dtos = resultPage.getContent().stream()
-                .map(goods -> GoodsListResponseDto.builder()
-                        .goodsId(goods.getGoodsId())
-                        .userId(goods.getUserId())
-                        .webtoonId(goods.getWebtoonId())
-                        .goodsName(goods.getGoodsName())
-                        .goodsImage(goods.getGoodsImage())
-                        .build())
+        return resultPage.getContent().stream()
+                .map(this::toGoodsResponseDto)
                 .collect(Collectors.toList());
-
-        return dtos;
     }
 
     private Sort getSort(String orderBy) {

@@ -46,7 +46,7 @@ public class SsoController {
                 .secure(true) // HTTPS 환경에서만 사용
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
-                .sameSite("Lax") // CSRF 보호
+                .sameSite("None") // CSRF 보호
                 .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
                 .build();
 

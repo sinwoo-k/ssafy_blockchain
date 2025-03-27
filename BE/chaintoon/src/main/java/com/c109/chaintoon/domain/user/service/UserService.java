@@ -1,6 +1,5 @@
 package com.c109.chaintoon.domain.user.service;
 
-import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
@@ -35,25 +34,53 @@ public class UserService {
 
     // 유저 검색
     @Transactional(readOnly = true)
-    public List<SearchUserResponseDto> searchByNickname(String keyword, int page, int pageSize){
+    public List<SearchUserResponseDto> searchByNickname(String keyword, int page, int pageSize) {
         // 페이지네이션 (정렬 기준 없음)
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
         // 닉네임으로 유저 검색
         Page<User> userPage = userRepository.findByNicknameIgnoreCaseContaining(keyword, pageable);
 
-        return toDto(userPage);
+        return toList(userPage);
     }
 
-    private List<SearchUserResponseDto> toDto(Page<User> userPage) {
+    private List<SearchUserResponseDto> toList(Page<User> userPage) {
         return userPage.getContent().stream()
-                .map(user -> {
-                    return SearchUserResponseDto.builder()
-                            .nickname(user.getNickname())
-                            .id(user.getId())
-                            .profileImage(user.getProfileImage())
-                            .build();
-                }).collect(Collectors.toList());
+                .map(user -> SearchUserResponseDto.builder()
+                        .nickname(user.getNickname())
+                        .id(user.getId())
+                        .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
+                        .build()).collect(Collectors.toList());
+    }
+
+    // 개인정보 미포함, 현재는 동일
+    private UserResponseDto toUserResponseDto(User user) {
+        return UserResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .introduction(user.getIntroduction())
+                .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
+                .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
+                .follower(user.getFollower())
+                .following(user.getFollowing())
+                .joinDate(user.getJoinDate())
+                .build();
+    }
+
+    // 개인정보 포함
+    private MyInfoResponseDto toMyInfoResponseDto(User user) {
+        return MyInfoResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .introduction(user.getIntroduction())
+                .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
+                .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
+                .follower(user.getFollower())
+                .following(user.getFollowing())
+                .joinDate(user.getJoinDate())
+                .build();
     }
 
     // id로 회원 정보 조회
@@ -61,17 +88,7 @@ public class UserService {
     public UserResponseDto findUserById(Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .introduction(user.getIntroduction())
-                .profileImage(user.getProfileImage())
-                .backgroundImage(user.getBackgroundImage())
-                .follower(user.getFollower())
-                .following(user.getFollowing())
-                .joinDate(user.getJoinDate())
-                .build();
+        return toUserResponseDto(user);
     }
 
     // 내 정보 조회
@@ -79,44 +96,27 @@ public class UserService {
     public MyInfoResponseDto getMyInfo(Integer loginId){
         User user = userRepository.findById(loginId).orElseThrow(() -> new UserIdNotFoundException(loginId));
 
-        return MyInfoResponseDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .introduction(user.getIntroduction())
-                .profileImage(user.getProfileImage())
-                .backgroundImage(user.getBackgroundImage())
-                .follower(user.getFollower())
-                .following(user.getFollowing())
-                .joinDate(user.getJoinDate())
-                .build();
+        return toMyInfoResponseDto(user);
     }
 
     // 회원 정보 수정
     @PreAuthorize("hasRole('USER')")
-    public UserResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile backgroundImage) {
+    public MyInfoResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile backgroundImage) {
         // 기존 유저 조회
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
-        
-        // 수정 권한 없음
-        if (!userRequestDto.getUserId().equals(userId)) {
-            throw new UnauthorizedAccessException("회원 수정 권한이 없습니다.");
-        }
 
         // 프로필 이미지 업데이트
         if (profileImage != null && !profileImage.isEmpty()) {
-            if (userRequestDto.getProfileImage() != null && !userRequestDto.getProfileImage().equals("")) {
-                s3Service.deleteFile(user.getProfileImage());
-            }
+            s3Service.deleteFile(user.getProfileImage());
+
             String profileUrl = uploadProfile(userId, profileImage);
             user.setProfileImage(profileUrl);
         }
 
         // 배경 이미지 업데이트
         if(backgroundImage != null && !backgroundImage.isEmpty()) {
-            if (user.getBackgroundImage() != null&& !user.getBackgroundImage().equals("")) {
-                s3Service.deleteFile(user.getBackgroundImage());
-            }
+            s3Service.deleteFile(user.getBackgroundImage());
+
             String backgroundUrl = uploadBackground(userId, backgroundImage);
             user.setBackgroundImage(backgroundUrl);
         }
@@ -127,17 +127,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .introduction(user.getIntroduction())
-                .profileImage(user.getProfileImage())
-                .backgroundImage(user.getBackgroundImage())
-                .following(user.getFollowing())
-                .follower(user.getFollower())
-                .joinDate(user.getJoinDate())
-                .build();
+        return toMyInfoResponseDto(user);
     }
 
     // 프로필 이미지 업로드
@@ -160,7 +150,7 @@ public class UserService {
     // 프로필 이미지 제거
     @Transactional
     @PreAuthorize("hasRole('USER')")
-    public UserResponseDto deleteProfile(Integer userId){
+    public MyInfoResponseDto deleteProfile(Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
         if(user.getProfileImage() != null) {
@@ -169,23 +159,13 @@ public class UserService {
         user.setProfileImage(null);
         userRepository.save(user);
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .introduction(user.getIntroduction())
-                .profileImage(user.getProfileImage())
-                .backgroundImage(user.getBackgroundImage())
-                .following(user.getFollowing())
-                .follower(user.getFollower())
-                .joinDate(user.getJoinDate())
-                .build();
+        return toMyInfoResponseDto(user);
     }
 
     // 배경 이미지 제거
     @Transactional
     @PreAuthorize("hasRole('USER')")
-    public UserResponseDto deleteBackground(Integer userId){
+    public MyInfoResponseDto deleteBackground(Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
         if(user.getBackgroundImage() != null) {
@@ -194,17 +174,7 @@ public class UserService {
         user.setBackgroundImage(null);
         userRepository.save(user);
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .introduction(user.getIntroduction())
-                .profileImage(user.getProfileImage())
-                .backgroundImage(user.getBackgroundImage())
-                .following(user.getFollowing())
-                .follower(user.getFollower())
-                .joinDate(user.getJoinDate())
-                .build();
+        return toMyInfoResponseDto(user);
     }
 
     // 팔로우
@@ -305,13 +275,11 @@ public class UserService {
 
     private List<FollowingResponseDto> toFollowDto(Page<User> userPage) {
         return userPage.getContent().stream()
-                .map(user -> {
-                    return FollowingResponseDto.builder()
-                            .profile(user.getProfileImage())
-                            .userId(user.getId())
-                            .nickname(user.getNickname())
-                            .build();
-                })
+                .map(user -> FollowingResponseDto.builder()
+                        .profile(s3Service.getPresignedUrl(user.getProfileImage()))
+                        .userId(user.getId())
+                        .nickname(user.getNickname())
+                        .build())
                 .collect(Collectors.toList());
     }
 

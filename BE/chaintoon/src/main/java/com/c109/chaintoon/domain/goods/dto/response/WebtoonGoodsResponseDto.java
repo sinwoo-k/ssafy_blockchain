@@ -20,5 +20,5 @@ public class WebtoonGoodsResponseDto {
     private String garoThumbnail;
     private String seroThumbnail;
     private Integer totalGoodsCount;
-    private List<GoodsListResponseDto> goodsList;
+    private List<GoodsResponseDto> goodsList;
 }
