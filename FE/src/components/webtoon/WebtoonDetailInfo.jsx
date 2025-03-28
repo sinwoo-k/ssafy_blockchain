@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formattingNumber } from '../../utils/formatting'
 
@@ -13,6 +13,13 @@ const WebtoonDetailInfo = ({ webtoon }) => {
   console.log(webtoon)
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
+
+  useEffect(() => {
+    // mount
+    setBackgroundImg(webtoon.garoThumbnail)
+    // unmount
+    return () => {}
+  }, [webtoon])
 
   return (
     <div className={`relative mb-10 flex w-full justify-center py-10`}>
@@ -77,12 +84,12 @@ const WebtoonDetailInfo = ({ webtoon }) => {
               {webtoon.tags?.length === 0 ? (
                 <div className='text-text/50'>등록된 태그가 없습니다.</div>
               ) : (
-                webtoon.tags?.map((tag) => (
+                webtoon.tags?.map((tag, index) => (
                   <div
-                    key={tag.id}
+                    key={`${webtoon.webtoonName}-태그${index + 1}`}
                     className='bg-chaintoon/75 rounded px-2 py-1'
                   >
-                    #{tag.tagName}
+                    # {tag}
                   </div>
                 ))
               )}
