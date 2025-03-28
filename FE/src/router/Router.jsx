@@ -3,7 +3,6 @@ import { lazy, Suspense } from 'react'
 import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
 import CollectionPage from '../pages/store/CollectionPage'
-import MyFanart from '../pages/myworks/MyFanart'
 
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
@@ -22,7 +21,8 @@ const MyWebtoonEpisodeCreate = lazy(
 const MyWebtoonEpisodeUpdate = lazy(
   () => import('../pages/myworks/MyWebtoonEpisodeUpdate'),
 )
-const myFanart = lazy(() => import('../pages/myworks/MyFanart'))
+const MyFanart = lazy(() => import('../pages/myworks/MyFanart'))
+const MyFanartUpdate = lazy(() => import('../pages/myworks/MyFanartUpdate'))
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
@@ -35,6 +35,7 @@ const ProductDetail = lazy(() => import('../pages/store/ProductDetail'))
 const FanartMain = lazy(() => import('../pages/fanart/FanartMain'))
 const FanartDetail = lazy(() => import('../pages/fanart/FanartDetail'))
 const FanartWebtoon = lazy(() => import('../pages/fanart/FanartWebtoon'))
+const FanartCreate = lazy(() => import('../pages/fanart/FanartCreate'))
 
 const router = createBrowserRouter([
   {
@@ -131,6 +132,14 @@ const router = createBrowserRouter([
               </Suspense>
             ),
           },
+          {
+            path: 'fanart/:fanartId/update',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyFanartUpdate />
+              </Suspense>
+            ),
+          },
         ],
       },
       // 마이페이지 section
@@ -189,6 +198,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <FanartWebtoon />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'fanart/webtoon/:webtoonId/create',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartCreate />
           </Suspense>
         ),
       },

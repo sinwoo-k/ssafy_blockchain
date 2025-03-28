@@ -27,5 +27,5 @@ dist-ssr
 .env
 
 # 인증서
-.certs/localhost-key.pem
-.certs/localhost.pem
+localhost-key.pem
+localhost.pem
