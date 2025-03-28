@@ -11,12 +11,12 @@ import lombok.*;
 public class FanartResponseDto {
     private Integer fanartId;
     private Integer userId;
+    private String nickname;
+    private String profileImage;
     private Integer webtoonId;
-    private String fanartImage;
-    private String fanartName;
-    private String garoThumbnail;
-    private String seroThumbnail;
-    private String description;
     private String webtoonName;
-    private String writer;
+    private String fanartName;
+    private String fanartImage;
+    private Integer commentCount;
+    private Integer likeCount;
 }

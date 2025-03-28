@@ -30,9 +30,17 @@ export async function createMetamaskWallet(walletAddress, userId) {
 export async function createUser(userData){
   const { nickname , joinDate, deleted } = userData;
   const [result] = await pool.execute(
-    `INSERT INTO user (nickname, join_date, deleted)
-     VALUES (?, ?, ?)`,
-    [nickname, joinDate, deleted]
+    `INSERT INTO user (email, nickname, introduction, profile_image, background_image, follower, following, join_date, deleted ,status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ["", nickname, "", "", "", 0, 0, joinDate, deleted, "Y"]
   );
   return result.insertId;
+}
+
+export async function findWalletByAddress(walletAddress) {
+  const [result] = await pool.execute(
+    `SELECT * FROM wallet WHERE wallet_address = ?`,
+    [walletAddress]
+  );
+  return result;
 }

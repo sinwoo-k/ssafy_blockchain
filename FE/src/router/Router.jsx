@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
 import CollectionPage from '../pages/store/CollectionPage'
+import MyFanart from '../pages/myworks/MyFanart'
 
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
@@ -21,6 +22,7 @@ const MyWebtoonEpisodeCreate = lazy(
 const MyWebtoonEpisodeUpdate = lazy(
   () => import('../pages/myworks/MyWebtoonEpisodeUpdate'),
 )
+const myFanart = lazy(() => import('../pages/myworks/MyFanart'))
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
@@ -28,6 +30,11 @@ const MyPage = lazy(() => import('../pages/mypage/Mypage'))
 // 스토어 추가
 const StoreMain = lazy(() => import('../pages/store/StoreMain'))
 const ProductDetail = lazy(() => import('../pages/store/ProductDetail'))
+
+// 팬아트 section
+const FanartMain = lazy(() => import('../pages/fanart/FanartMain'))
+const FanartDetail = lazy(() => import('../pages/fanart/FanartDetail'))
+const FanartWebtoon = lazy(() => import('../pages/fanart/FanartWebtoon'))
 
 const router = createBrowserRouter([
   {
@@ -116,6 +123,14 @@ const router = createBrowserRouter([
               </Suspense>
             ),
           },
+          {
+            path: 'fanart',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyFanart />
+              </Suspense>
+            ),
+          },
         ],
       },
       // 마이페이지 section
@@ -149,6 +164,31 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <CollectionPage />
+          </Suspense>
+        ),
+      },
+      // 팬아트 section
+      {
+        path: '/fanart',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartMain />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/fanart/:fanartId',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartDetail />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/fanart/webtoon/:webtoonId/',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FanartWebtoon />
           </Suspense>
         ),
       },

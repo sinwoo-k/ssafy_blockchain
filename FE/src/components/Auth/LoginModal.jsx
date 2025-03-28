@@ -1,73 +1,79 @@
-import React, { useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { userReducerActions } from '../../redux/reducers/userSlice'
-import LogoImg from '../../assets/logo2.png'
-import saffylogo from '../../assets/ssafylogo.png'
-import metamasklogo from '../../assets/metamask_logo.png'
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { authActions } from '../../redux/reducers/authSlice';
+import { userReducerActions } from '../../redux/reducers/userSlice';
+import { metaMaskLoginAction, requestEmailVerification, verifyEmailCode } from '../../redux/actions/authActions';
+import { isMetaMaskInstalled } from '../../utils/metamask';
+import LogoImg from '../../assets/logo2.png';
+import saffylogo from '../../assets/ssafylogo.png';
+import metamasklogo from '../../assets/metamask_logo.png';
 
 const LoginModal = ({ isOpen, onClose }) => {
-  const dispatch = useDispatch()
-  
-  // 로그인 단계 (0: 이메일 입력, 1: 인증 코드 입력)
-  const [loginStep, setLoginStep] = useState(0)
-  // 사용자 이메일
-  const [email, setEmail] = useState('')
-  // 사용자가 입력한 인증 코드
-  const [inputCode, setInputCode] = useState('')
-  // 오류 메시지
-  const [errorMessage, setErrorMessage] = useState('')
-  
-  // 이메일 인증 코드 발송 (시뮬레이션)
+  const dispatch = useDispatch();
+  const { loginStep, isLoading, errorMessage, email: reduxEmail } = useSelector(state => state.auth);
+  const { isAuthenticated } = useSelector(state => state.user);
+
+  const [email, setEmail] = useState('');
+  const [inputCode, setInputCode] = useState('');
+  const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState(false);
+
+  useEffect(() => {
+    setIsMetaMaskAvailable(isMetaMaskInstalled());
+  }, []);
+
+  useEffect(() => {
+    if (reduxEmail) setEmail(reduxEmail);
+  }, [reduxEmail]);
+
+  useEffect(() => {
+    if (isAuthenticated) onClose();
+  }, [isAuthenticated, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      dispatch(authActions.resetAuthState());
+      setInputCode('');
+      setEmail('');
+    }
+  }, [isOpen, dispatch]);
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    dispatch(authActions.setEmail(e.target.value));
+  };
+
   const handleSendVerificationCode = () => {
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setErrorMessage('유효한 이메일 주소를 입력해주세요')
-      return
+      dispatch(authActions.setErrorMessage('유효한 이메일 주소를 입력해주세요'));
+      return;
     }
+    dispatch(requestEmailVerification(email));
+  };
 
-    // 실제로는 이메일로 코드를 보내지 않고, 콘솔에만 출력 (데모용)
-    console.log(`${email}로 인증 코드를 발송했습니다 (데모 - 실제 발송되지 않음)`)
-    
-    // 인증 코드 입력 화면으로 전환
-    setLoginStep(1)
-    setErrorMessage('')
-  }
-
-  // 인증 코드 확인 (데모에서는 아무 코드나 허용)
   const handleVerifyCode = () => {
-    console.log('인증 코드 확인 버튼 클릭됨:', inputCode);
-    
-    // 코드가 6자리인지만 확인 (데모이므로 어떤 코드든 허용)
-    if (inputCode.length === 6) {
-      // 데모 목적으로 모든 코드 허용
-      console.log('인증 성공 (데모 - 모든 코드 허용)');
-      try {
-        dispatch(userReducerActions.setAuthenticated(true));
-        onClose();
-      } catch (error) {
-        console.error('로그인 처리 중 오류 발생:', error);
-        setErrorMessage('로그인 처리 중 오류가 발생했습니다.');
-      }
-    } else {
-      // 6자리가 아닌 경우만 오류 메시지 표시
-      setErrorMessage('6자리 숫자 코드를 입력해주세요');
+    if (inputCode.length !== 12) {
+      dispatch(authActions.setErrorMessage('12자리 인증 코드를 입력해주세요'));
+      return;
     }
-  }
+    dispatch(verifyEmailCode(email, inputCode));
+  };
 
-  // 메타마스크 로그인
   const handleMetaMaskLogin = () => {
-    dispatch(userReducerActions.setAuthenticated(true))
-    onClose()
-  }
+    dispatch(metaMaskLoginAction());
+  };
 
-  // 싸피 로그인
   const handleSaffyLogin = () => {
-    dispatch(userReducerActions.setAuthenticated(true))
-    onClose()
-  }
+    dispatch(userReducerActions.setAuthenticated(true));
+    onClose();
+  };
 
-  if (!isOpen) return null
+  const handleBackToEmailInput = () => {
+    dispatch(authActions.setLoginStep(0));
+    setInputCode('');
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
@@ -103,7 +109,8 @@ const LoginModal = ({ isOpen, onClose }) => {
                 placeholder="이메일을 입력하세요"
                 className="flex-grow bg-transparent text-base text-white outline-none"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                disabled={isLoading}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSendVerificationCode();
                 }}
@@ -111,6 +118,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               <button 
                 onClick={handleSendVerificationCode}
                 className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2]"
+                disabled={isLoading}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -129,18 +137,22 @@ const LoginModal = ({ isOpen, onClose }) => {
             <button 
               onClick={handleMetaMaskLogin}
               className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919]"
+              disabled={isLoading}
             >
               <div className="flex items-center">
                 <img src={metamasklogo} alt="메타마스크 로고" className="w-[50px]" />
                 <span className="ml-2">Meta Mask</span>
               </div>
-              <span className="rounded bg-[#2a2a2a] px-2 py-1 text-xs text-gray-400">설치됨</span>
+              <span className="rounded bg-[#2a2a2a] px-2 py-1 text-xs text-gray-400">
+                {isMetaMaskAvailable ? '설치됨' : '설치 필요'}
+              </span>
             </button>
             
             {/* 싸피 로그인 버튼 */}
             <button 
               onClick={handleSaffyLogin}
               className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919]"
+              disabled={isLoading}
             >
               <div className="flex items-center">
                 <img src={saffylogo} alt="싸피 로고" className="h-[40px] w-[50px]" />
@@ -153,17 +165,18 @@ const LoginModal = ({ isOpen, onClose }) => {
           /* 인증 코드 입력 화면 */
           <div>
             <p className="mb-3 text-center text-sm text-gray-300">
-              {email}로 6자리 인증 코드를 보냈습니다.<br />
+              {email}로 12자리 인증 코드를 보냈습니다.<br />
             </p>
 
             <div className="mb-4 flex w-full items-center justify-between rounded-lg bg-[#222222] px-4 py-2 hover:bg-[#2a2a2a]">
               <input
                 type="text"
-                placeholder="인증 코드 6자리 입력"
+                placeholder="인증 코드 12자리 입력"
                 className="flex-grow bg-transparent text-base text-white text-center outline-none"
                 value={inputCode}
-                onChange={(e) => setInputCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                maxLength={6}
+                onChange={(e) => setInputCode(e.target.value.slice(0, 12))}
+                maxLength={12}
+                disabled={isLoading}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleVerifyCode();
                 }}
@@ -172,7 +185,8 @@ const LoginModal = ({ isOpen, onClose }) => {
                 onClick={handleVerifyCode}
                 className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2] cursor-pointer z-10"
                 type="button"
-                >
+                disabled={isLoading}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -181,8 +195,9 @@ const LoginModal = ({ isOpen, onClose }) => {
 
             <div className="mb-4 flex justify-center">
               <button 
-                onClick={() => setLoginStep(0)} 
+                onClick={handleBackToEmailInput} 
                 className="text-sm text-gray-400 hover:text-white"
+                disabled={isLoading}
               >
                 다시 입력하기
               </button>
@@ -192,6 +207,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               <button 
                 onClick={handleSendVerificationCode} 
                 className="text-sm text-blue-400 hover:text-blue-300"
+                disabled={isLoading}
               >
                 인증 코드 재전송
               </button>
@@ -205,7 +221,7 @@ const LoginModal = ({ isOpen, onClose }) => {
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginModal
+export default LoginModal;

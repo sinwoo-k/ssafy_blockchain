@@ -3,12 +3,16 @@ package com.c109.chaintoon.domain.comment.service;
 import com.c109.chaintoon.common.exception.DuplicatedException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.domain.comment.dto.request.CommentRequestDto;
+import com.c109.chaintoon.domain.comment.dto.request.CommentUpdateDto;
 import com.c109.chaintoon.domain.comment.dto.response.CommentResponseDto;
 import com.c109.chaintoon.domain.comment.entity.Comment;
 import com.c109.chaintoon.domain.comment.entity.CommentPreference;
 import com.c109.chaintoon.domain.comment.exception.CommentNotFoundException;
 import com.c109.chaintoon.domain.comment.repository.CommentPreferenceRepository;
 import com.c109.chaintoon.domain.comment.repository.CommentRepository;
+import com.c109.chaintoon.domain.user.entity.User;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,15 +31,22 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final CommentPreferenceRepository commentPreferenceRepository;
+    private final UserRepository userRepository;
 
     private CommentResponseDto convertToDto(Comment comment) {
         // 날짜와 시간을 포맷팅
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+        User user = userRepository.findById(comment.getUserId()).orElseThrow(
+                () -> new UserIdNotFoundException(comment.getUserId())
+        );
+
         return CommentResponseDto.builder()
                 .commentId(comment.getCommentId())
                 .userId(comment.getUserId())
+                .nickname(user.getNickname())
+                .profileImage(user.getProfileImage())
                 .usageId(comment.getUsageId())
                 .type(comment.getType())
                 .parentId(comment.getParentId())
@@ -64,7 +75,7 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponseDto addComment(CommentRequestDto commentRequestDto) {
+    public CommentResponseDto addComment(Integer userId, CommentRequestDto commentRequestDto) {
         Integer parentId = commentRequestDto.getParentId();
         // 대댓글인 경우
         if (parentId != 0) {
@@ -79,7 +90,7 @@ public class CommentService {
 
         // Dto 엔티티로 변환
         Comment comment = Comment.builder()
-                .userId(commentRequestDto.getUserId())
+                .userId(userId)
                 .usageId(commentRequestDto.getUsageId())
                 .type(commentRequestDto.getType())
                 .parentId(commentRequestDto.getParentId())
@@ -112,13 +123,13 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponseDto updateComment(CommentRequestDto commentRequestDto) {
+    public CommentResponseDto updateComment(Integer userId, Integer commentId, CommentUpdateDto commentUpdateDto) {
         // 기존 댓글 조회
-        Comment comment = commentRepository.findByCommentIdAndDeleted(commentRequestDto.getCommentId(), "N")
-                .orElseThrow(() -> new CommentNotFoundException(commentRequestDto.getCommentId()));
+        Comment comment = commentRepository.findByCommentIdAndDeleted(commentId, "N")
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
 
         // 댓글 수정 권한 확인
-        if (!comment.getUserId().equals(commentRequestDto.getUserId())) {
+        if (!comment.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("댓글 수정 권한이 없습니다.");
         }
 
@@ -131,7 +142,7 @@ public class CommentService {
         }
 
         // 댓글 내용 수정
-        comment.setContent(commentRequestDto.getContent());
+        comment.setContent(commentUpdateDto.getContent());
         Comment savedComment = commentRepository.save(comment);
 
 

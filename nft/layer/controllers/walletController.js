@@ -2,13 +2,8 @@ import { createWalletService, getWalletInfoService, connectWalletService, sendTr
 
 export async function createWallet(req, res) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
-    }
-    const token = authHeader.split(' ')[1]; // "Bearer" 제거
-
-    const walletData = await createWalletService({ token });
+    const { userId } = req.params;
+    const walletData = await createWalletService({ userId });
     res.status(201).json({
       ...walletData,
       message: '제공된 이메일에 대해 새 지갑이 생성되고, 컨트랙트에 등록되었습니다.'
@@ -22,13 +17,8 @@ export async function createWallet(req, res) {
 
 export async function getWalletInfo(req, res) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
-    }
-    const token = authHeader.split(' ')[1]; // "Bearer" 제거
-
-    const info = await getWalletInfoService({ token });
+    const { userId } = req.params;
+    const info = await getWalletInfoService({ userId });
     res.status(200).json(info);
   } catch (err) {
     console.error(err);
@@ -54,11 +44,11 @@ export async function connectWallet(req, res) {
 
 export async function sendTransaction(req, res) {
   try {
-    const { from_address, to_address, amount } = req.body;
-    if (!from_address || !to_address || !amount) {
-      return res.status(400).json({ error: 'from_address, to_address, amount, email는 필수입니다.' });
+    const { fromAddress, toAddress, amount } = req.body;
+    if (!fromAddress || !toAddress || !amount) {
+      return res.status(400).json({ error: 'fromAddress, toAddress, amount, email는 필수입니다.' });
     }
-    const result = await sendTransactionService({ from_address, to_address, amount });
+    const result = await sendTransactionService({ fromAddress, toAddress, amount });
     res.status(200).json(result);
   } catch (err) {
     console.error(err);

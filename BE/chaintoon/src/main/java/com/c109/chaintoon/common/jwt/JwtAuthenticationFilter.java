@@ -6,18 +6,24 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Arrays.*;
 
 @Component
 @RequiredArgsConstructor
@@ -27,46 +33,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final RedisService redisService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-        String token = resolveToken(request);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
 
-        if (token != null) {
-            try {
-                // 토큰 파싱 (access token 여부 true)
-                Jws<Claims> claimsJws = jwtTokenProvider.parseToken(token, true);
-                Claims body = claimsJws.getBody();
-                Integer userId = Integer.valueOf(body.getSubject());
-                String role = body.get("role", String.class);
-                // role에 따라 권한 설정 (예: "ADMIN"이면 ROLE_ADMIN, 아니면 ROLE_USER)
-                setAuthentication(userId, role);
-
-            } catch (ExpiredJwtException ex) {
-                // Access Token 만료 처리: Refresh Token을 확인하여 재발급
-                Claims expiredClaims = ex.getClaims();
-                Integer userId = Integer.valueOf(expiredClaims.getSubject());
-                String role = expiredClaims.get("role", String.class);
-
-                String redisKey = "user:login:" + userId;
-                String storedRefreshToken = (String) redisService.getValue(redisKey);
-
-                if (storedRefreshToken != null && jwtTokenProvider.validateToken(storedRefreshToken, false)) {
-                    // Refresh Token이 유효하면 새 Access Token 재발급 (role 정보 포함)
-                    String newAccessToken = jwtTokenProvider.createAccessToken(userId, role);
-                    response.setHeader("Authorization", "Bearer " + newAccessToken);
-                    setAuthentication(userId, role);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
+        // 1. 쿠키에서 토큰 추출
+        String token = null;
+        if (request.getCookies() != null) { // Null 체크 추가
+            token = Arrays.stream(request.getCookies())
+                    .filter(cookie -> "jwt".equals(cookie.getName()))
+                    .findFirst()
+                    .map(Cookie::getValue)
+                    .orElse(null);
         }
-        filterChain.doFilter(request, response);
+
+        // 2. 헤더 토큰 추출 로직 간소화
+        if (token == null) {
+            token = resolveToken(request);
+        }
+
+        // 3. 인증 처리 로직
+        try {
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            return;
+        }
+
+        chain.doFilter(request, response);
     }
+
+
     /**
      * "Authorization: Bearer <TOKEN>" 헤더에서 토큰 추출
      */
@@ -77,6 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
     private void setAuthentication(Integer userId, String role) {
         List<SimpleGrantedAuthority> authorities;
         if ("ADMIN".equalsIgnoreCase(role)) {
@@ -88,4 +88,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(userId, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
+
 }
