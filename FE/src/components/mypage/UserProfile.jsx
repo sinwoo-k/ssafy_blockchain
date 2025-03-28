@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ProfileEditModal from './ProfileEdit';
 import FollowModal from './FollowModal';
 import userService from '../../api/userApi';
 import nftService from '../../api/nftApi';
+import { userReducerActions } from '../../redux/reducers/userSlice';
 
 const UserProfile = () => {
-  // 로그인한 사용자 정보 가져오기
-  const { user: authUser } = useSelector(state => state.user);
-  const userId = authUser?.id;
-
+  const dispatch = useDispatch();
+  // 현재 redux에서 userData 가져오기
+  const { userData, isAuthenticated } = useSelector(state => state.user);
+  
   // 상태 관리
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +23,12 @@ const UserProfile = () => {
     username: '',
     bio: '',
     url: '',
-    email: ''
+    email: '',
+    nickname: ''
   });
+  
+  // 프로필 배경 이미지 관련 상태
+  const [showBackgroundImageMenu, setShowBackgroundImageMenu] = useState(false);
   
   // 팔로우 모달 관련 상태
   const [showFollowersModal, setShowFollowersModal] = useState(false);
@@ -33,34 +38,59 @@ const UserProfile = () => {
   const [followersLoading, setFollowersLoading] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(false);
   
-  // 복사 알림 상태
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  // 알림 상태
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   
-  // 사용자 정보 로드
+  // 사용자 정보 로드 - 인증 쿠키를 사용하여 현재 사용자 정보 가져오기
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) return;
-      
       try {
         setLoading(true);
-        const userData = await userService.getUserInfo(userId);
-        setUser(userData);
         
-        // 편집 필드 초기화
-        setEditFields({
-          username: userData.username || '',
-          bio: userData.bio || '',
-          url: userData.url || '',
-          email: userData.email || ''
-        });
+        // 1. 먼저 내 정보 가져오기
+        let myUserInfo;
+        if (!userData) {
+          myUserInfo = await userService.getMyUserInfo();
+          // 리덕스에 사용자 정보 저장
+          dispatch(userReducerActions.setUser(myUserInfo));
+        } else {
+          myUserInfo = userData;
+        }
         
-        // 지갑 정보 가져오기
-        const wallet = await nftService.getWalletInfo();
-        setWalletInfo(wallet);
-        
-        // NFT 개수 가져오기
-        const myNfts = await nftService.getMyNFTs();
-        setNftCount(myNfts.length || 0);
+        // 2. 가져온 내 정보의 ID를 사용하여 상세 정보 가져오기
+        if (myUserInfo && myUserInfo.id) {
+          const userDetails = await userService.getUserInfo(myUserInfo.id);
+          setUser(userDetails);
+          
+          // 편집 필드 초기화
+          setEditFields({
+            username: userDetails.username || '',
+            bio: userDetails.bio || userDetails.introduction || '',
+            url: userDetails.url || '',
+            email: userDetails.email || '',
+            nickname: userDetails.nickname || ''
+          });
+          
+          // 지갑 정보 가져오기 (있을 경우)
+          try {
+            const wallet = await nftService.getWalletInfo();
+            setWalletInfo(wallet);
+          } catch (walletErr) {
+            console.error('지갑 정보 로드 오류:', walletErr);
+            // 지갑 정보가 없어도 계속 진행
+          }
+          
+          // NFT 개수 가져오기 (있을 경우)
+          try {
+            const myNfts = await nftService.getMyNFTs();
+            setNftCount(myNfts.length || 0);
+          } catch (nftErr) {
+            console.error('NFT 정보 로드 오류:', nftErr);
+            // NFT 정보가 없어도 계속 진행
+          }
+        } else {
+          setError('사용자 정보를 찾을 수 없습니다.');
+        }
         
         setLoading(false);
       } catch (err) {
@@ -70,16 +100,18 @@ const UserProfile = () => {
       }
     };
     
-    fetchUserData();
-  }, [userId]);
+    if (isAuthenticated) {
+      fetchUserData();
+    }
+  }, [dispatch, isAuthenticated, userData]);
   
   // 팔로워 목록 가져오기
   const fetchFollowers = async () => {
-    if (!userId) return;
+    if (!user || !user.id) return;
     
     try {
       setFollowersLoading(true);
-      const followersData = await userService.getFollowers(userId);
+      const followersData = await userService.getFollowers(user.id);
       setFollowers(followersData.list || []);
       setFollowersLoading(false);
     } catch (err) {
@@ -90,11 +122,11 @@ const UserProfile = () => {
   
   // 팔로잉 목록 가져오기
   const fetchFollowing = async () => {
-    if (!userId) return;
+    if (!user || !user.id) return;
     
     try {
       setFollowingLoading(true);
-      const followingData = await userService.getFollowing(userId);
+      const followingData = await userService.getFollowing(user.id);
       setFollowing(followingData.list || []);
       setFollowingLoading(false);
     } catch (err) {
@@ -103,29 +135,142 @@ const UserProfile = () => {
     }
   };
   
+  // 알림 표시 함수
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ ...notification, show: false });
+    }, 3000);
+  };
+  
   // 프로필 이미지 변경
   const handleProfileImageChange = () => {
-    // 이미지 선택 로직 구현 필요
-    console.log('프로필 이미지 변경');
-    
-    // 파일 입력 요소 생성 및 클릭
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
-    fileInput.onchange = (e) => {
+    fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        // 이미지 업로드 로직 구현 필요
-        console.log('선택된 파일:', file);
-        
-        // FormData로 파일 전송 구현
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        // API 호출 구현 필요
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          
+          // API 호출하여 이미지 업로드
+          const response = await userService.uploadProfileImage(formData);
+          
+          // 성공 시 사용자 정보 업데이트
+          setUser(prev => ({
+            ...prev,
+            profileImage: response.profileImage
+          }));
+          
+          // 리덕스 상태도 업데이트
+          if (userData) {
+            dispatch(userReducerActions.setUser({
+              ...userData,
+              profileImage: response.profileImage
+            }));
+          }
+          
+          showNotification('프로필 이미지가 업데이트되었습니다.');
+        } catch (err) {
+          console.error('프로필 이미지 업로드 오류:', err);
+          showNotification('프로필 이미지 업로드에 실패했습니다.', 'error');
+        }
       }
     };
     fileInput.click();
+  };
+  
+  // 프로필 이미지 제거
+  const handleDeleteProfileImage = async () => {
+    try {
+      await userService.deleteProfileImage();
+      
+      // 성공 시 사용자 정보 업데이트
+      setUser(prev => ({
+        ...prev,
+        profileImage: null
+      }));
+      
+      // 리덕스 상태도 업데이트
+      if (userData) {
+        dispatch(userReducerActions.setUser({
+          ...userData,
+          profileImage: null
+        }));
+      }
+      
+      showNotification('프로필 이미지가 제거되었습니다.');
+    } catch (err) {
+      console.error('프로필 이미지 제거 오류:', err);
+      showNotification('프로필 이미지 제거에 실패했습니다.', 'error');
+    }
+  };
+  
+  // 배경 이미지 변경
+  const handleBackgroundImageChange = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          
+          // API 호출하여 배경 이미지 업로드
+          const response = await userService.uploadBackgroundImage(formData);
+          
+          // 성공 시 사용자 정보 업데이트
+          setUser(prev => ({
+            ...prev,
+            backgroundImage: response.backgroundImage
+          }));
+          
+          // 리덕스 상태도 업데이트
+          if (userData) {
+            dispatch(userReducerActions.setUser({
+              ...userData,
+              backgroundImage: response.backgroundImage
+            }));
+          }
+          
+          showNotification('배경 이미지가 업데이트되었습니다.');
+        } catch (err) {
+          console.error('배경 이미지 업로드 오류:', err);
+          showNotification('배경 이미지 업로드에 실패했습니다.', 'error');
+        }
+      }
+    };
+    fileInput.click();
+  };
+  
+  // 배경 이미지 제거
+  const handleDeleteBackgroundImage = async () => {
+    try {
+      await userService.deleteBackgroundImage();
+      
+      // 성공 시 사용자 정보 업데이트
+      setUser(prev => ({
+        ...prev,
+        backgroundImage: null
+      }));
+      
+      // 리덕스 상태도 업데이트
+      if (userData) {
+        dispatch(userReducerActions.setUser({
+          ...userData,
+          backgroundImage: null
+        }));
+      }
+      
+      showNotification('배경 이미지가 제거되었습니다.');
+    } catch (err) {
+      console.error('배경 이미지 제거 오류:', err);
+      showNotification('배경 이미지 제거에 실패했습니다.', 'error');
+    }
   };
 
   // URL로 이동하는 함수
@@ -145,13 +290,11 @@ const UserProfile = () => {
     const currentUrl = window.location.href;
     navigator.clipboard.writeText(currentUrl)
       .then(() => {
-        setShowCopyNotification(true);
-        setTimeout(() => {
-          setShowCopyNotification(false);
-        }, 2000);
+        showNotification('페이지 주소가 복사되었습니다.');
       })
       .catch(err => {
         console.error('주소 복사 실패:', err);
+        showNotification('주소 복사에 실패했습니다.', 'error');
       });
   };
   
@@ -161,9 +304,10 @@ const UserProfile = () => {
     
     setEditFields({
       username: user.username || '',
-      bio: user.bio || '',
+      bio: user.bio || user.introduction || '',
       url: user.url || '',
-      email: user.email || ''
+      email: user.email || '',
+      nickname: user.nickname || ''
     });
     setShowEditModal(true);
   };
@@ -177,26 +321,60 @@ const UserProfile = () => {
     }));
   };
   
-  // 정보 수정 저장
-  const handleSaveEdit = async () => {
-    if (!userId) return;
+  // 닉네임 중복 체크
+  const checkNickname = async (nickname) => {
+    if (!nickname || nickname.trim() === '') return false;
     
     try {
-      // API 호출하여 사용자 정보 업데이트
-      await userService.updateUserInfo(userId, editFields);
-      
-      // 업데이트된 정보로 상태 갱신
-      setUser(prev => ({
-        ...prev,
-        ...editFields
-      }));
-      
-      setShowEditModal(false);
+      const result = await userService.checkNicknameExists(nickname);
+      return result.exists;
     } catch (err) {
-      console.error('사용자 정보 업데이트 오류:', err);
-      // 에러 처리 로직 추가
+      console.error('닉네임 중복 체크 오류:', err);
+      return false;
     }
   };
+  
+  // 정보 수정 저장
+const handleSaveEdit = async () => {
+  if (!user) return;
+  
+  try {
+    // 서버에서 기대하는 형식으로 데이터 구조화
+    const updateData = {
+      nickname: editFields.nickname,
+      introduction: editFields.bio // 필드명 확인 필요
+    };
+    
+    if (editFields.url) {
+      updateData.url = editFields.url;
+    }
+    
+    console.log('회원 정보 수정 요청 데이터:', updateData);
+    
+    // API 호출하여 사용자 정보 업데이트 (userId 제거)
+    const updatedUser = await userService.updateUserInfo(null, updateData);
+    
+    // 업데이트된 정보로 상태 갱신
+    setUser(prev => ({
+      ...prev,
+      ...updatedUser
+    }));
+    
+    // 리덕스 상태도 업데이트
+    if (userData) {
+      dispatch(userReducerActions.setUser({
+        ...userData,
+        ...updatedUser
+      }));
+    }
+    
+    setShowEditModal(false);
+    showNotification('회원 정보가 업데이트되었습니다.');
+  } catch (err) {
+    console.error('사용자 정보 업데이트 오류:', err);
+    showNotification('회원 정보 업데이트에 실패했습니다.', 'error');
+  }
+};
   
   // 팔로워/팔로잉 관련 함수
   const handleFollowersClick = () => {
@@ -214,8 +392,15 @@ const UserProfile = () => {
       await userService.followUser(userId);
       // 팔로잉 목록 업데이트
       fetchFollowing();
+      // 현재 사용자 정보도 갱신 (팔로잉 카운트 업데이트)
+      if (user && user.id) {
+        const updatedUser = await userService.getUserInfo(user.id);
+        setUser(updatedUser);
+      }
+      showNotification('팔로우했습니다.');
     } catch (err) {
       console.error('팔로우 오류:', err);
+      showNotification('팔로우에 실패했습니다.', 'error');
     }
   };
   
@@ -225,10 +410,28 @@ const UserProfile = () => {
       // 팔로잉 목록 업데이트
       const updatedFollowing = following.filter(user => user.id !== userId);
       setFollowing(updatedFollowing);
+      // 현재 사용자 정보도 갱신 (팔로잉 카운트 업데이트)
+      if (user && user.id) {
+        const updatedUser = await userService.getUserInfo(user.id);
+        setUser(updatedUser);
+      }
+      showNotification('언팔로우했습니다.');
     } catch (err) {
       console.error('언팔로우 오류:', err);
+      showNotification('언팔로우에 실패했습니다.', 'error');
     }
   };
+
+  // 비인증 상태 처리
+  if (!isAuthenticated) {
+    return (
+      <div className="border-b border-gray-800 py-3 mt-10">
+        <div className="flex justify-center items-center h-40 text-gray-500">
+          로그인이 필요합니다.
+        </div>
+      </div>
+    );
+  }
 
   // 로딩 중 표시
   if (loading) {
@@ -265,7 +468,50 @@ const UserProfile = () => {
 
   return (
     <>
-      <div className="border-b border-gray-800 py-3 mt-10">
+      {/* 배경 이미지 */}
+      <div className="relative w-full h-48 bg-gray-800 overflow-hidden">
+        {user.backgroundImage ? (
+          <img 
+            src={user.backgroundImage} 
+            alt="배경" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900"></div>
+        )}
+        
+        {/* 배경 이미지 메뉴 */}
+        <div className="absolute bottom-2 right-2">
+          <button 
+            className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+            onClick={() => setShowBackgroundImageMenu(!showBackgroundImageMenu)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {showBackgroundImageMenu && (
+            <div className="absolute bottom-full right-0 mb-2 bg-gray-800 rounded shadow-lg overflow-hidden">
+              <button 
+                className="block w-full px-4 py-2 text-left text-white hover:bg-gray-700"
+                onClick={handleBackgroundImageChange}
+              >
+                이미지 업로드
+              </button>
+              <button 
+                className="block w-full px-4 py-2 text-left text-white hover:bg-gray-700"
+                onClick={handleDeleteBackgroundImage}
+                disabled={!user.backgroundImage}
+              >
+                이미지 제거
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="border-b border-gray-800 py-3 relative">
         <div className="flex items-start mb-5">
           {/* 프로필 이미지 */}
           <div className="relative mr-4 group mt-1">
@@ -274,7 +520,7 @@ const UserProfile = () => {
                 <img src={user.profileImage} alt="프로필" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-700">
-                  <span className="text-white text-lg">{user.username?.charAt(0).toUpperCase()}</span>
+                  <span className="text-white text-lg">{user.nickname?.charAt(0).toUpperCase() || user.username?.charAt(0).toUpperCase()}</span>
                 </div>
               )}
             </div>
@@ -285,12 +531,25 @@ const UserProfile = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
+            
+            {/* 프로필 이미지 제거 */}
+            {user.profileImage && (
+              <button 
+                className="absolute -bottom-1 -right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                onClick={handleDeleteProfileImage}
+                title="프로필 이미지 제거"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
           
           {/* 사용자 정보 */}
           <div className="flex-grow">
             <div className="flex items-center space-x-2 mb-1">
-              <h1 className="text-lg font-bold">{user.username}</h1>
+              <h1 className="text-lg font-bold">{user.nickname || user.username || '사용자'}</h1>
               
               <div className="flex items-center space-x-3 ml-2">
                 {/* 정보 수정 아이콘 */}
@@ -326,18 +585,14 @@ const UserProfile = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                     </svg>
                   </button>
-                  
-                  {/* 복사 알림 */}
-                  {showCopyNotification && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-1 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-10">
-                      페이지 주소가 복사되었습니다
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
             
-            <p className="text-gray-400 text-sm mb-1">{user.bio || '안녕하세요'}</p>
+            <p className="text-gray-400 text-sm mb-1">{user.bio || user.introduction || '안녕하세요'}</p>
+            {user.email && (
+              <p className="text-gray-400 text-xs mb-1">{user.email}</p>
+            )}
           </div>
           
           {/* 잔액 정보 */}
@@ -359,7 +614,7 @@ const UserProfile = () => {
             className="text-[#3cc3ec] hover:underline flex items-center"
             onClick={handleFollowersClick}
           >
-            <span>팔로워 {user.followersCount || 0}</span>
+            <span>팔로워 {user.follower || 0}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -369,7 +624,7 @@ const UserProfile = () => {
             className="text-[#3cc3ec] hover:underline flex items-center"
             onClick={handleFollowingClick}
           >
-            <span>팔로잉 {user.followingCount || 0}</span>
+            <span>팔로잉 {user.following || 0}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -378,11 +633,22 @@ const UserProfile = () => {
         
         {/* 가입일 */}
         <div className="flex items-center text-xs text-gray-400 mt-4 ml-3">
-          <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+          <span>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : ''}</span>
           <span className="mx-2">|</span>
           <span>NFT {nftCount}개</span>
         </div>
       </div>
+      
+      {/* 알림 메시지 */}
+      {notification.show && (
+        <div 
+          className={`fixed top-4 right-4 p-4 rounded shadow-lg z-50 ${
+            notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          } text-white`}
+        >
+          {notification.message}
+        </div>
+      )}
       
       {/* 프로필 수정 모달 */}
       <ProfileEditModal 
@@ -391,6 +657,7 @@ const UserProfile = () => {
         editFields={editFields}
         onChange={handleEditFieldChange}
         onSave={handleSaveEdit}
+        onCheckNickname={checkNickname}
         user={user}
       />
       
