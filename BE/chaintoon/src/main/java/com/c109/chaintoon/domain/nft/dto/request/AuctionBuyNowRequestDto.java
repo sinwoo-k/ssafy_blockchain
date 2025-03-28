@@ -10,5 +10,4 @@ import lombok.*;
 public class AuctionBuyNowRequestDto {
     private Integer auctionItemId;
     private Integer bidderId;
-    private Double buyNowPrice;
 }
