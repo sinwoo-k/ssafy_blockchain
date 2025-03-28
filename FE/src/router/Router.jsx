@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
 import CollectionPage from '../pages/store/CollectionPage'
+import MyFanart from '../pages/myworks/MyFanart'
 
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
@@ -21,6 +22,7 @@ const MyWebtoonEpisodeCreate = lazy(
 const MyWebtoonEpisodeUpdate = lazy(
   () => import('../pages/myworks/MyWebtoonEpisodeUpdate'),
 )
+const myFanart = lazy(() => import('../pages/myworks/MyFanart'))
 
 // 마이페이지 section
 const MyPage = lazy(() => import('../pages/mypage/Mypage'))
@@ -118,6 +120,14 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={<Loader />}>
                 <MyWebtoonEpisodeUpdate />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'fanart',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyFanart />
               </Suspense>
             ),
           },

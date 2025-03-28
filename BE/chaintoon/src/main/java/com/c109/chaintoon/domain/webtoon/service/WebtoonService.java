@@ -69,8 +69,8 @@ public class WebtoonService {
                             .writer(writer)
                             .webtoonName(webtoon.getWebtoonName())
                             .genre(webtoon.getGenre())
-                            .garoThumbnail(webtoon.getGaroThumbnail())
-                            .seroThumbnail(webtoon.getSeroThumbnail())
+                            .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                            .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                             .episodeCount(webtoon.getEpisodeCount())
                             .viewCount(webtoon.getViewCount())
                             .rating(rating)
@@ -98,8 +98,8 @@ public class WebtoonService {
                 .genre(webtoon.getGenre())
                 .summary(webtoon.getSummary())
                 .adaptable(webtoon.getAdaptable())
-                .garoThumbnail(webtoon.getGaroThumbnail())
-                .seroThumbnail(webtoon.getSeroThumbnail())
+                .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                 .episodeCount(webtoon.getEpisodeCount())
                 .viewCount(webtoon.getViewCount())
                 .rating(rating)
@@ -130,10 +130,10 @@ public class WebtoonService {
     }
 
 
-    public WebtoonResponseDto addWebtoon(WebtoonRequestDto webtoonDto, MultipartFile garoImage, MultipartFile seroImage) {
+    public WebtoonResponseDto addWebtoon(Integer userId, WebtoonRequestDto webtoonDto, MultipartFile garoImage, MultipartFile seroImage) {
         // Webtoon 엔티티 생성
         Webtoon webtoon = Webtoon.builder()
-                .userId(webtoonDto.getUserId())
+                .userId(userId)
                 .webtoonName(webtoonDto.getWebtoonName())
                 .genre(webtoonDto.getGenre())
                 .summary(webtoonDto.getSummary())
