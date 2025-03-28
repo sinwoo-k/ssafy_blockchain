@@ -1,4 +1,5 @@
-import API from './API';
+import API from '../api/API'
+
 
 export const requestEmailVerification = async (email) => {
   const res = await API.post('/auth/email-login', { email });

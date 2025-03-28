@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
+import { logoutAction } from '../../redux/actions/authActions';
 // 컴포넌트
 import LoginModal from '../Auth/LoginModal'
 
@@ -43,7 +44,7 @@ const NavBar = () => {
   }
 
   const handleLogout = () => {
-    dispatch(userReducerActions.logout())
+    dispatch(logoutAction());
   }
 
   return (
