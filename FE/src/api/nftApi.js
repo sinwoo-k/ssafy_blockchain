@@ -71,7 +71,7 @@ const getMyTradingHistory = async () => {
 // 지갑 정보 조회
 const getWalletInfo = async () => {
   try {
-    const response = await nftApi.get('/api/nft/wallet-info');
+    const response = await API.get('/api/nft/wallet-info');
     return response.data;
   } catch (error) {
     throw error;

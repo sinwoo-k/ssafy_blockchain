@@ -4800,15 +4800,15 @@
     "absolutePath": "project:/contracts/WalletManager.sol",
     "exportedSymbols": {
       "WalletManager": [
-        3413
+        3411
       ]
     },
-    "id": 3414,
+    "id": 3412,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3288,
+        "id": 3286,
         "literals": [
           "solidity",
           "^",
@@ -4825,9 +4825,9 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 3413,
+        "id": 3411,
         "linearizedBaseContracts": [
-          3413
+          3411
         ],
         "name": "WalletManager",
         "nameLocation": "70:13:17",
@@ -4836,12 +4836,12 @@
           {
             "constant": false,
             "functionSelector": "b2dd5c07",
-            "id": 3292,
+            "id": 3290,
             "mutability": "mutable",
             "name": "registered",
             "nameLocation": "123:10:17",
             "nodeType": "VariableDeclaration",
-            "scope": 3413,
+            "scope": 3411,
             "src": "91:42:17",
             "stateVariable": true,
             "storageLocation": "default",
@@ -4850,9 +4850,9 @@
               "typeString": "mapping(address => bool)"
             },
             "typeName": {
-              "id": 3291,
+              "id": 3289,
               "keyType": {
-                "id": 3289,
+                "id": 3287,
                 "name": "address",
                 "nodeType": "ElementaryTypeName",
                 "src": "99:7:17",
@@ -4868,7 +4868,7 @@
                 "typeString": "mapping(address => bool)"
               },
               "valueType": {
-                "id": 3290,
+                "id": 3288,
                 "name": "bool",
                 "nodeType": "ElementaryTypeName",
                 "src": "110:4:17",
@@ -4883,12 +4883,12 @@
           {
             "constant": false,
             "functionSelector": "c0689f47",
-            "id": 3296,
+            "id": 3294,
             "mutability": "mutable",
             "name": "walletPublicKeys",
             "nameLocation": "174:16:17",
             "nodeType": "VariableDeclaration",
-            "scope": 3413,
+            "scope": 3411,
             "src": "140:50:17",
             "stateVariable": true,
             "storageLocation": "default",
@@ -4897,9 +4897,9 @@
               "typeString": "mapping(address => string)"
             },
             "typeName": {
-              "id": 3295,
+              "id": 3293,
               "keyType": {
-                "id": 3293,
+                "id": 3291,
                 "name": "address",
                 "nodeType": "ElementaryTypeName",
                 "src": "148:7:17",
@@ -4915,7 +4915,7 @@
                 "typeString": "mapping(address => string)"
               },
               "valueType": {
-                "id": 3294,
+                "id": 3292,
                 "name": "string",
                 "nodeType": "ElementaryTypeName",
                 "src": "159:6:17",
@@ -4930,23 +4930,23 @@
           {
             "anonymous": false,
             "eventSelector": "fd8c98a09da86eba82da3f4067f073c6ef0f7138bc302e189386df00b87b836c",
-            "id": 3302,
+            "id": 3300,
             "name": "WalletRegistered",
             "nameLocation": "205:16:17",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3301,
+              "id": 3299,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3298,
+                  "id": 3296,
                   "indexed": true,
                   "mutability": "mutable",
                   "name": "wallet",
                   "nameLocation": "238:6:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3302,
+                  "scope": 3300,
                   "src": "222:22:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4955,7 +4955,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3297,
+                    "id": 3295,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "222:7:17",
@@ -4969,13 +4969,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 3300,
+                  "id": 3298,
                   "indexed": false,
                   "mutability": "mutable",
                   "name": "publicKey",
                   "nameLocation": "253:9:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3302,
+                  "scope": 3300,
                   "src": "246:16:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4984,7 +4984,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 3299,
+                    "id": 3297,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "246:6:17",
@@ -5002,12 +5002,12 @@
           },
           {
             "body": {
-              "id": 3305,
+              "id": 3303,
               "nodeType": "Block",
               "src": "286:2:17",
               "statements": []
             },
-            "id": 3306,
+            "id": 3304,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
@@ -5015,18 +5015,18 @@
             "nameLocation": "-1:-1:-1",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3303,
+              "id": 3301,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "283:2:17"
             },
             "returnParameters": {
-              "id": 3304,
+              "id": 3302,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "286:0:17"
             },
-            "scope": 3413,
+            "scope": 3411,
             "src": "272:16:17",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -5034,7 +5034,7 @@
           },
           {
             "body": {
-              "id": 3341,
+              "id": 3339,
               "nodeType": "Block",
               "src": "600:226:17",
               "statements": [
@@ -5042,7 +5042,7 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 3317,
+                        "id": 3315,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -5053,21 +5053,21 @@
                         "src": "619:23:17",
                         "subExpression": {
                           "baseExpression": {
-                            "id": 3313,
+                            "id": 3311,
                             "name": "registered",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 3292,
+                            "referencedDeclaration": 3290,
                             "src": "620:10:17",
                             "typeDescriptions": {
                               "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                               "typeString": "mapping(address => bool)"
                             }
                           },
-                          "id": 3316,
+                          "id": 3314,
                           "indexExpression": {
                             "expression": {
-                              "id": 3314,
+                              "id": 3312,
                               "name": "msg",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
@@ -5078,7 +5078,7 @@
                                 "typeString": "msg"
                               }
                             },
-                            "id": 3315,
+                            "id": 3313,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -5110,7 +5110,7 @@
                       },
                       {
                         "hexValue": "57616c6c657420616c72656164792072656769737465726564",
-                        "id": 3318,
+                        "id": 3316,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -5136,7 +5136,7 @@
                           "typeString": "literal_string \"Wallet already registered\""
                         }
                       ],
-                      "id": 3312,
+                      "id": 3310,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -5150,7 +5150,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 3319,
+                    "id": 3317,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -5166,34 +5166,34 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3320,
+                  "id": 3318,
                   "nodeType": "ExpressionStatement",
                   "src": "611:61:17"
                 },
                 {
                   "expression": {
-                    "id": 3326,
+                    "id": 3324,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "baseExpression": {
-                        "id": 3321,
+                        "id": 3319,
                         "name": "registered",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3292,
+                        "referencedDeclaration": 3290,
                         "src": "683:10:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                           "typeString": "mapping(address => bool)"
                         }
                       },
-                      "id": 3324,
+                      "id": 3322,
                       "indexExpression": {
                         "expression": {
-                          "id": 3322,
+                          "id": 3320,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
@@ -5204,7 +5204,7 @@
                             "typeString": "msg"
                           }
                         },
-                        "id": 3323,
+                        "id": 3321,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -5233,7 +5233,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "hexValue": "74727565",
-                      "id": 3325,
+                      "id": 3323,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -5253,34 +5253,34 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 3327,
+                  "id": 3325,
                   "nodeType": "ExpressionStatement",
                   "src": "683:29:17"
                 },
                 {
                   "expression": {
-                    "id": 3333,
+                    "id": 3331,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "baseExpression": {
-                        "id": 3328,
+                        "id": 3326,
                         "name": "walletPublicKeys",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3296,
+                        "referencedDeclaration": 3294,
                         "src": "723:16:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_string_storage_$",
                           "typeString": "mapping(address => string storage ref)"
                         }
                       },
-                      "id": 3331,
+                      "id": 3329,
                       "indexExpression": {
                         "expression": {
-                          "id": 3329,
+                          "id": 3327,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
@@ -5291,7 +5291,7 @@
                             "typeString": "msg"
                           }
                         },
-                        "id": 3330,
+                        "id": 3328,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -5319,11 +5319,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 3332,
+                      "id": 3330,
                       "name": "publicKey",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3309,
+                      "referencedDeclaration": 3307,
                       "src": "754:9:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_string_calldata_ptr",
@@ -5336,7 +5336,7 @@
                       "typeString": "string storage ref"
                     }
                   },
-                  "id": 3334,
+                  "id": 3332,
                   "nodeType": "ExpressionStatement",
                   "src": "723:40:17"
                 },
@@ -5345,7 +5345,7 @@
                     "arguments": [
                       {
                         "expression": {
-                          "id": 3336,
+                          "id": 3334,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
@@ -5356,7 +5356,7 @@
                             "typeString": "msg"
                           }
                         },
-                        "id": 3337,
+                        "id": 3335,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -5371,11 +5371,11 @@
                         }
                       },
                       {
-                        "id": 3338,
+                        "id": 3336,
                         "name": "publicKey",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3309,
+                        "referencedDeclaration": 3307,
                         "src": "808:9:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_calldata_ptr",
@@ -5394,18 +5394,18 @@
                           "typeString": "string calldata"
                         }
                       ],
-                      "id": 3335,
+                      "id": 3333,
                       "name": "WalletRegistered",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3302,
+                      "referencedDeclaration": 3300,
                       "src": "779:16:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (address,string memory)"
                       }
                     },
-                    "id": 3339,
+                    "id": 3337,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -5421,20 +5421,20 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3340,
+                  "id": 3338,
                   "nodeType": "EmitStatement",
                   "src": "774:44:17"
                 }
               ]
             },
             "documentation": {
-              "id": 3307,
+              "id": 3305,
               "nodeType": "StructuredDocumentation",
               "src": "296:238:17",
               "text": " @dev 사용자가 자신의 지갑을 등록하는 함수.\n msg.sender를 통해 지갑 주소를 등록합니다.\n @param publicKey 사용자가 등록할 공개키 (오프체인에서 생성된 정보)"
             },
             "functionSelector": "74b6068f",
-            "id": 3342,
+            "id": 3340,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -5442,17 +5442,17 @@
             "nameLocation": "549:14:17",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3310,
+              "id": 3308,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3309,
+                  "id": 3307,
                   "mutability": "mutable",
                   "name": "publicKey",
                   "nameLocation": "580:9:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3342,
+                  "scope": 3340,
                   "src": "564:25:17",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -5461,7 +5461,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 3308,
+                    "id": 3306,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "564:6:17",
@@ -5476,12 +5476,12 @@
               "src": "563:27:17"
             },
             "returnParameters": {
-              "id": 3311,
+              "id": 3309,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "600:0:17"
             },
-            "scope": 3413,
+            "scope": 3411,
             "src": "540:286:17",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -5489,7 +5489,7 @@
           },
           {
             "body": {
-              "id": 3375,
+              "id": 3373,
               "nodeType": "Block",
               "src": "1098:214:17",
               "statements": [
@@ -5497,7 +5497,7 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 3354,
+                        "id": 3352,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -5508,24 +5508,24 @@
                         "src": "1117:20:17",
                         "subExpression": {
                           "baseExpression": {
-                            "id": 3351,
+                            "id": 3349,
                             "name": "registered",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 3292,
+                            "referencedDeclaration": 3290,
                             "src": "1118:10:17",
                             "typeDescriptions": {
                               "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                               "typeString": "mapping(address => bool)"
                             }
                           },
-                          "id": 3353,
+                          "id": 3351,
                           "indexExpression": {
-                            "id": 3352,
+                            "id": 3350,
                             "name": "_wallet",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 3345,
+                            "referencedDeclaration": 3343,
                             "src": "1129:7:17",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -5550,7 +5550,7 @@
                       },
                       {
                         "hexValue": "57616c6c657420616c72656164792072656769737465726564",
-                        "id": 3355,
+                        "id": 3353,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -5576,7 +5576,7 @@
                           "typeString": "literal_string \"Wallet already registered\""
                         }
                       ],
-                      "id": 3350,
+                      "id": 3348,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -5590,7 +5590,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 3356,
+                    "id": 3354,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -5606,37 +5606,37 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3357,
+                  "id": 3355,
                   "nodeType": "ExpressionStatement",
                   "src": "1109:58:17"
                 },
                 {
                   "expression": {
-                    "id": 3362,
+                    "id": 3360,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "baseExpression": {
-                        "id": 3358,
+                        "id": 3356,
                         "name": "registered",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3292,
+                        "referencedDeclaration": 3290,
                         "src": "1178:10:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                           "typeString": "mapping(address => bool)"
                         }
                       },
-                      "id": 3360,
+                      "id": 3358,
                       "indexExpression": {
-                        "id": 3359,
+                        "id": 3357,
                         "name": "_wallet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3345,
+                        "referencedDeclaration": 3343,
                         "src": "1189:7:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -5658,7 +5658,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "hexValue": "74727565",
-                      "id": 3361,
+                      "id": 3359,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -5678,37 +5678,37 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 3363,
+                  "id": 3361,
                   "nodeType": "ExpressionStatement",
                   "src": "1178:26:17"
                 },
                 {
                   "expression": {
-                    "id": 3368,
+                    "id": 3366,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "baseExpression": {
-                        "id": 3364,
+                        "id": 3362,
                         "name": "walletPublicKeys",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3296,
+                        "referencedDeclaration": 3294,
                         "src": "1215:16:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_string_storage_$",
                           "typeString": "mapping(address => string storage ref)"
                         }
                       },
-                      "id": 3366,
+                      "id": 3364,
                       "indexExpression": {
-                        "id": 3365,
+                        "id": 3363,
                         "name": "_wallet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3345,
+                        "referencedDeclaration": 3343,
                         "src": "1232:7:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -5729,11 +5729,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 3367,
+                      "id": 3365,
                       "name": "publicKey",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3347,
+                      "referencedDeclaration": 3345,
                       "src": "1243:9:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_string_calldata_ptr",
@@ -5746,7 +5746,7 @@
                       "typeString": "string storage ref"
                     }
                   },
-                  "id": 3369,
+                  "id": 3367,
                   "nodeType": "ExpressionStatement",
                   "src": "1215:37:17"
                 },
@@ -5754,11 +5754,11 @@
                   "eventCall": {
                     "arguments": [
                       {
-                        "id": 3371,
+                        "id": 3369,
                         "name": "_wallet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3345,
+                        "referencedDeclaration": 3343,
                         "src": "1285:7:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -5766,11 +5766,11 @@
                         }
                       },
                       {
-                        "id": 3372,
+                        "id": 3370,
                         "name": "publicKey",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3347,
+                        "referencedDeclaration": 3345,
                         "src": "1294:9:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_calldata_ptr",
@@ -5789,18 +5789,18 @@
                           "typeString": "string calldata"
                         }
                       ],
-                      "id": 3370,
+                      "id": 3368,
                       "name": "WalletRegistered",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3302,
+                      "referencedDeclaration": 3300,
                       "src": "1268:16:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (address,string memory)"
                       }
                     },
-                    "id": 3373,
+                    "id": 3371,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -5816,20 +5816,20 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 3374,
+                  "id": 3372,
                   "nodeType": "EmitStatement",
                   "src": "1263:41:17"
                 }
               ]
             },
             "documentation": {
-              "id": 3343,
+              "id": 3341,
               "nodeType": "StructuredDocumentation",
               "src": "834:176:17",
               "text": " @dev 누구나 임의의 지갑을 등록할 수 있는 함수.\n @param _wallet 등록할 지갑 주소\n @param publicKey 등록할 공개키"
             },
             "functionSelector": "60c8a703",
-            "id": 3376,
+            "id": 3374,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -5837,17 +5837,17 @@
             "nameLocation": "1025:19:17",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3348,
+              "id": 3346,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3345,
+                  "id": 3343,
                   "mutability": "mutable",
                   "name": "_wallet",
                   "nameLocation": "1053:7:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3376,
+                  "scope": 3374,
                   "src": "1045:15:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -5856,7 +5856,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3344,
+                    "id": 3342,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1045:7:17",
@@ -5870,12 +5870,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 3347,
+                  "id": 3345,
                   "mutability": "mutable",
                   "name": "publicKey",
                   "nameLocation": "1078:9:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3376,
+                  "scope": 3374,
                   "src": "1062:25:17",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -5884,7 +5884,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 3346,
+                    "id": 3344,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "1062:6:17",
@@ -5899,12 +5899,12 @@
               "src": "1044:44:17"
             },
             "returnParameters": {
-              "id": 3349,
+              "id": 3347,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1098:0:17"
             },
-            "scope": 3413,
+            "scope": 3411,
             "src": "1016:296:17",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -5912,31 +5912,31 @@
           },
           {
             "body": {
-              "id": 3388,
+              "id": 3386,
               "nodeType": "Block",
               "src": "1556:44:17",
               "statements": [
                 {
                   "expression": {
                     "baseExpression": {
-                      "id": 3384,
+                      "id": 3382,
                       "name": "registered",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3292,
+                      "referencedDeclaration": 3290,
                       "src": "1574:10:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                         "typeString": "mapping(address => bool)"
                       }
                     },
-                    "id": 3386,
+                    "id": 3384,
                     "indexExpression": {
-                      "id": 3385,
+                      "id": 3383,
                       "name": "wallet",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3379,
+                      "referencedDeclaration": 3377,
                       "src": "1585:6:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -5954,21 +5954,21 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 3383,
-                  "id": 3387,
+                  "functionReturnParameters": 3381,
+                  "id": 3385,
                   "nodeType": "Return",
                   "src": "1567:25:17"
                 }
               ]
             },
             "documentation": {
-              "id": 3377,
+              "id": 3375,
               "nodeType": "StructuredDocumentation",
               "src": "1320:157:17",
               "text": " @dev 특정 지갑의 등록 여부를 조회합니다.\n @param wallet 확인할 지갑 주소\n @return bool 등록 여부"
             },
             "functionSelector": "7f247e49",
-            "id": 3389,
+            "id": 3387,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -5976,17 +5976,17 @@
             "nameLocation": "1492:18:17",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3380,
+              "id": 3378,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3379,
+                  "id": 3377,
                   "mutability": "mutable",
                   "name": "wallet",
                   "nameLocation": "1519:6:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3389,
+                  "scope": 3387,
                   "src": "1511:14:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -5995,7 +5995,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3378,
+                    "id": 3376,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1511:7:17",
@@ -6011,17 +6011,17 @@
               "src": "1510:16:17"
             },
             "returnParameters": {
-              "id": 3383,
+              "id": 3381,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3382,
+                  "id": 3380,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3389,
+                  "scope": 3387,
                   "src": "1550:4:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6030,7 +6030,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3381,
+                    "id": 3379,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "1550:4:17",
@@ -6044,7 +6044,7 @@
               ],
               "src": "1549:6:17"
             },
-            "scope": 3413,
+            "scope": 3411,
             "src": "1483:117:17",
             "stateMutability": "view",
             "virtual": false,
@@ -6052,23 +6052,23 @@
           },
           {
             "body": {
-              "id": 3411,
+              "id": 3409,
               "nodeType": "Block",
               "src": "1980:99:17",
               "statements": [
                 {
                   "expression": {
-                    "id": 3403,
+                    "id": 3401,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 3399,
+                      "id": 3397,
                       "name": "isRegistered",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3395,
+                      "referencedDeclaration": 3393,
                       "src": "1991:12:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bool",
@@ -6079,24 +6079,24 @@
                     "operator": "=",
                     "rightHandSide": {
                       "baseExpression": {
-                        "id": 3400,
+                        "id": 3398,
                         "name": "registered",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3292,
+                        "referencedDeclaration": 3290,
                         "src": "2006:10:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
                           "typeString": "mapping(address => bool)"
                         }
                       },
-                      "id": 3402,
+                      "id": 3400,
                       "indexExpression": {
-                        "id": 3401,
+                        "id": 3399,
                         "name": "wallet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3392,
+                        "referencedDeclaration": 3390,
                         "src": "2017:6:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -6120,23 +6120,23 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 3404,
+                  "id": 3402,
                   "nodeType": "ExpressionStatement",
                   "src": "1991:33:17"
                 },
                 {
                   "expression": {
-                    "id": 3409,
+                    "id": 3407,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 3405,
+                      "id": 3403,
                       "name": "publicKey",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 3397,
+                      "referencedDeclaration": 3395,
                       "src": "2035:9:17",
                       "typeDescriptions": {
                         "typeIdentifier": "t_string_memory_ptr",
@@ -6147,24 +6147,24 @@
                     "operator": "=",
                     "rightHandSide": {
                       "baseExpression": {
-                        "id": 3406,
+                        "id": 3404,
                         "name": "walletPublicKeys",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3296,
+                        "referencedDeclaration": 3294,
                         "src": "2047:16:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_address_$_t_string_storage_$",
                           "typeString": "mapping(address => string storage ref)"
                         }
                       },
-                      "id": 3408,
+                      "id": 3406,
                       "indexExpression": {
-                        "id": 3407,
+                        "id": 3405,
                         "name": "wallet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 3392,
+                        "referencedDeclaration": 3390,
                         "src": "2064:6:17",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -6188,20 +6188,20 @@
                       "typeString": "string memory"
                     }
                   },
-                  "id": 3410,
+                  "id": 3408,
                   "nodeType": "ExpressionStatement",
                   "src": "2035:36:17"
                 }
               ]
             },
             "documentation": {
-              "id": 3390,
+              "id": 3388,
               "nodeType": "StructuredDocumentation",
               "src": "1608:260:17",
               "text": " @dev 특정 지갑의 정보를 조회합니다.\n @param wallet 조회할 지갑 주소\n @return isRegistered 해당 지갑이 등록되었는지 여부, publicKey 등록된 공개키 (등록되지 않았다면 빈 문자열)"
             },
             "functionSelector": "7d5c1914",
-            "id": 3412,
+            "id": 3410,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -6209,17 +6209,17 @@
             "nameLocation": "1883:13:17",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3393,
+              "id": 3391,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3392,
+                  "id": 3390,
                   "mutability": "mutable",
                   "name": "wallet",
                   "nameLocation": "1905:6:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3412,
+                  "scope": 3410,
                   "src": "1897:14:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6228,7 +6228,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3391,
+                    "id": 3389,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1897:7:17",
@@ -6244,17 +6244,17 @@
               "src": "1896:16:17"
             },
             "returnParameters": {
-              "id": 3398,
+              "id": 3396,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3395,
+                  "id": 3393,
                   "mutability": "mutable",
                   "name": "isRegistered",
                   "nameLocation": "1941:12:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3412,
+                  "scope": 3410,
                   "src": "1936:17:17",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6263,7 +6263,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3394,
+                    "id": 3392,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "1936:4:17",
@@ -6276,12 +6276,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 3397,
+                  "id": 3395,
                   "mutability": "mutable",
                   "name": "publicKey",
                   "nameLocation": "1969:9:17",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3412,
+                  "scope": 3410,
                   "src": "1955:23:17",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -6290,7 +6290,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 3396,
+                    "id": 3394,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "1955:6:17",
@@ -6304,14 +6304,14 @@
               ],
               "src": "1935:44:17"
             },
-            "scope": 3413,
+            "scope": 3411,
             "src": "1874:205:17",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 3414,
+        "scope": 3412,
         "src": "61:2021:17",
         "usedErrors": []
       }
@@ -6332,8 +6332,8 @@
     "17000": {
       "events": {},
       "links": {},
-      "address": "0xF22B235D87fa02E052c03f3FcC2f127c07A63689",
-      "transactionHash": "0xb4fd80a15183154ecbaf0f80ed26efe58f81ea60d14f469337e417b24177ed5a"
+      "address": "0x037D24b0dbF5BC73807dC5feEa47D6D8F956226b",
+      "transactionHash": "0x20009b4ee7b6913518a3831217daea9d3db1899c9b1874a41124234613a28e19"
     },
     "1742821645144": {
       "events": {},
@@ -6343,7 +6343,7 @@
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-03-25T02:21:08.017Z",
+  "updatedAt": "2025-03-27T15:54:19.972Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

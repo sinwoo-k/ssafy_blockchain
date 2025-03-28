@@ -9,10 +9,20 @@ const getUserInfo = async (userId) => {
 // 내 정보 조회 API
 export const getMyUserInfo = async () => {
   try {
-    const res = await API.get('/users/my-info');
-    console.log(res)
-    return res.data;
-    
+    const response = await userApi.patch(`/api/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 팔로워 목록 조회
+const getFollowers = async (userId, page = 1, pageSize = 10) => {
+  try {
+    const response = await userApi.get(`/api/users/followers/${userId}`, {
+      params: { page, pageSize }
+    });
+    return response.data;
   } catch (error) {
     console.log(error)
   }
