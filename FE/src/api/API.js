@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'https://j12c109.p.ssafy.io/api';
+const BASE_URL = import.meta.env.VITE_CHAINTOON_BASE_URL;
 
 const API = axios.create({
   baseURL: BASE_URL,

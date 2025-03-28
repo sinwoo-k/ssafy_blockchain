@@ -1,6 +1,6 @@
 import { authActions } from '../reducers/authSlice';
 import { userReducerActions } from '../reducers/userSlice';
-import { authService } from '../../api/authApi';
+import { authService } from '../../api/authApi.js';
 import { loginWithMetaMask } from '../../utils/metamask';
 import { getMyUserInfo } from '../../api/userApi';
 
@@ -101,22 +101,35 @@ export const checkAuthStatus = () => async (dispatch) => {
   }
 };
 
+// export const logoutAction = () => async (dispatch) => {
+//   try {
+//     // 백엔드에 로그아웃 요청하여 쿠키 삭제
+//     await authService.logout();
+//     // 로컬 스토리지 클리어
+//     if (localStorage.getItem('authMethod')) {
+//       localStorage.removeItem('authMethod');
+//     }
+//     // 리덕스 상태 초기화
+//     dispatch(userReducerActions.logout());
+//   } catch (error) {
+//     console.error('로그아웃 처리 중 오류 발생:', error);
+//     // 오류가 발생해도 프론트 상태는 초기화
+//     if (localStorage.getItem('authMethod')) {
+//       localStorage.removeItem('authMethod');
+//     }
+//     dispatch(userReducerActions.logout());
+//   }
+// };
+
 export const logoutAction = () => async (dispatch) => {
   try {
-    // 백엔드에 로그아웃 요청하여 쿠키 삭제
+    console.log('📡 로그아웃 요청 시작');
     await authService.logout();
-    // 로컬 스토리지 클리어
-    if (localStorage.getItem('authMethod')) {
-      localStorage.removeItem('authMethod');
-    }
-    // 리덕스 상태 초기화
+    console.log('✅ 서버에서 쿠키 삭제 완료');
     dispatch(userReducerActions.logout());
-  } catch (error) {
-    console.error('로그아웃 처리 중 오류 발생:', error);
-    // 오류가 발생해도 프론트 상태는 초기화
-    if (localStorage.getItem('authMethod')) {
-      localStorage.removeItem('authMethod');
-    }
+    console.log('✅ Redux 상태 초기화 완료');
+  } catch (err) {
+    console.error('🚨 로그아웃 중 에러', err);
     dispatch(userReducerActions.logout());
   }
 };
