@@ -6,6 +6,7 @@ import { encrypt, decrypt } from '../../cryptoHelper.js';
 import * as walletRepository from '../repositories/walletRepository.js';
 import AppError from '../../utils/AppError.js';
 import { getNonce, deleteNonce } from './nonceService.js';
+import { setChallenge } from './nftService.js';
 import { get } from 'http';
 
 // __dirname 대체 (ES Module 환경)
@@ -107,7 +108,7 @@ export async function createWalletService({ userId }) {
 export async function getWalletInfoService({ userId }) {
 
   // DB에서 지갑 정보 조회
-  const wallet = await walletRepository.findWalletByUserId(userId);
+  const wallet = await walletRepository.getWalletByUserId(userId);
   if (!wallet) throw new Error('Wallet not found');
   const walletAddress = wallet.wallet_address;
   // 온체인 지갑 정보 조회
@@ -116,7 +117,20 @@ export async function getWalletInfoService({ userId }) {
   // ETH 잔고 조회
   const ethBalanceWei = await provider.getBalance(walletAddress);
   const ethBalance = ethers.formatEther(ethBalanceWei); // Wei를 ETH로 변환
-
+  if (wallet.private_key) {
+    return {
+      walletId: wallet.wallet_id,
+      walletAddress: wallet.wallet_address,
+      publicKey: wallet.public_key,
+      private_key: decrypt(wallet.private_key),
+      coinType: wallet.coin_type,
+      isRegistered: result[0],
+      contractPublicKey: result[1],
+      balances: {
+        eth: `${ethBalance} ETH`
+      }
+    };
+  }
   return {
     walletId: wallet.wallet_id,
     walletAddress: wallet.wallet_address,
@@ -132,7 +146,7 @@ export async function getWalletInfoService({ userId }) {
 
 export async function sendTransactionService({ fromAddress, toAddress, amount }) {
   // fromAddress에 해당하는 지갑 정보 조회
-  const wallet = await walletRepository.findWalletByAddress(fromAddress);
+  const wallet = await walletRepository.getWalletByAddress(fromAddress);
   if (!wallet) {
     throw new Error('Wallet not found');
   }
@@ -141,23 +155,24 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
   const amountToSend = ethers.parseEther(amount.toString());
   console.log("Amount to send (wei):", amountToSend.toString());
 
-  // 트랜잭션 실행 전, 가스 가격 및 가스 한도 정보 조회 (Ethers v6)
+  // RPC Provider 생성
+  const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+
+  // 트랜잭션 실행 전, 가스 가격 및 가스 한도 정보 조회
   const feeData = await provider.getFeeData();
   const gasPrice = feeData.gasPrice; // BigInt (wei 단위)
-  // gasPrice를 Gwei 단위의 10진수 문자열로 변환
-  const gasPriceGwei = ethers.formatUnits(gasPrice, "gwei");
   const gasLimit = 21000; // 기본 ETH 송금의 가스 한도
-  console.log("Gas Price (Gwei):", gasPriceGwei);
+  console.log("Gas Price (Gwei):", ethers.formatUnits(gasPrice, "gwei"));
   console.log("Gas Limit:", gasLimit.toString());
-
-  // 서버에 개인키가 저장되어 있는 경우: 해당 지갑으로 직접 서명하여 송금
+  console.log(wallet.user_id);
+  // 개인키가 있는 경우 (서버가 직접 서명)
   if (wallet.private_key) {
     // 개인키 복호화 후 Wallet 객체 생성
     const decryptedPrivateKey = decrypt(wallet.private_key);
     const userWallet = new ethers.Wallet(decryptedPrivateKey, provider);
 
     try {
-      // 트랜잭션 생성 및 전송 (가스 정보도 함께 지정)
+      // 트랜잭션 생성 및 전송 (가스 정보 포함)
       const tx = await userWallet.sendTransaction({
         to: toAddress,
         value: amountToSend,
@@ -166,7 +181,6 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
       });
       // 트랜잭션 확인 대기
       const receipt = await tx.wait();
-
       return {
         from: fromAddress,
         to: toAddress,
@@ -179,29 +193,27 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
       throw new AppError('트랜잭션 전송 중 오류가 발생했습니다.', 500);
     }
   } else {
-    const adminWallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);
-    try {
-      const tx = await adminWallet.sendTransaction({
-        to: toAddress,
-        value: amountToSend,
-        gasPrice: gasPrice,
-        gasLimit: gasLimit,
-      });
-      const receipt = await tx.wait();
-
-      return {
-        // fallback인 경우 실제 송금은 adminWallet으로 진행됨
-        from: adminWallet.address,
-        to: toAddress,
-        amount: `${amount} ETH`,
-        transactionHash: receipt.transactionHash,
-        blockNumber: receipt.blockNumber,
-        note: "Sent using admin wallet as fallback"
-      };
-    } catch (error) {
-      console.error("Fallback 트랜잭션 전송 중 오류:", error);
-      throw new AppError('트랜잭션 전송 중 오류가 발생했습니다.', 500);
-    }
+    // 개인키가 없는 경우: MetaMask를 통한 거래 전송 위임
+    // MetaMask에서 사용자가 직접 거래를 전송할 수 있도록 payload를 생성합니다.
+    console.log("MetaMask 전송을 위한 payload 생성 중...");
+    const metamaskPayload = {
+      to: toAddress,
+      value: amountToSend.toString(), // 문자열 형태로 변환
+      gasPrice: gasPrice.toString(),
+      gasLimit: gasLimit,
+    };
+    // 서명을 위한 메시지 생성 (예: fromAddress와 현재 시간을 포함)
+    const messageToSign = `${fromAddress}-${Date.now()}`;
+    // 챌린지 데이터 생성하여 Redis에 저장 (키는 fromAddress 사용)
+    const challengeData = {
+      message: messageToSign,
+      operation: 'sendTransaction',
+      extra: { fromAddress, toAddress, amount: amount, metamaskPayload }
+    };
+    await setChallenge(wallet.user_id, challengeData);
+    // 클라이언트는 반환받은 messageToSign에 대해 MetaMask로 서명하고,
+    // confirmSignature API를 호출하여 최종 거래 전송 payload를 받아 MetaMask로 거래를 진행해야 합니다.
+    return { needSignature: true, messageToSign };
   }
 }
 

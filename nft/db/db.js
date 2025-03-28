@@ -10,7 +10,6 @@ const pool = mysql.createPool({
 });
 
 const redisClient = createClient({
-  legacyMode: true,
   url: process.env.REDIS_URL || 'redis://j12c109.p.ssafy.io:6379'
 });
 
@@ -19,6 +18,5 @@ redisClient.on('error', (err) => {
 });
 
 await redisClient.connect();
-
 
 export { pool, redisClient };
