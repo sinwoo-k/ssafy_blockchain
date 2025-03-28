@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.nft.service;
 
+import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -18,14 +19,15 @@ import com.c109.chaintoon.domain.nft.repository.TradingHistoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Block;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +39,7 @@ public class AuctionItemService {
     private final NftRepository nftRepository;
     private final BiddingHistoryRepository biddingHistoryRepository;
     private final TradingHistoryRepository tradingHistoryRepository;
+    private final BlockchainService blockchainService;
 
     // 판매 등록
     public AuctionCreateResponseDto createAuctionItem(AuctionCreateRequestDto auctionCreateRequestDto) {
@@ -170,7 +173,13 @@ public class AuctionItemService {
         }
 
         // TODO : 구매자 지갑 잔액 확인
+        WalletBalance walletBalance = blockchainService.getWalletBalance(buyNowRequestDto.getBidderId());
+        log.info("구매자 {}의 잔액: {}", buyNowRequestDto.getBidderId(), walletBalance.getAmount());
 
+        // 구매자 잔액이 즉시 구매 가격보다 부족하면 구매 불가 처리
+        if (walletBalance.getAmount() < buyNowPrice) {
+            throw new InsufficientWalletBalanceException("구매자 지갑 잔액이 부족합니다.");
+        }
 
         // 경매 아이템 업데이트
         auctionItem.setBiddingPrice(buyNowPrice);
@@ -223,6 +232,60 @@ public class AuctionItemService {
                 ));
 
         // 각 입찰자에 대해 비동기로 지갑 잔액 조회 요청
-        Map<>
+        Map<Integer, WalletBalance> bidderBalances = new ConcurrentHashMap<>();
+
+        // 비동기적으로 여러 입찰자의 지갑 잔액을 조회하고, 조회 결과를 맵에 저장
+        List<CompletableFuture<Void>> futures = new ArrayList<>(); // 비동기 작업을 관리하기 위한 리스트
+
+        // bidderBidMap을 순회하며 입찰자 id 가져오기
+        for(Map.Entry<Integer, Double> entry : bidderBidMap.entrySet()) {
+            Integer bidderId = entry.getKey();
+
+            // 비동기 작업 시작
+            CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+                // TODO : 블록체인에서 지갑 잔액 조회
+                return bidderBalances.get(bidderId); // TODO : return 코드가 없으면 에러나서 임시로 작성
+            }).thenAccept(balance -> { // 잔액 조회 결과를 MAP에 저장
+                bidderBalances.put(bidderId, balance);
+                log.info("bidder {}의 잔액 : {}", bidderId, balance.getAmount());
+            }).exceptionally(e -> { // 비동기 작업 중 예외가 발생하면 처리
+                log.error("bidder {}의 지갑 잔액 조회 실패 : {}", bidderId, e.getMessage());
+                return null;
+            });
+            futures.add(future); // 비동기 작업 리스트에 추가
+        }
+
+        // 모든 비동기 요청이 완료되면 낙찰자 선정 로직 실행
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])) // 모든 입찰자의 지갑 조회가 완료될때까지 기다림
+                .thenRun(() -> {
+                    // 내림차순으로 bidder 목록 정렬
+                    List<Integer> sortedBidders = bidderBidMap.entrySet().stream()
+                            .sorted(Comparator.comparingDouble(Map.Entry<Integer,Double>::getValue).reversed())
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toList());
+
+                    Integer winner = null;
+                    for (Integer bidderId : sortedBidders) {
+                        double bidPrice = bidderBidMap.get(bidderId);
+                        WalletBalance balance = bidderBalances.get(bidderId);
+                        if (balance == null) {
+                            log.warn("bidder {}의 잔액 정보를 가져오지 못했습니다.", bidderId);
+                            continue;
+                        }
+                        // 잔액이 입찰가 이상이면 유효한 입찰로 간주
+                        if (balance.getAmount() >= bidPrice) {
+                            winner = bidderId;
+                            log.info("낙찰자 선정 : bidder {} (입찰가: {}, wksdor: {})", bidderId, bidPrice, balance.getAmount());
+                            break;
+                        }
+                    }
+
+                    if (winner == null) {
+                        log.info("모든 bidder가 잔액 부족으로 낙찰 조건을 충족하지 못했습니다.");
+                    } else {
+                        // 낙찰자가 선정되면 경매 아이템 상태 업데이트, 거래 내역 기록 등의 후속 작업 진행
+                    }
+                });
+
     }
 }
