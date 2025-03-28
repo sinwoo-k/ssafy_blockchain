@@ -1,52 +1,42 @@
-// src/redux/reducers/userSlice.js
-import { createSlice } from '@reduxjs/toolkit'
+// userSlice.js (최종 최적화 코드)
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   isAuthenticated: false,
   walletAddress: null,
-  walletType: null, // 'metamask', 'email', 'ssafy' 등
+  walletType: null,
   userData: null,
-  token: null
-}
+};
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     setAuthenticated: (state, action) => {
-      state.isAuthenticated = action.payload
-      // 로그아웃 시 모든 상태 초기화
+      state.isAuthenticated = action.payload;
       if (!action.payload) {
-        state.walletAddress = null
-        state.walletType = null
-        state.userData = null
-        state.token = null
+        state.walletAddress = null;
+        state.walletType = null;
+        state.userData = null;
       }
     },
     setWalletAddress: (state, action) => {
-      state.walletAddress = action.payload
+      state.walletAddress = action.payload;
     },
     setWalletType: (state, action) => {
-      state.walletType = action.payload
+      state.walletType = action.payload;
     },
     setUserData: (state, action) => {
-      state.userData = action.payload
+      console.log(action.payload)
+      state.userData = action.payload;
     },
-    setToken: (state, action) => {
-      state.token = action.payload
+    setUser:(state,action) =>{
+      state.userData = action.payload;
     },
-    logout: (state) => {
-      state.isAuthenticated = false
-      state.walletAddress = null
-      state.walletType = null
-      state.userData = null
-      state.token = null
-      // 토큰 제거
-      localStorage.removeItem('token')
-    }
-  }
-})
+    logout: () => initialState,
+  },
+});
 
-export const userReducerActions = userSlice.actions
+export const userReducerActions = userSlice.actions;
 
-export default userSlice.reducer
+export default userSlice.reducer;

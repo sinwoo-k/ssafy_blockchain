@@ -10,7 +10,7 @@ export async function createWallet(walletData) {
   return result.insertId;
 }
 
-export async function findWalletByUserId(userId) {
+export async function getWalletByUserId(userId) {
   const [result] = await pool.execute(
     `SELECT * FROM wallet WHERE user_id = ?`,
     [userId]
@@ -37,10 +37,10 @@ export async function createUser(userData){
   return result.insertId;
 }
 
-export async function findWalletByAddress(walletAddress) {
-  const [result] = await pool.execute(
-    `SELECT * FROM wallet WHERE wallet_address = ?`,
-    [walletAddress]
-  );
-  return result;
+export async function getWalletByAddress(walletAddress) {
+  const query = `
+    SELECT * FROM wallet WHERE wallet_address = ?
+  `;  
+  const [result] = await pool.execute(query, [walletAddress]);
+  return result[0];
 }

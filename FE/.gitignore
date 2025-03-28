@@ -25,3 +25,7 @@ dist-ssr
 
 # 환경변수
 .env
+
+# 인증서
+.certs/localhost-key.pem
+.certs/localhost.pem
