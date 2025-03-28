@@ -60,6 +60,7 @@ public class AuthController {
         jwtCookie.setHttpOnly(true);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // 쿠키 즉시 삭제
+        jwtCookie.setSecure(true);
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok("로그아웃 성공");
