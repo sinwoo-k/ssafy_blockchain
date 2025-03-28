@@ -1,33 +1,23 @@
-// src/utils/API/nftApi.js - NFT 관련 API
-import axios from 'axios';
+import API from '../api/API.js'
 
-const BASE_URL = 'https://j12c109.p.ssafy.io';
-
-const nftApi = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// 요청 인터셉터 - 토큰 추가
-nftApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// // 요청 인터셉터 - 토큰 추가
+// nftApi.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem('token');
+//     if (token) {
+//       config.headers['Authorization'] = `Bearer ${token}`;
+//     }
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
 
 // 내 NFT 목록 조회
 const getMyNFTs = async () => {
   try {
-    const response = await nftApi.get('/api/nft/me');
+    const response = await API.get('/api/nft/me');
     return response.data;
   } catch (error) {
     throw error;
@@ -37,7 +27,7 @@ const getMyNFTs = async () => {
 // NFT 상세 정보 조회
 const getNFTDetails = async (tokenId) => {
   try {
-    const response = await nftApi.get(`/api/nft/nft-details/${tokenId}`, {
+    const response = await API.get(`/api/nft/nft-details/${tokenId}`, {
       params: { type: 'nft' }
     });
     return response.data;
@@ -49,7 +39,7 @@ const getNFTDetails = async (tokenId) => {
 // NFT 거래 내역 조회
 const getNFTTradingHistory = async (nftId) => {
   try {
-    const response = await nftApi.get(`/api/nfts/${nftId}/trading-histories`, {
+    const response = await API.get(`/api/nfts/${nftId}/trading-histories`, {
       params: { type: 'nft' }
     });
     return response.data;
@@ -61,7 +51,7 @@ const getNFTTradingHistory = async (nftId) => {
 // NFT 판매 등록
 const sellNFT = async (nftData) => {
   try {
-    const response = await nftApi.post('/api/nft/sell-nft', nftData);
+    const response = await API.post('/api/nft/sell-nft', nftData);
     return response.data;
   } catch (error) {
     throw error;
@@ -71,7 +61,7 @@ const sellNFT = async (nftData) => {
 // 내 거래 내역 조회
 const getMyTradingHistory = async () => {
   try {
-    const response = await nftApi.get('/api/users/trading-histories');
+    const response = await API.get('/api/users/trading-histories');
     return response.data;
   } catch (error) {
     throw error;
