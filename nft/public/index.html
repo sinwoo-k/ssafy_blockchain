@@ -2,19 +2,19 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>NFT API 요청 테스트</title>
+  <title>NFT 및 송금 API 요청 테스트</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; }
     form { margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; }
     label { display: block; margin-top: 5px; }
-    input, textarea { width: 100%; padding: 5px; margin-top: 5px; }
+    input { width: 100%; padding: 5px; margin-top: 5px; }
     button { margin-top: 10px; padding: 8px 12px; }
     .output { margin-top: 10px; padding: 8px; background: #f0f0f0; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <h1>NFT API 요청 테스트 (직접 바디값 입력)</h1>
+  <h1>NFT 및 송금 API 요청 테스트</h1>
   
   <!-- NFT 민팅 폼 -->
   <form id="mintForm">
@@ -76,8 +76,27 @@
     <div id="buyOutput" class="output"></div>
   </form>
   
+  <!-- 송금 테스트 폼 -->
+  <form id="sendTxForm">
+    <h2>송금 테스트 (MetaMask 위임)</h2>
+    <label for="fromAddress">From Address</label>
+    <input type="text" id="fromAddress" name="fromAddress" placeholder="예: 0xYourAddress" required>
+    
+    <label for="toAddress">To Address</label>
+    <input type="text" id="toAddress" name="toAddress" placeholder="예: 0xRecipientAddress" required>
+    
+    <label for="sendAmount">Amount (ETH)</label>
+    <input type="text" id="sendAmount" name="amount" placeholder="예: 0.01" required>
+    
+    <label for="sendUserId">User ID</label>
+    <input type="text" id="sendUserId" name="userId" placeholder="예: user1" required>
+    
+    <button type="submit">송금 요청 전송</button>
+  </form>
+  <div id="sendTxOutput" class="output"></div>
+
   <script>
-    // MetaMask 서명 요청 및 confirmSignature API 호출 함수
+    // 공통: MetaMask 서명 요청 및 confirmSignature API 호출 함수
     async function signAndConfirm(messageToSign, userId) {
       if (!window.ethereum) {
         alert("MetaMask가 설치되어 있지 않습니다.");
@@ -96,7 +115,7 @@
       return await confirmRes.json();
     }
 
-    // 실제 거래 전송 함수: 반환받은 payload를 이용해 MetaMask로 거래를 전송하고 영수증을 반환
+    // 실제 거래 전송 함수: 반환받은 payload를 이용해 MetaMask로 거래 전송 및 영수증 반환
     async function sendTransaction(payload) {
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -217,6 +236,46 @@
             output.innerText = '구매 거래 전송 중...';
             const receipt = await sendTransaction(confirmData.metamaskPayload);
             output.innerText = '구매 거래 완료! 영수증: ' + JSON.stringify(receipt);
+          } else {
+            output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
+          }
+        } else {
+          output.innerText = '서버 처리 결과: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.innerText = '오류: ' + err.message;
+      }
+    });
+
+    // 송금 폼 처리 (MetaMask 서명 위임)
+    document.getElementById('sendTxForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const output = document.getElementById('sendTxOutput');
+      output.innerText = '송금 요청 중...';
+
+      const payload = {
+        fromAddress: document.getElementById('fromAddress').value,
+        toAddress: document.getElementById('toAddress').value,
+        amount: document.getElementById('sendAmount').value,
+        userId: document.getElementById('sendUserId').value
+      };
+
+      try {
+        const res = await fetch('/api/nft/send-transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.needSignature && data.messageToSign) {
+          output.innerText = '서명 요청 중...';
+          const confirmData = await signAndConfirm(data.messageToSign, payload.userId);
+          console.log("Confirm Data:", confirmData);
+          if (confirmData.metamaskPayload) {
+            output.innerText = '송금 거래 전송 중...';
+            const receipt = await sendTransaction(confirmData.metamaskPayload);
+            output.innerText = '송금 거래 완료! 영수증: ' + JSON.stringify(receipt);
           } else {
             output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
           }

@@ -30,7 +30,7 @@ const pinata = new pinataSDK(
   process.env.PINATA_SECRET_API_KEY
 );
 
-async function setChallenge(userId, challengeData) {
+export async function setChallenge(userId, challengeData) {
   const key = `challenge:${userId}`;
   // Redis v4에서는 옵션 객체를 사용하여 EX 옵션을 지정할 수 있습니다.
   await redisClient.set(key, JSON.stringify(challengeData), { EX: 300 });
@@ -165,7 +165,17 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     if (userWallet.private_key) {
       wallet = new ethers.Wallet(decrypt(userWallet.private_key), provider);
     } else {
-      wallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);
+      // wallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);
+      const messageToSign = `${userId}-${Date.now()}`;
+      const challengeData = {
+        message: messageToSign,
+        operation: 'mint',
+        extra: { webtoonId, type, typeId, s3Url, originalCreator, registrant, metadataUri }
+      };
+      await setChallenge(userId, challengeData);
+      // 클라이언트는 반환받은 messageToSign에 대해 MetaMask로 서명 후,
+      // confirmSignature API를 호출하여 거래 payload를 받아 직접 거래를 전송합니다.
+      return { needSignature: true, messageToSign };
     }
 
     const nftMarketplace = new ethers.Contract(NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, wallet);
@@ -248,7 +258,6 @@ export async function sellNftService({ tokenId, price, userId }) {
 
     // price를 ETH 단위(소수)에서 Wei(BigInt)로 변환 (예: "0.001" -> 1e15)
     const priceWei = ethers.parseUnits(price.toString(), 'ether');
-    const tokenIdBN = BigInt(tokenId);
 
     // RPC Provider 생성
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
@@ -264,7 +273,7 @@ export async function sellNftService({ tokenId, price, userId }) {
       const nftMarketplace = new ethers.Contract(NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, sellerWallet);
 
       // listNFT 트랜잭션 실행
-      const tx = await nftMarketplace.listNFT(tokenIdBN, priceWei);
+      const tx = await nftMarketplace.listNFT(tokenId, priceWei);
       const receipt = await tx.wait();
 
       // 이벤트 NFTListed 파싱
@@ -283,14 +292,14 @@ export async function sellNftService({ tokenId, price, userId }) {
       if (!listed) {
         throw new AppError('NFTListed 이벤트가 발생하지 않았습니다.', 500);
       }
-      return { message: 'NFT 판매 등록 성공', tokenIdBN, price: priceWei.toString() };
+      return { message: 'NFT 판매 등록 성공', tokenId, price: priceWei.toString() };
     } else {
       // DB에 privateKey가 없는 경우 => MetaMask 연동된 계정으로 진행
       // MetaMask에서 서명할 수 있도록 거래에 필요한 파라미터(payload) 생성
       // 여기서는 거래 데이터를 미리 준비해 둡니다.
       const iface = new ethers.Interface(NFT_MARKETPLACE_ABI);
       // listNFT 함수에 대한 데이터 인코딩
-      const data = iface.encodeFunctionData('listNFT', [tokenIdBN, priceWei]);
+      const data = iface.encodeFunctionData('listNFT', [tokenId, priceWei]);
       const metamaskPayload = {
         to: NFT_MARKETPLACE_ADDRESS,
         data,
@@ -300,7 +309,7 @@ export async function sellNftService({ tokenId, price, userId }) {
       const challengeData = {
         message: messageToSign,
         operation: 'sell',
-        extra: { tokenId: tokenIdBN.toString(), price, priceWei: priceWei.toString(), metamaskPayload }
+        extra: { tokenId: tokenId, price, priceWei: priceWei.toString(), metamaskPayload }
       };
       await setChallenge(userId, challengeData);
       return { needSignature: true, messageToSign };
@@ -390,6 +399,7 @@ export async function getAllNftsService() {
 
 // MetaMask 서명 검증 및 트랜잭션 진행
 export async function confirmSignatureService({ userId, signature }) {
+  console.log("userId:", userId);
   const challengeData = await getChallenge(userId);
   if (!challengeData) {
     throw new AppError('서명 요청 정보가 존재하지 않습니다.', 400);
@@ -463,6 +473,20 @@ export async function confirmSignatureService({ userId, signature }) {
         contractAddress: NFT_MARKETPLACE_ADDRESS,
         metamaskPayload 
       };
+    } else if (operation === 'sendTransaction') {
+      // sendTransaction 작업은 단순 ETH 송금을 위한 거래 payload 생성
+      // extra에는 toAddress와 amountWei (송금할 금액의 wei 값)가 포함되어 있다고 가정합니다.
+      const metamaskPayload = {
+        to: extra.toAddress,
+        value: extra.amountWei, // 이미 문자열 형식으로 wei 값이어야 함
+        // 추가 가스 옵션이 필요하면 여기서 설정 가능
+      };
+      return {
+        success: true,
+        message: '서명이 확인되었습니다. 송금 거래를 진행하세요.',
+        operation,
+        metamaskPayload
+      };
     } else {
       return { success: true, message: '서명이 확인되었습니다.', operation, contractAddress: NFT_MARKETPLACE_ADDRESS, extra };
     }
@@ -479,4 +503,5 @@ export default {
   buyNftService,
   getMyNftsService,
   confirmSignatureService,
+  setChallenge,
 };
