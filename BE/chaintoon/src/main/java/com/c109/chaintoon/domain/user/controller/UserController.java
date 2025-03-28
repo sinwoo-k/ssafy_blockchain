@@ -43,7 +43,7 @@ public class UserController {
     }
 
     // 내 정보 조회
-    @GetMapping("/myInfo")
+    @GetMapping("/my-info")
     public ResponseEntity<?> getMyInfo(
             @AuthenticationPrincipal Integer loginId) {
         MyInfoResponseDto user = userService.getMyInfo(loginId);
@@ -63,7 +63,7 @@ public class UserController {
     }
 
     // 닉네임 중복 확인
-    @GetMapping("/isExist/{nickname}")
+    @GetMapping("/is-exist/{nickname}")
     public ResponseEntity<?> isExist(@PathVariable String nickname) {
         return ResponseEntity.ok(userService.checkNickname(nickname));
     }

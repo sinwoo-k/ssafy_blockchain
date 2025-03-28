@@ -40,7 +40,7 @@ public class AuthController {
         // HttpOnly & Secure 쿠키 설정
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true)
-                .secure(true) // HTTPS 환경에서만 사용
+//                .secure(true) // HTTPS 환경에서만 사용
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
                 .sameSite("None") // CSRF 보호
@@ -58,7 +58,6 @@ public class AuthController {
         // JWT 쿠키 제거
         Cookie jwtCookie = new Cookie("jwt", null); // 쿠키 이름은 "jwt"
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true); // HTTPS 환경에서만 동작
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // 쿠키 즉시 삭제
         response.addCookie(jwtCookie);
