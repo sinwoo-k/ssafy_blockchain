@@ -3,6 +3,7 @@ package com.c109.chaintoon.domain.user.controller;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
+import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
 import com.c109.chaintoon.domain.user.service.UserService;
@@ -41,15 +42,23 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    // 내 정보 조회
+    @GetMapping("/myInfo")
+    public ResponseEntity<?> getMyInfo(
+            @AuthenticationPrincipal Integer loginId) {
+        MyInfoResponseDto user = userService.getMyInfo(loginId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
     // 회원 정보 수정
-    @PatchMapping("/{userId}")
+    @PatchMapping()
     public ResponseEntity<?> updateUser(
             @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
     ){
-        UserResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
+        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -63,7 +72,7 @@ public class UserController {
     @DeleteMapping("/delete-profile")
     public ResponseEntity<?> deleteProfile(
             @AuthenticationPrincipal Integer loginId) {
-        UserResponseDto user = userService.deleteProfile(loginId);
+        MyInfoResponseDto user = userService.deleteProfile(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -71,7 +80,7 @@ public class UserController {
     @DeleteMapping("/delete-background")
     public ResponseEntity<?> deleteBackground(
             @AuthenticationPrincipal Integer loginId) {
-        UserResponseDto user = userService.deleteBackground(loginId);
+        MyInfoResponseDto user = userService.deleteBackground(loginId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

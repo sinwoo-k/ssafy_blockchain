@@ -34,6 +34,7 @@ const NewFanartList = () => {
     arrows: false,
     autoplay: true,
     autoplaySpeed: 3000,
+    draggable: false,
   }
 
   const getData = () => {

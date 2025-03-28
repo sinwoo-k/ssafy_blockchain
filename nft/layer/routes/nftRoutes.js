@@ -10,6 +10,6 @@ router.get('/ipfs-image/:ipfsHash', getIpfsImage);
 router.post('/buy-nft', buyNftController);
 router.post('/sell-nft', sellNftController);
 router.get('/all-nfts', getAllNftsController);
-router.get('/my-nfts', getMyNftsController);
+router.get('/my-nfts:userId', getMyNftsController);
 
 export default router;

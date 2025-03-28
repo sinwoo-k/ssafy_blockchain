@@ -5,6 +5,7 @@ import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.EpisodeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class EpisodeController {
 
     @PostMapping
     public ResponseEntity<?> addEpisode(
-            @RequestPart(name = "episode") EpisodeRequestDto episodeRequest,
+            @Valid @RequestPart(name = "episode") EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail") MultipartFile thumbnail,
             @RequestPart(name = "images") List<MultipartFile> images
     ) {
@@ -63,7 +64,7 @@ public class EpisodeController {
     public ResponseEntity<?> updateEpisode(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer episodeId,
-            @RequestPart(name = "episode", required = false) EpisodeRequestDto episodeRequest,
+            @Valid @RequestPart(name = "episode", required = false) EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestPart(name = "images", required = false) List<ImageRequestDto> images,
             @RequestPart(name = "newImages", required = false) List<MultipartFile> newImages
