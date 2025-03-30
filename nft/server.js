@@ -10,6 +10,7 @@ import transactionRoutes from './layer/routes/transactionRoutes.js';
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+import './scheduler/syncScheduler.js';
 
 app.use(cors({
     origin: ['https://j12c109.p.ssafy.io', 'http://localhost:8080'],
