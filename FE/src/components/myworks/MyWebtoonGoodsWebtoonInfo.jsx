@@ -7,7 +7,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
 
-const MyWebtoonDetailInfo = ({ webtoonId }) => {
+const MyWebtoonGoodsWebtoonInfo = ({ webtoonId }) => {
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
 
@@ -20,7 +20,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
   useEffect(() => {
     // mount
     setWebtoon({
-      id: 0,
+      webtoonId: 0,
       title: '판타지',
       author: '작가1',
       genre: '판타지',
@@ -109,45 +109,27 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
           </div>
         </div>
         {/* 버튼 */}
-        <div className='mt-10 flex justify-between text-black'>
-          <div className='flex gap-10'>
-            <Link to={`/myworks/webtoon/${webtoonId}/episode/create`}>
-              <button
-                className='bg-chaintoon h-[45px] w-[250px] 
-              cursor-pointer rounded'
-              >
-                신규 회차 등록
-              </button>
-            </Link>
-            <Link to={`/myworks/webtoon/${webtoonId}/goods`}>
-              <button
-                className='bg-chaintoon h-[45px] w-[250px] 
-              cursor-pointer rounded'
-              >
-                굿즈 관리하기
-              </button>
-            </Link>
-          </div>
-          <div className='flex gap-5'>
-            <Link to={`/myworks/webtoon/${webtoonId}/update`}>
-              <button
-                className='bg-chaintoon h-[45px] w-[150px] 
-              cursor-pointer rounded'
-              >
-                작품 정보 수정
-              </button>
-            </Link>
+        <div className='mt-10 flex gap-10 text-black'>
+          <Link to={`/myworks/webtoon/${webtoon.webtoonId}/goods/create`}>
             <button
-              className='bg-chaintoon h-[45px] w-[150px] 
+              className='bg-chaintoon h-[45px] w-[250px] 
+            cursor-pointer rounded'
+            >
+              굿즈 등록하기
+            </button>
+          </Link>
+          <Link to={`/myworks/webtoon/${webtoon.webtoonId}`}>
+            <button
+              className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded'
             >
-              작품 삭제
+              웹툰 관리하기
             </button>
-          </div>
+          </Link>
         </div>
       </div>
     </div>
   )
 }
 
-export default MyWebtoonDetailInfo
+export default MyWebtoonGoodsWebtoonInfo
