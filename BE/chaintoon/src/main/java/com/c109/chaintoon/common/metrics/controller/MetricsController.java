@@ -1,4 +1,4 @@
-package com.c109.chaintoon.common.metrics;
+package com.c109.chaintoon.common.metrics.controller;
 
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.slf4j.Logger;
