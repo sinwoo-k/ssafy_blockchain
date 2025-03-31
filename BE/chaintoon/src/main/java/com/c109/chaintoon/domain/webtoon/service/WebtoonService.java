@@ -2,6 +2,7 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
@@ -90,10 +91,15 @@ public class WebtoonService {
                 .map(tag -> tag.getTagId().getTag())
                 .toList();
 
+        // 작성자 조회
+        User user = userRepository.findById(webtoon.getUserId())
+                .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()));
+
         // 응답 dto 생성
         return WebtoonResponseDto.builder()
                 .webtoonId(webtoon.getWebtoonId())
                 .userId(webtoon.getUserId())
+                .writer(user.getNickname())
                 .webtoonName(webtoon.getWebtoonName())
                 .genre(webtoon.getGenre())
                 .summary(webtoon.getSummary())
@@ -103,6 +109,7 @@ public class WebtoonService {
                 .episodeCount(webtoon.getEpisodeCount())
                 .viewCount(webtoon.getViewCount())
                 .rating(rating)
+                .favoriteCount(webtoon.getFavoriteCount())
                 .tags(tags)
                 .build();
     }
@@ -291,6 +298,10 @@ public class WebtoonService {
 
         // 데이터베이스에 저장
         favoriteWebtoonRepository.save(favoriteWebtoon);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() + 1);
+        webtoonRepository.save(webtoon);
     }
 
     @Transactional
@@ -305,5 +316,9 @@ public class WebtoonService {
 
         // 데이터베이스에서 삭제
         favoriteWebtoonRepository.deleteById(id);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() - 1);
+        webtoonRepository.save(webtoon);
     }
 }
