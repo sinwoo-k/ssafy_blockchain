@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getWebtoon } from '../../api/webtoonAPI'
 // 디폴트 이미지
 import fantasyCover from '../../assets/defaultCover/fantasy.webp'
 // 아이콘
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
+import { formattingNumber } from '../../utils/formatting'
 
 const MyWebtoonDetailInfo = ({ webtoonId }) => {
   // 배경 이미지
@@ -14,32 +16,19 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
   // 웹툰 정보
   const [webtoon, setWebtoon] = useState({})
 
-  // 웹툰 태그
-  const [tags, setTags] = useState([])
+  const getData = async () => {
+    try {
+      const result = await getWebtoon(webtoonId)
+      setWebtoon(result)
+      setBackgroundImg(result.garoThumbnail)
+    } catch (error) {
+      console.error('웹툰 정보 불러오기 실패: ', error)
+    }
+  }
 
   useEffect(() => {
     // mount
-    setWebtoon({
-      id: 0,
-      title: '판타지',
-      author: '작가1',
-      genre: '판타지',
-      summary:
-        '판타지 웹툰의 줄거리입니다.\n테스트를 위한 줄거리 데이터 입니다. ',
-      cover: fantasyCover,
-    })
-    setTags([
-      { id: 0, tagName: '판타지' },
-      { id: 1, tagName: '마법사' },
-      { id: 2, tagName: '먼치킨' },
-      { id: 3, tagName: '모험' },
-      { id: 4, tagName: '태그1' },
-      { id: 5, tagName: '태그2' },
-      { id: 6, tagName: '태그3' },
-      { id: 7, tagName: '태그4' },
-      { id: 8, tagName: '태그5' },
-      { id: 9, tagName: '태그6' },
-    ])
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -59,7 +48,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
             {/* 웹툰 이미지 */}
             <div className='mb-3 w-[250px]'>
               <img
-                src={fantasyCover}
+                src={webtoon.seroThumbnail}
                 alt={`${webtoon?.title} 대표 이미지`}
                 className='h-[300px] w-[250px] rounded-xl'
               />
@@ -69,19 +58,19 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
               <div className='flex items-center gap-1'>
                 <FavoriteIcon sx={{ fontSize: 25, color: '#ff1919' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  109
+                  {formattingNumber(webtoon.favoriteCount)}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <VisibilityIcon sx={{ fontSize: 30, color: '#3cc3ec' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  109K
+                  {formattingNumber(webtoon.viewCount)}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  4.56
+                  {(webtoon.rating / 2).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -89,8 +78,8 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
           {/* 웹툰 정보 */}
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
-              <p className='text-2xl'>{webtoon.title}</p>
-              <p className='text-xl text-[#b9b9b9]'>{webtoon.author}</p>
+              <p className='text-2xl'>{webtoon.webtoonName}</p>
+              <p className='text-xl text-[#b9b9b9]'>{webtoon.writer}</p>
               <p className='text-xl text-[#b9b9b9]'>{webtoon.genre}</p>
               <div className='text-xl'>
                 {webtoon.summary?.split('\n').map((line, index) => (
@@ -100,9 +89,12 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
             </div>
             {/* 태그 */}
             <div className='flex flex-wrap gap-3'>
-              {tags.map((tag) => (
-                <div key={tag.id} className='bg-chaintoon/75 rounded px-2 py-1'>
-                  #{tag.tagName}
+              {webtoon.tags?.map((tag, index) => (
+                <div
+                  key={`태그-${index}`}
+                  className='bg-chaintoon/75 rounded px-2 py-1'
+                >
+                  # {tag}
                 </div>
               ))}
             </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import EpisodeCard from './EpisodeCard'
 
 // 아이콘
@@ -7,7 +7,6 @@ import ErrorIcon from '@mui/icons-material/Error'
 import { getEpisodeList } from '../../api/webtoonAPI'
 
 const WebtoonDetailEpisodeList = () => {
-  const params = useParams()
   const [episodeData, setEpisodeData] = useState([])
   // 보여줄 에피소드 리스트
   const [episodes, setEpisodes] = useState([])

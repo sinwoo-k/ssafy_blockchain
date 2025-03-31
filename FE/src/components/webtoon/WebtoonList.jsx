@@ -24,7 +24,7 @@ const WebtoonList = () => {
     setIsLoading(true)
     try {
       const data = await getWebtoonList(page)
-
+      console.log(data)
       setWebtoons((prev) => [...prev, ...data])
 
       if (data.length < 50) {

@@ -1,12 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
 
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import { getWebtoon, patchWebtoon } from '../../api/webtoonAPI'
 
 const MyWebtoonUpdate = () => {
+  const params = useParams()
+  const navigate = useNavigate()
+
   const [webtoonName, setWebtoonName] = useState('') // 웹툰명
   const genreList = [
     '판타지',
@@ -23,12 +28,14 @@ const MyWebtoonUpdate = () => {
   const [genre, setGenre] = useState('') // 장르
   const [tags, setTags] = useState([]) // 태그
   const [summary, setSummary] = useState('') // 줄거리
+  const [tempImage, setTempImage] = useState(null) // 등록 전 이미지
   const [garoImage, setGaroImage] = useState(null) // 가로형 이미지
   const garoImageRef = useRef(null)
+  const [garoImageUrl, setGaroImageUrl] = useState('')
   const [showGaroImageModal, setShowGaroImageModal] = useState(false)
   const [seroImage, setSeroImage] = useState(null) // 세로형 이미지
   const seroImageRef = useRef(null)
-  const [tempImage, setTempImage] = useState(null) // 등록 전 이미지
+  const [seroImageUrl, setSeroImageUrl] = useState('')
   const [showSeroImageModal, setShowSeroImageModal] = useState(false)
   const [adaptable, setAdaptable] = useState(false) // 팬아트 허용
 
@@ -68,48 +75,72 @@ const MyWebtoonUpdate = () => {
     }
   }
 
-  const submitWebtoonForm = (event) => {
+  const submitWebtoonForm = async (event) => {
     event.preventDefault()
     if (webtoonName.trim() === '') {
       alert('웹툰명을 입력해주세요.')
-    } else if (genre === '') {
+      return
+    }
+    if (genre === '') {
       alert('장르를 선택해주세요.')
-    } else if (tags.length === 0) {
+      return
+    }
+    if (tags.length === 0) {
       alert('태그를 1개 이상 입력해주세요.')
-    } else if (summary.trim() === '') {
+      return
+    }
+    if (summary.trim() === '') {
       alert('줄거리를 입력해주세요.')
-    } else if (garoImage === null || seroImage === null) {
+      return
+    }
+    if (
+      (garoImage === null && !garoImageUrl) ||
+      (seroImage === null && !seroImageUrl)
+    ) {
       alert('이미지를 등록해주세요.')
-    } else {
-      const payload = {
-        webtoonName: webtoonName,
-        genre: genre,
-        tags: tags,
-        summary: summary,
-        adaptable: adaptable ? 'Y' : 'N',
-      }
-      console.log(payload)
+      return
+    }
+
+    const payload = {
+      webtoonName,
+      genre,
+      tags,
+      summary,
+      adaptable: adaptable ? 'Y' : 'N',
+    }
+
+    try {
+      const result = await patchWebtoon(
+        params.webtoonId,
+        payload,
+        garoImage,
+        seroImage,
+      )
+      navigate(`/myworks/webtoon/${params.webtoonId}`)
+    } catch (error) {
+      console.error('웹툰 등록 중 에러 발생:', error)
+      alert('웹툰 등록에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 
-  const getWebtoonData = () => {
-    const response = {
-      webtoonName: '테스트',
-      genre: '판타지',
-      tags: ['태그1', '태그2'],
-      summary: '테스트 데이터입니다.',
-      adaptable: 'Y',
+  const getData = async () => {
+    try {
+      const result = await getWebtoon(params.webtoonId)
+      setWebtoonName(result.webtoonName)
+      setGenre(result.genre)
+      setTags(result.tags)
+      setSummary(result.summary)
+      setAdaptable(result.adaptable === 'Y' ? true : false)
+      setGaroImageUrl(result.garoThumbnail)
+      setSeroImageUrl(result.seroThumbnail)
+    } catch (error) {
+      console.error('웹툰 정보 불러오기 실패: ', error)
     }
-    setWebtoonName(response.webtoonName)
-    setGenre(response.genre)
-    setTags(response.tags)
-    setSummary(response.summary)
-    setAdaptable(response.adaptable === 'Y' ? true : false)
   }
 
   useEffect(() => {
     // mount
-    getWebtoonData()
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -244,15 +275,23 @@ const MyWebtoonUpdate = () => {
               <div>
                 <p className='px-2'>포스터형 (200x300)</p>
                 <div
-                  className='bg-text/30 h-[300px] w-[200px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[200px] cursor-pointer overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('sero')}
                 >
-                  {seroImage && (
+                  {seroImage ? (
                     <img
                       src={URL.createObjectURL(seroImage)}
                       alt='세로 이미지'
                       className='h-[300px] w-[200px]'
                     />
+                  ) : (
+                    seroImageUrl && (
+                      <img
+                        src={seroImageUrl}
+                        alt='세로 이미지'
+                        className='h-[300px] w-[200px]'
+                      />
+                    )
                   )}
                   <input
                     type='file'
@@ -268,7 +307,8 @@ const MyWebtoonUpdate = () => {
                       image={tempImage}
                       setImage={setSeroImage}
                       setShowModal={setShowSeroImageModal}
-                      type={'sero'}
+                      width={2}
+                      height={3}
                     />
                   )}
                 </div>
@@ -276,15 +316,23 @@ const MyWebtoonUpdate = () => {
               <div>
                 <p className='px-2'>가로형 (400x300)</p>
                 <div
-                  className='bg-text/30 h-[300px] w-[400px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[400px] cursor-pointer overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('garo')}
                 >
-                  {garoImage && (
+                  {garoImage ? (
                     <img
                       src={URL.createObjectURL(garoImage)}
                       alt='가로 이미지'
                       className='h-[300px] w-[400px]'
                     />
+                  ) : (
+                    garoImageUrl && (
+                      <img
+                        src={garoImageUrl}
+                        alt='가로 이미지'
+                        className='h-[300px] w-[400px]'
+                      />
+                    )
                   )}
                   <input
                     type='file'
@@ -300,7 +348,8 @@ const MyWebtoonUpdate = () => {
                       image={tempImage}
                       setImage={setGaroImage}
                       setShowModal={setShowGaroImageModal}
-                      type={'garo'}
+                      width={4}
+                      height={3}
                     />
                   )}
                 </div>
