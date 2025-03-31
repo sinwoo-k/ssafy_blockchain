@@ -101,7 +101,7 @@ public class UserService {
 
     // 회원 정보 수정
     @PreAuthorize("hasRole('USER')")
-    public MyInfoResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage, MultipartFile backgroundImage) {
+    public MyInfoResponseDto updateUser(Integer userId, UserRequestDto userRequestDto, MultipartFile profileImage) {
         // 기존 유저 조회
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
@@ -111,14 +111,6 @@ public class UserService {
 
             String profileUrl = uploadProfile(userId, profileImage);
             user.setProfileImage(profileUrl);
-        }
-
-        // 배경 이미지 업데이트
-        if(backgroundImage != null && !backgroundImage.isEmpty()) {
-            s3Service.deleteFile(user.getBackgroundImage());
-
-            String backgroundUrl = uploadBackground(userId, backgroundImage);
-            user.setBackgroundImage(backgroundUrl);
         }
 
         // 회원 정보 업데이트
@@ -133,6 +125,23 @@ public class UserService {
     // 프로필 이미지 업로드
     private String uploadProfile(Integer userId, MultipartFile file){
         return s3Service.uploadFile(file, "user/" + userId + "/profile");
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    public String updateBackgroundImage(Integer userId, MultipartFile backgroundImage) {
+        // 기존 유저 조회
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        // 배경 이미지 업데이트
+        if(backgroundImage != null && !backgroundImage.isEmpty()) {
+            s3Service.deleteFile(user.getBackgroundImage());
+
+            String backgroundUrl = uploadBackground(userId, backgroundImage);
+            user.setBackgroundImage(backgroundUrl);
+        }
+
+        userRepository.save(user);
+        return user.getBackgroundImage();
     }
 
     // 배경 이미지 업로드
