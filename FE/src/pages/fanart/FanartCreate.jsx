@@ -9,7 +9,7 @@ const FanartCreate = () => {
   const params = useParams()
 
   const [fanartImage, setFanartImage] = useState(null) // 팬아트 이미지
-  const [fanartImageURL, setFanartImageURL] = useState(null)
+  const [fanartImageURL, setFanartImageURL] = useState('')
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
   const [fanartName, setFanartName] = useState('') // 팬아트명
   const [fanartDescription, setFanartDescription] = useState('') // 팬아트 설명
@@ -51,6 +51,16 @@ const FanartCreate = () => {
     }
   }
 
+  const selectFanartImage = (file) => {
+    setFanartImage(file)
+    setFanartImageURL(URL.createObjectURL(file))
+  }
+
+  const clearFanartImage = () => {
+    setFanartImage(null)
+    setFanartImageURL('')
+  }
+
   // 팬아트 등록 함수
   const createFanart = () => {
     if (fanartImage === null) {
@@ -75,18 +85,6 @@ const FanartCreate = () => {
     return () => {}
   }, [])
 
-  useEffect(() => {
-    // mount
-    if (fanartImage) {
-      const newURL = URL.createObjectURL(fanartImage)
-      setFanartImageURL(newURL)
-      // 새로운 이미지가 설정되거나 컴포넌트 언마운트 시 기존 URL 해제
-      return () => URL.revokeObjectURL(newURL)
-    } else {
-      setFanartImageURL(null)
-    }
-  }, [fanartImage])
-
   return (
     <div className='flex justify-center pt-[60px]'>
       <div className='w-[1000px] pt-15'>
@@ -94,7 +92,7 @@ const FanartCreate = () => {
         <div className='mb-8 flex gap-10'>
           {/* 팬아트 이미지 */}
           <div className='flex-none'>
-            {fanartImageURL !== null ? (
+            {fanartImageURL !== '' ? (
               <div className='relative'>
                 <img
                   src={fanartImageURL}
@@ -103,7 +101,7 @@ const FanartCreate = () => {
                 />
                 <button
                   className='absolute right-2 bottom-2'
-                  onClick={() => setFanartImage(null)}
+                  onClick={clearFanartImage}
                 >
                   <ClearIcon
                     sx={{ fontSize: 50 }}
@@ -139,7 +137,7 @@ const FanartCreate = () => {
               id='fanart-image'
               accept='image/*'
               className='hidden'
-              onChange={(event) => setFanartImage(event.target.files[0])}
+              onChange={(event) => selectFanartImage(event.target.files[0])}
             />
           </div>
           {/* 팬아트 정보 */}

@@ -4,6 +4,7 @@ import com.c109.chaintoon.domain.fanart.dto.request.FanartRequestDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartResponseDto;
 import com.c109.chaintoon.domain.fanart.dto.response.FanartListResponseDto;
 import com.c109.chaintoon.domain.fanart.service.FanartService;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -102,7 +103,7 @@ public class FanartController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam String keyword
     ) {
-        List<FanartResponseDto> fanartList = fanartService.searchFanarts(page, pageSize, keyword);
+        SearchResponseDto<FanartListResponseDto> fanartList = fanartService.searchFanarts(page, pageSize, keyword);
         return new ResponseEntity<>(fanartList, HttpStatus.OK);
     }
 

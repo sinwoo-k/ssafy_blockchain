@@ -5,14 +5,14 @@ import { useParams } from 'react-router-dom'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
 
-const MyFanartUpdate = () => {
+const MyWebtoonGoodsCreate = () => {
   const params = useParams()
 
-  const [fanartImage, setFanartImage] = useState(null) // 팬아트 이미지
-  const [fanartImageURL, setFanartImageURL] = useState('')
+  const [goodsImage, setGoodsImage] = useState(null) // 굿즈 이미지
+  const [goodsImageURL, setGoodsImageURL] = useState('')
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
-  const [fanartName, setFanartName] = useState('') // 팬아트명
-  const [fanartDescription, setFanartDescription] = useState('') // 팬아트 설명
+  const [goodsName, setGoodsName] = useState('') // 굿즈명
+  const [goodsDescription, setGoodsDescription] = useState('') // 굿즈 설명
 
   // 드래그 & 드랍 관련 이벤트 함수
   const [dragOver, setDragOver] = useState(false)
@@ -47,32 +47,33 @@ const MyFanartUpdate = () => {
     setDragOver(false)
     if (event.dataTransfer) {
       const file = event.dataTransfer.files[0]
-      setFanartImage(file)
+      setGoodsImage(file)
+      setGoodsImageURL(URL.createObjectURL(file))
     }
   }
 
-  const selectFanartImage = (file) => {
-    setFanartImage(file)
-    setFanartImageURL(URL.createObjectURL(file))
+  const selectGoodsImage = (file) => {
+    setGoodsImage(file)
+    setGoodsImageURL(URL.createObjectURL(file))
   }
 
-  const clearFanartImage = () => {
-    setFanartImage(null)
-    setFanartImageURL('')
+  const clearGoodsImage = () => {
+    setGoodsImage(null)
+    setGoodsImageURL('')
   }
 
-  // 팬아트 수정 함수
-  const updateFanart = () => {
-    if (fanartImage === null) {
-      alert('팬아트를 등록해주세요.')
-    } else if (fanartName.trim() === '') {
-      alert('팬아트명을 작성해주세요.')
-    } else if (fanartDescription.trim() === '') {
-      alert('팬아트 설명을 작성해주세요.')
+  // 굿즈 등록 함수
+  const createGoods = () => {
+    if (goodsImage === null) {
+      alert('굿즈를 등록해주세요.')
+    } else if (goodsName.trim() === '') {
+      alert('굿즈명을 작성해주세요.')
+    } else if (goodsDescription.trim() === '') {
+      alert('굿즈 설명을 작성해주세요.')
     } else {
       const payload = {
-        fanartName: fanartName,
-        fanartDescription: fanartDescription,
+        goodsName: goodsName,
+        goodsDescription: goodsDescription,
       }
       console.log(payload)
     }
@@ -81,8 +82,6 @@ const MyFanartUpdate = () => {
   useEffect(() => {
     // mount
     setWeboonName('테스트')
-    setFanartName('테스트 팬아트')
-    setFanartDescription('테스트 데이터 입니다.')
     // unmount
     return () => {}
   }, [])
@@ -90,20 +89,20 @@ const MyFanartUpdate = () => {
   return (
     <div className='flex justify-center pt-[60px]'>
       <div className='w-[1000px] pt-15'>
-        <h1 className='mb-8 text-xl'>팬아트 수정하기</h1>
+        <h1 className='mb-8 text-xl'>굿즈 등록하기</h1>
         <div className='mb-8 flex gap-10'>
-          {/* 팬아트 이미지 */}
+          {/* 굿즈 이미지 */}
           <div className='flex-none'>
-            {fanartImageURL !== '' ? (
+            {goodsImageURL !== '' ? (
               <div className='relative'>
                 <img
-                  src={fanartImageURL}
-                  alt='업로드 팬아트 이미지'
+                  src={goodsImageURL}
+                  alt='업로드 굿즈 이미지'
                   className='h-[600px] w-[450px] rounded-lg object-cover'
                 />
                 <button
                   className='absolute right-2 bottom-2'
-                  onClick={clearFanartImage}
+                  onClick={clearGoodsImage}
                 >
                   <ClearIcon
                     sx={{ fontSize: 50 }}
@@ -114,7 +113,7 @@ const MyFanartUpdate = () => {
               </div>
             ) : (
               <label
-                htmlFor='fanart-image'
+                htmlFor='goods-image'
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
@@ -130,19 +129,19 @@ const MyFanartUpdate = () => {
                       fontSize: 50,
                     }}
                   />
-                  <p>팬아트를 선택하거나 올려주세요.</p>
+                  <p>굿즈를 선택하거나 올려주세요.</p>
                 </div>
               </label>
             )}
             <input
               type='file'
-              id='fanart-image'
+              id='goods-image'
               accept='image/*'
               className='hidden'
-              onChange={(event) => selectFanartImage(event.target.files[0])}
+              onChange={(event) => selectGoodsImage(event.target.files[0])}
             />
           </div>
-          {/* 팬아트 정보 */}
+          {/* 굿즈 정보 */}
           <div className='flex grow flex-col gap-8'>
             {/* 웹툰명 */}
             <div className='flex flex-col gap-1'>
@@ -156,38 +155,38 @@ const MyFanartUpdate = () => {
                 />
               </div>
             </div>
-            {/* 팬아트명 */}
+            {/* 굿즈명 */}
             <div className='flex flex-col gap-1'>
-              <label className='text-lg' htmlFor='fanart-name'>
-                팬아트명
+              <label className='text-lg' htmlFor='goods-name'>
+                굿즈명
               </label>
               <div className='bg-text/30 border-text flex gap-1 rounded-lg border p-3'>
                 <input
                   type='text'
-                  id='fanart-name'
+                  id='goods-name'
                   className='grow focus:outline-none'
-                  value={fanartName}
-                  onChange={(event) => setFanartName(event.target.value)}
+                  value={goodsName}
+                  onChange={(event) => setGoodsName(event.target.value)}
                   maxLength={50}
                 />
-                <span className='text-text/75'>{fanartName.length} / 50</span>
+                <span className='text-text/75'>{goodsName.length} / 50</span>
               </div>
             </div>
-            {/* 팬아트 설명 */}
+            {/* 굿즈 설명 */}
             <div className='flex flex-col gap-1'>
-              <label htmlFor='fanart-description' className='text-lg'>
-                팬아트 설명
+              <label htmlFor='goods-description' className='text-lg'>
+                굿즈 설명
               </label>
               <div className='bg-text/30 border-text flex flex-col gap-1 rounded-lg border p-3'>
                 <textarea
-                  id='fanart-description'
+                  id='goods-description'
                   className='h-[150px] w-full resize-none focus:outline-none'
-                  value={fanartDescription}
-                  onChange={(event) => setFanartDescription(event.target.value)}
+                  value={goodsDescription}
+                  onChange={(event) => setGoodsDescription(event.target.value)}
                   maxLength={255}
                 ></textarea>
                 <p className='text-text/75 text-end'>
-                  {fanartDescription.length} / 255
+                  {goodsDescription.length} / 255
                 </p>
               </div>
             </div>
@@ -206,13 +205,13 @@ const MyFanartUpdate = () => {
         {/* 등록 버튼 */}
         <button
           className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
-          onClick={updateFanart}
+          onClick={createGoods}
         >
-          수정하기
+          등록하기
         </button>
       </div>
     </div>
   )
 }
 
-export default MyFanartUpdate
+export default MyWebtoonGoodsCreate

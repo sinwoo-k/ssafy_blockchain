@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
@@ -31,8 +32,8 @@ public class UserController {
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<SearchUserResponseDto> list = userService.searchByNickname(keyword, page, pageSize);
-        return new ResponseEntity<>(list, HttpStatus.OK);
+        SearchResponseDto<SearchUserResponseDto> searchResult = userService.searchByNickname(keyword, page, pageSize);
+        return new ResponseEntity<>(searchResult, HttpStatus.OK);
     }
 
     // id로 회원 정보 조회
@@ -55,11 +56,20 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
+    ){
+        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 배경 이미지 수정
+    @PatchMapping("/background-image")
+    public ResponseEntity<?> updateBackgroundImage(
+            @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
     ){
-        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        String backgroundUrl = userService.updateBackgroundImage(loginId, backgroundImage);
+        return new ResponseEntity<>(backgroundUrl, HttpStatus.OK);
     }
 
     // 닉네임 중복 확인

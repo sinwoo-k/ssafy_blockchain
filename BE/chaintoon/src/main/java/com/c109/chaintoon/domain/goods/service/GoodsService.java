@@ -9,6 +9,8 @@ import com.c109.chaintoon.domain.goods.entity.Goods;
 import com.c109.chaintoon.domain.goods.exception.GoodsNotFoundException;
 import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
 import com.c109.chaintoon.domain.goods.specification.GoodsSpecification;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -166,7 +168,7 @@ public class GoodsService {
     }
 
     // 굿즈 검색
-    public List<GoodsResponseDto> searchGoods(int page, int pageSize, String keyword) {
+    public SearchResponseDto<GoodsResponseDto> searchGoods(int page, int pageSize, String keyword) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
         // 키워드에 대해 제목이 포함되는 조건을 specification으로 구성
@@ -175,9 +177,13 @@ public class GoodsService {
 
         Page<Goods> resultPage = goodsRepository.findAll(spec, pageable);
 
-        return resultPage.getContent().stream()
-                .map(this::toGoodsResponseDto)
-                .collect(Collectors.toList());
+        return SearchResponseDto.<GoodsResponseDto>builder()
+                .type(SearchType.GOODS.getValue())
+                .totalCount(resultPage.getTotalElements())
+                .searchResult(resultPage.getContent().stream()
+                        .map(this::toGoodsResponseDto)
+                        .toList())
+                .build();
     }
 
     private Sort getSort(String orderBy) {
