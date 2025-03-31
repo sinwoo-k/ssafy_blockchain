@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 // 아이콘
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 
 const SearchUserCard = ({ user }) => {
   return (
-    <Link>
+    <Link to={`/user/${user.userId}`}>
       <div className='flex w-[150px] flex-col items-center gap-3'>
         {/* 프로필 이미지 */}
         {user.profileImage !== null ? (

@@ -47,6 +47,9 @@ const FanartCreate = lazy(() => import('../pages/fanart/FanartCreate'))
 // 검색 section
 const SearchRoot = lazy(() => import('../pages/search/SearchRoot'))
 
+// 유저 프로필 section
+const UserProfile = lazy(() => import('../pages/user/UserProfile'))
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -249,6 +252,15 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <SearchRoot />
+          </Suspense>
+        ),
+      },
+      // 유저 프로필 section
+      {
+        path: 'user/:userId',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <UserProfile />
           </Suspense>
         ),
       },
