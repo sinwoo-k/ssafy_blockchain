@@ -1,34 +1,34 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
 
 // 아이콘
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import { Link } from 'react-router-dom'
 
-const MyFanartCard = ({ fanart }) => {
+const GoodsCard = ({ goods }) => {
   return (
     <div className='flex justify-center'>
       <div className='flex flex-col gap-3'>
         <div className='relative'>
-          <Link to={`/fanart/${fanart.fanartId}`}>
-            <img
-              src={fanart.fanartImage}
-              alt={`${fanart.fanartName} 이미지`}
-              className='h-[200px] w-[180px] rounded-lg object-cover'
-            />
-          </Link>
+          <img
+            src={goods.goodsImage}
+            alt={`${goods.goodsName} 이미지`}
+            className='h-[200px] w-[180px] rounded-lg object-cover'
+          />
         </div>
         <div className='flex justify-between'>
           <button className='hover:text-chaintoon cursor-pointer'>
             NFT 발행하기
           </button>
           <div className='flex gap-3'>
-            <IconButton
-              Icon={EditIcon}
-              tooltip={'수정하기'}
-              style={{ color: '#2599ff' }}
-            />
+            <Link to={`/myworks/webtoon/goods/update/${goods.goodsId}`}>
+              <IconButton
+                Icon={EditIcon}
+                tooltip={'수정하기'}
+                style={{ color: '#2599ff' }}
+              />
+            </Link>
             <IconButton
               Icon={DeleteIcon}
               tooltip={'삭제하기'}
@@ -37,12 +37,11 @@ const MyFanartCard = ({ fanart }) => {
           </div>
         </div>
         <div>
-          <p className='w-[180px] truncate text-lg'>{fanart.fanartName}</p>
-          <p className='text-text/75 w-[180px] truncate'>웹툰명</p>
+          <p className='w-[180px] truncate text-lg'>{goods.goodsName}</p>
         </div>
       </div>
     </div>
   )
 }
 
-export default MyFanartCard
+export default GoodsCard

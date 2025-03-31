@@ -7,7 +7,7 @@ const MyWebtoonDetail = () => {
   const params = useParams()
   return (
     <div className='py-[60px]'>
-      <MyWebtoonDetailInfo webtoonId={params.id} />
+      <MyWebtoonDetailInfo webtoonId={params.webtoonId} />
       <MyWebtoonDetailEpisodeList />
     </div>
   )
