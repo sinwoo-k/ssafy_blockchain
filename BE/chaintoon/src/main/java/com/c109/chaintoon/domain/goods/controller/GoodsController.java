@@ -4,6 +4,7 @@ import com.c109.chaintoon.domain.goods.dto.request.GoodsRequestDto;
 import com.c109.chaintoon.domain.goods.dto.response.GoodsResponseDto;
 import com.c109.chaintoon.domain.goods.dto.response.WebtoonGoodsResponseDto;
 import com.c109.chaintoon.domain.goods.service.GoodsService;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/goods")
@@ -71,7 +70,7 @@ public class GoodsController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam String keyword
     ) {
-        List<GoodsResponseDto> goodsList = goodsService.searchGoods(page, pageSize, keyword);
+        SearchResponseDto<GoodsResponseDto> goodsList = goodsService.searchGoods(page, pageSize, keyword);
         return new ResponseEntity<>(goodsList,HttpStatus.OK);
     }
 }

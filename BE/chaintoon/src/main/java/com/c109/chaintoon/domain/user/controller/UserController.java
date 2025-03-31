@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
@@ -31,8 +32,8 @@ public class UserController {
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<SearchUserResponseDto> list = userService.searchByNickname(keyword, page, pageSize);
-        return new ResponseEntity<>(list, HttpStatus.OK);
+        SearchResponseDto<SearchUserResponseDto> searchResult = userService.searchByNickname(keyword, page, pageSize);
+        return new ResponseEntity<>(searchResult, HttpStatus.OK);
     }
 
     // id로 회원 정보 조회

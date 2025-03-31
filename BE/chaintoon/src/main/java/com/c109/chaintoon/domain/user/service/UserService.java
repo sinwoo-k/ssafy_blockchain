@@ -1,6 +1,8 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
 import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
@@ -34,14 +36,18 @@ public class UserService {
 
     // 유저 검색
     @Transactional(readOnly = true)
-    public List<SearchUserResponseDto> searchByNickname(String keyword, int page, int pageSize) {
+    public SearchResponseDto<SearchUserResponseDto> searchByNickname(String keyword, int page, int pageSize) {
         // 페이지네이션 (정렬 기준 없음)
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
         // 닉네임으로 유저 검색
         Page<User> userPage = userRepository.findByNicknameIgnoreCaseContaining(keyword, pageable);
 
-        return toList(userPage);
+        return SearchResponseDto.<SearchUserResponseDto>builder()
+                .type(SearchType.USER.getValue())
+                .totalCount(userPage.getTotalElements())
+                .searchResult(toList(userPage))
+                .build();
     }
 
     private List<SearchUserResponseDto> toList(Page<User> userPage) {
@@ -50,7 +56,7 @@ public class UserService {
                         .nickname(user.getNickname())
                         .id(user.getId())
                         .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
-                        .build()).collect(Collectors.toList());
+                        .build()).toList();
     }
 
     // 개인정보 미포함, 현재는 동일

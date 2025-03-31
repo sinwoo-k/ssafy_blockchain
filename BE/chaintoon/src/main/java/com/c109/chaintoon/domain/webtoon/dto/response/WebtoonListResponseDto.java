@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.dto.response;
 
+import com.c109.chaintoon.domain.search.dto.response.SearchResult;
 import lombok.*;
 
 @Getter
@@ -7,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class WebtoonListResponseDto {
+public class WebtoonListResponseDto implements SearchResult {
     private Integer webtoonId;
     private Integer userId;
     private String writer;
