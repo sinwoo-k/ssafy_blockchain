@@ -1,14 +1,16 @@
-// redux/store.js
-import { configureStore } from '@reduxjs/toolkit';
-import userReducer from './reducers/userSlice';
-import authReducer from './reducers/authSlice';
+import { configureStore } from '@reduxjs/toolkit'
+import authReducer from './reducers/authSlice'
+import userReducer from './reducers/userSlice'
+import searchReducer from './reducers/searchSlice'
 
-export const store = configureStore({
+const store = configureStore({
   reducer: {
-    user: userReducer,
     auth: authReducer,
-    // 다른 리듀서들...
-  }
-});
+    user: userReducer,
+    search: searchReducer,
+  },
+  // DevTools 확장 프로그램 연결
+  devTools: process.env.NODE_ENV !== 'production',
+})
 
-export default store;
+export default store

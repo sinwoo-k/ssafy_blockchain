@@ -42,7 +42,7 @@ public class AuthController {
                 .secure(true) // HTTPS 환경에서만 사용
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
-                .sameSite("Lax") // CSRF 보호
+                .sameSite("None") // CSRF 보호
 //                .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
                 .build();
 
@@ -51,5 +51,21 @@ public class AuthController {
         return ResponseEntity.ok("인증 성공");
     }
 
-    
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // JWT 쿠키 제거
+        ResponseCookie cookie = ResponseCookie.from("jwt", null)
+                .httpOnly(true)
+                .secure(true) // HTTPS 환경에서만 사용
+                .path("/")
+                .maxAge(0) // 즉시 삭제
+                .sameSite("None") // CSRF 보호
+//            .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok("로그아웃 성공");
+    }
 }

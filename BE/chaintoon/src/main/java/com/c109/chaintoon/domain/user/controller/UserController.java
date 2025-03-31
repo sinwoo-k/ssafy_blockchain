@@ -43,7 +43,7 @@ public class UserController {
     }
 
     // 내 정보 조회
-    @GetMapping("/myInfo")
+    @GetMapping("/my-info")
     public ResponseEntity<?> getMyInfo(
             @AuthenticationPrincipal Integer loginId) {
         MyInfoResponseDto user = userService.getMyInfo(loginId);
@@ -55,15 +55,24 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @AuthenticationPrincipal Integer loginId,
             @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
-            @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ){
-        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage, backgroundImage);
+        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    // 배경 이미지 수정
+    @PatchMapping("/background-image")
+    public ResponseEntity<?> updateBackgroundImage(
+            @AuthenticationPrincipal Integer loginId,
+            @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
+    ){
+        String backgroundUrl = userService.updateBackgroundImage(loginId, backgroundImage);
+        return new ResponseEntity<>(backgroundUrl, HttpStatus.OK);
+    }
+
     // 닉네임 중복 확인
-    @GetMapping("/isExist/{nickname}")
+    @GetMapping("/is-exist/{nickname}")
     public ResponseEntity<?> isExist(@PathVariable String nickname) {
         return ResponseEntity.ok(userService.checkNickname(nickname));
     }

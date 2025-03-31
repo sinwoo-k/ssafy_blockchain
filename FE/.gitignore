@@ -25,3 +25,10 @@ dist-ssr
 
 # 환경변수
 .env
+
+# 설정 파일
+vite.config.js
+
+# 인증서
+localhost-key.pem
+localhost.pem

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
+import { logoutAction } from '../../redux/actions/authActions'
 // 컴포넌트
 import LoginModal from '../Auth/LoginModal'
 
@@ -43,7 +44,7 @@ const NavBar = () => {
   }
 
   const handleLogout = () => {
-    dispatch(userReducerActions.logout())
+    dispatch(logoutAction())
   }
 
   return (
@@ -61,7 +62,9 @@ const NavBar = () => {
           </div>
           {/* 페이지 내비게이션*/}
           <div className='flex h-full w-[100px] items-center justify-center'>
-            <Link className='text-lg'>웹툰</Link>
+            <Link to={'/'} className='text-lg'>
+              웹툰
+            </Link>
           </div>
           <div className='flex h-full w-[100px] items-center justify-center'>
             <Link to='/store' className='text-lg'>

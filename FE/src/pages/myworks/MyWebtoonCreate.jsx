@@ -107,7 +107,7 @@ const MyWebtoonCreate = () => {
             >
               웹툰명
             </label>
-            <div className='bg-text/50 flex grow gap-1 rounded-lg border p-3'>
+            <div className='bg-text/30 flex grow gap-1 rounded-lg border p-3'>
               <input
                 type='text'
                 id='title-input'
@@ -131,7 +131,7 @@ const MyWebtoonCreate = () => {
               장르
             </label>
             <div
-              className={`${genre === '' && 'text-text/75'} bg-text/50 grow rounded-lg border px-3`}
+              className={`${genre === '' && 'text-text/75'} bg-text/30 grow rounded-lg border px-3`}
             >
               <select
                 id='genre-select'
@@ -159,7 +159,7 @@ const MyWebtoonCreate = () => {
               태그
             </label>
             <div className='flex grow flex-col gap-3'>
-              <div className='bg-text/50 flex w-full flex-wrap gap-1 rounded-lg border p-3'>
+              <div className='bg-text/30 flex w-full flex-wrap gap-1 rounded-lg border p-3'>
                 {tags.map((v, i) => (
                   <div
                     key={`tag-${v}-${i}`}
@@ -204,7 +204,7 @@ const MyWebtoonCreate = () => {
             >
               줄거리
             </label>
-            <div className='bg-text/50 grow rounded-lg border p-3'>
+            <div className='bg-text/30 grow rounded-lg border p-3'>
               <textarea
                 id='summary-textarea'
                 className='placeholder:text-text/75 h-[150px] w-full resize-none focus:outline-none'
@@ -225,7 +225,7 @@ const MyWebtoonCreate = () => {
               <div>
                 <p className='px-2'>포스터형 (200x300)</p>
                 <div
-                  className='bg-text/50 h-[300px] w-[200px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[200px] overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('sero')}
                 >
                   {seroImage && (
@@ -258,7 +258,7 @@ const MyWebtoonCreate = () => {
               <div>
                 <p className='px-2'>가로형 (400 x 300)</p>
                 <div
-                  className='bg-text/50 h-[300px] w-[400px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[400px] overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('garo')}
                 >
                   {garoImage && (
