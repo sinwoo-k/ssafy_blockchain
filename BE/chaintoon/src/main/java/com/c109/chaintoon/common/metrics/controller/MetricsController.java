@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api")
 public class MetricsController {
     private static final Logger log  = LoggerFactory.getLogger(MetricsController.class);
 
@@ -18,7 +20,7 @@ public class MetricsController {
         this.prometheusMeterRegistry = prometheusMeterRegistry;
     }
 
-    @GetMapping(value = "/metrics.do", produces = "text/plain")
+    @GetMapping(value = "/metrics")
     public ResponseEntity<String> metrics() {
         String metrics = prometheusMeterRegistry.scrape();
         metrics += "\n# EOF";
