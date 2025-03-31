@@ -237,3 +237,26 @@ CREATE TABLE `webtoon` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`webtoon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- contract_address: table
+CREATE TABLE `contract_transactions` (
+  `contract_id` INT NOT NULL AUTO_INCREMENT,
+  `block_number` BIGINT,
+  `block_hash` VARCHAR(66),
+  `time_stamp` BIGINT,
+  `hash` VARCHAR(66) NOT NULL,
+  `nonce` VARCHAR(255),
+  `transaction_index` VARCHAR(255),
+  `from` VARCHAR(42),
+  `to` VARCHAR(42),
+  `value` VARCHAR(255),
+  `gas` VARCHAR(255),
+  `gas_price` VARCHAR(255),
+  `contract_address` VARCHAR(42),
+  `gas_used` VARCHAR(255),
+  `input` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`contract_id`),
+  UNIQUE KEY `uniq_hash` (`hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
