@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import GoodsCard from './GoodsCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-import GoodsCard from './GoodsCard'
 
 const MyWebtoonGoodsList = ({ webtoonId }) => {
   const [goodsList, setGoodsList] = useState([])

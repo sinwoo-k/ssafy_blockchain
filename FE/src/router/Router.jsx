@@ -46,7 +46,6 @@ const FanartCreate = lazy(() => import('../pages/fanart/FanartCreate'))
 
 // 검색 section
 const SearchRoot = lazy(() => import('../pages/search/SearchRoot'))
-const SearchAll = lazy(() => import('../pages/search/SearchAll'))
 
 const router = createBrowserRouter([
   {
@@ -252,16 +251,6 @@ const router = createBrowserRouter([
             <SearchRoot />
           </Suspense>
         ),
-        children: [
-          {
-            path: '',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <SearchAll />
-              </Suspense>
-            ),
-          },
-        ],
       },
     ],
   },
