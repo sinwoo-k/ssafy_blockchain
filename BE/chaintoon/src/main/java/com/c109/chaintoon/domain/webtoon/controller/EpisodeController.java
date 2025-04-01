@@ -43,20 +43,29 @@ public class EpisodeController {
     }
 
     @GetMapping("/{episodeId}")
-    public ResponseEntity<?> getEpisode(@PathVariable Integer episodeId) {
-        EpisodeResponseDto episode = episodeService.getEpisode(episodeId);
+    public ResponseEntity<?> getEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer episodeId
+    ) {
+        EpisodeResponseDto episode = episodeService.getEpisode(episodeId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/first")
-    public ResponseEntity<?> getFirstEpisode(@RequestParam Integer webtoonId) {
-        EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId);
+    public ResponseEntity<?> getFirstEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam Integer webtoonId
+    ) {
+        EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/latest")
-    public ResponseEntity<?> getLatestEpisode(@RequestParam Integer webtoonId) {
-        EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId);
+    public ResponseEntity<?> getLatestEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam Integer webtoonId
+    ) {
+        EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 

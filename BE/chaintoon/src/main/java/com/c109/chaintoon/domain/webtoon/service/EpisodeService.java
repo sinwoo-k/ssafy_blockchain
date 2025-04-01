@@ -79,8 +79,19 @@ public class EpisodeService {
     }
 
     private EpisodeResponseDto buildEpisodeResponseDto(Episode episode) {
+        return buildEpisodeResponseDto(episode, null); // 유저 정보 없이 호출
+    }
+
+    private EpisodeResponseDto buildEpisodeResponseDto(Episode episode, Integer userId) {
         // 이미지 URL 목록 조회
         List<ImageResponseDto> imageUrls = getImageUrls(episode.getEpisodeId());
+
+        String hasRated = "N";
+        if (userId != null) {
+            RatingId ratingId = new RatingId(episode.getEpisodeId(), userId);
+            Rating rating = ratingRepository.findById(ratingId).orElse(null);
+            hasRated = (rating == null) ? "N" : "Y";
+        }
 
         // DTO 변환
         return EpisodeResponseDto.builder()
@@ -94,6 +105,7 @@ public class EpisodeService {
                 .commentCount(episode.getCommentCount())
                 .ratingSum(episode.getRatingSum())
                 .ratingCount(episode.getRatingCount())
+                .hasRated(hasRated)
                 .previousEpisodeId(episode.getPreviousEpisodeId())
                 .nextEpisodeId(episode.getNextEpisodeId())
                 .images(imageUrls)
@@ -190,7 +202,7 @@ public class EpisodeService {
         return buildEpisodeResponseDto(savedEpisode);
     }
 
-    public EpisodeResponseDto getEpisode(Integer episodeId) {
+    public EpisodeResponseDto getEpisode(Integer episodeId, Integer userId) {
         // 에피소드 조회
         Episode episode = episodeRepository.findByEpisodeIdAndDeleted(episodeId, "N")
                 .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
@@ -199,10 +211,10 @@ public class EpisodeService {
         increaseViewCount(episode.getWebtoonId());
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
-    public EpisodeResponseDto getFirstEpisode(Integer webtoonId) {
+    public EpisodeResponseDto getFirstEpisode(Integer webtoonId, Integer userId) {
         // 첫화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdAsc(webtoonId, "N")
                 .orElseThrow(() -> new EpisodeNotFoundException(0));
@@ -211,10 +223,10 @@ public class EpisodeService {
         increaseViewCount(webtoonId);
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
-    public EpisodeResponseDto getLatestEpisode(Integer webtoonId) {
+    public EpisodeResponseDto getLatestEpisode(Integer webtoonId, Integer userId) {
         // 최신화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(webtoonId, "N")
                 .orElseThrow(() -> new EpisodeNotFoundException(0));
@@ -223,7 +235,7 @@ public class EpisodeService {
         increaseViewCount(webtoonId);
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
 
@@ -296,7 +308,7 @@ public class EpisodeService {
         Episode updatedEpisode = episodeRepository.save(episode);
 
         // DTO 변환 후 반환
-        return buildEpisodeResponseDto(updatedEpisode);
+        return buildEpisodeResponseDto(updatedEpisode, userId);
     }
 
     @Transactional
@@ -351,6 +363,5 @@ public class EpisodeService {
         webtoon.setRatingSum(webtoon.getRatingSum() + rating);
         webtoon.setRatingCount(webtoon.getRatingCount() + 1);
         webtoonRepository.save(webtoon);
-
     }
 }
