@@ -150,7 +150,7 @@ public class NoticeService {
             String metadataJson = objectMapper.writeValueAsString(metadata);
 
             Notice notice = Notice.builder()
-                    .userId(auctionItem.getBidderId()) // 기존 입찰자에게 알림 전송
+//                    .userId(auctionItem.getBidderId()) // 기존 입찰자에게 알림 전송
                     .type(NoticeType.OVERBID.getValue())
                     .metadata(metadataJson)
                     .build();
@@ -162,7 +162,7 @@ public class NoticeService {
         }
 
         // 소켓 메시지 전송
-        socketService.sendNewNotice(auctionItem.getBidderId());
+//        socketService.sendNewNotice(auctionItem.getBidderId());
     }
 
     // 계약 체결 시 호출
