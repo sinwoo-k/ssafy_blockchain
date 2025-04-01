@@ -3,7 +3,15 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { encrypt, decrypt } from '../../cryptoHelper.js';
-import * as walletRepository from '../repositories/walletRepository.js';
+import {
+  fetchWalletNFTs,
+  fetchWalletTransactions,
+  getWalletByAddress,
+  getWalletByUserId,
+  createMetamaskWallet,
+  createUser,
+  createWallet
+} from '../repositories/walletRepository.js';
 import AppError from '../../utils/AppError.js';
 import { getNonce, deleteNonce } from './nonceService.js';
 import { setChallenge } from './nftService.js';
@@ -54,11 +62,11 @@ export async function connectWalletService({ walletAddress, signature, message }
     joinDate,
     deleted: "N"
   };
-  const userId = await walletRepository.createUser(userData);
+  const userId = await createUser(userData);
   if (!userId) {
     throw new AppError('User not found', 404);
   }
-  await walletRepository.createMetamaskWallet(walletAddress, userId);
+  await createMetamaskWallet(walletAddress, userId);
 
   return { walletAddress, message: 'Wallet connected successfully.' };
 }
@@ -76,7 +84,7 @@ export async function createWalletService({ userId }) {
   const encryptedRecoveryPhrase = encrypt(recoveryPhrase);
 
   // 3. DB에 지갑 정보 저장 (Data Access Layer 호출)
-  const walletId = await walletRepository.createWallet({
+  const walletId = await createWallet({
     userId,
     walletAddress,
     privateKey: encryptedPrivateKey,
@@ -108,7 +116,7 @@ export async function createWalletService({ userId }) {
 export async function getWalletInfoService({ userId }) {
 
   // DB에서 지갑 정보 조회
-  const wallet = await walletRepository.getWalletByUserId(userId);
+  const wallet = await getWalletByUserId(userId);
   if (!wallet) throw new Error('Wallet not found');
   const walletAddress = wallet.wallet_address;
   // 온체인 지갑 정보 조회
@@ -146,7 +154,7 @@ export async function getWalletInfoService({ userId }) {
 
 export async function sendTransactionService({ fromAddress, toAddress, amount }) {
   // fromAddress에 해당하는 지갑 정보 조회
-  const wallet = await walletRepository.getWalletByAddress(fromAddress);
+  const wallet = await getWalletByAddress(fromAddress);
   if (!wallet) {
     throw new Error('Wallet not found');
   }
@@ -216,7 +224,29 @@ export async function sendTransactionService({ fromAddress, toAddress, amount })
     return { needSignature: true, messageToSign };
   }
 }
+/**
+ * 지갑 주소에 따른 거래 내역을 조회하는 서비스 함수
+ */
+export async function getWalletTransactions(walletAddress) {
+  try {
+    const transactions = await fetchWalletTransactions(walletAddress);
+    return transactions;
+  } catch (error) {
+    throw new AppError("서비스: 지갑 거래 내역 조회 실패 - " + error.message, 500);
+  }
+}
 
+/**
+ * 지갑 주소가 보유한 NFT 목록을 조회하는 서비스 함수
+ */
+export async function getWalletNFTs(walletAddress) {
+  try {
+    const nfts = await fetchWalletNFTs(walletAddress);
+    return nfts;
+  } catch (error) {
+    throw new AppError("서비스: NFT 목록 조회 실패 - " + error.message, 500);
+  }
+}
 
 
 export default {
@@ -224,4 +254,6 @@ export default {
   connectWalletService,
   getWalletInfoService,
   sendTransactionService,
+  getWalletTransactions,
+  getWalletNFTs
 };

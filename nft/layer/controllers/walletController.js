@@ -1,4 +1,5 @@
-import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService } from '../services/walletService.js';
+import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService, getWalletNFTs, getWalletTransactions } from '../services/walletService.js';
+import AppError from '../../utils/AppError.js';
 
 export async function createWallet(req, res) {
   try {
@@ -54,5 +55,31 @@ export async function sendTransaction(req, res) {
     console.error(err);
     const status = err.statusCode || 500;
     res.status(status).json({ error: err.message || '트랜잭션 전송 중 오류가 발생했습니다.' });
+  }
+}
+
+export async function getWalletTransactionsController(req, res, next) {
+  try {
+    const { address } = req.params;
+    if (!address) {
+      throw new AppError("지갑 주소가 필요합니다.", 400);
+    }
+    const transactions = await getWalletTransactions(address);
+    res.status(200).json({ status: 'success', data: transactions });
+  } catch (error) {
+    next(new AppError("지갑 거래 내역 조회 실패: " + error.message, error.statusCode || 500));
+  }
+}
+
+export async function getWalletNFTsController(req, res, next) {
+  try {
+    const { address } = req.params;
+    if (!address) {
+      throw new AppError("지갑 주소가 필요합니다.", 400);
+    }
+    const nfts = await getWalletNFTs(address);
+    res.status(200).json({ status: 'success', data: nfts });
+  } catch (error) {
+    next(new AppError("NFT 목록 조회 실패: " + error.message, error.statusCode || 500));
   }
 }
