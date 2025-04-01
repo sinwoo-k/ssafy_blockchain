@@ -73,7 +73,8 @@ public class SecurityConfig {
                         "/api/users/search",
                         "/api/search",
                         "/api/redis/test",
-                        "/api/sso/**"
+                        "/api/sso/**",
+                        "/api/matrics"
                 ).permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
