@@ -55,7 +55,7 @@ public class AuthService {
     @Transactional
     public String verifyEmailCode(String email, String inputCode) {
         // Redis에서 저장된 인증 코드 가져오기
-        String redisKey = "Chaintoon:auth:code:" + email;
+        String redisKey = "auth:code:" + email;
         Object storedCode = redisService.getValue(redisKey);
 
         if (storedCode == null || !storedCode.toString().replaceAll("^\"|\"$", "").equals(inputCode)) {
