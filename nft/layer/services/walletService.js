@@ -72,18 +72,24 @@ export async function connectWalletService({ walletAddress, signature, message }
 }
 
 export async function createWalletService({ userId }) {
-  // 1. 새 지갑 생성 (랜덤 지갑 생성)
+
+  const existingWallet = await getWalletByUserId(userId);
+  if (existingWallet) {
+    throw new AppError('이미 지갑이 존재합니다.', 400);
+  }
+
+  // 새 지갑 생성 (랜덤 지갑 생성)
   const newWallet = ethers.Wallet.createRandom();
   const walletAddress = newWallet.address;
   const privateKey = newWallet.privateKey;
   const publicKey = newWallet.publicKey;
   const recoveryPhrase = newWallet.mnemonic.phrase;
 
-  // 2. 민감 데이터 암호화 (개인키, 복구 구문)
+  // 민감 데이터 암호화 (개인키, 복구 구문)
   const encryptedPrivateKey = encrypt(privateKey);
   const encryptedRecoveryPhrase = encrypt(recoveryPhrase);
 
-  // 3. DB에 지갑 정보 저장 (Data Access Layer 호출)
+  // DB에 지갑 정보 저장 (Data Access Layer 호출)
   const walletId = await createWallet({
     userId,
     walletAddress,
@@ -92,10 +98,10 @@ export async function createWalletService({ userId }) {
     recoveryPhrase: encryptedRecoveryPhrase,
   });
 
-  // 4. 스마트 컨트랙트에 관리자의 adminRegisterWallet 함수 호출하여 새 지갑 등록
+  // 스마트 컨트랙트에 관리자의 adminRegisterWallet 함수 호출하여 새 지갑 등록
   const txRegister = await walletManagerContract.adminRegisterWallet(walletAddress, publicKey);
   await txRegister.wait();
-  // 5. 관리자가 새 지갑으로 송금 (0.05 ETH)
+  // 관리자가 새 지갑으로 송금 (0.05 ETH)
   // const amountToSend = ethers.parseEther("0.05"); // ETH -> Wei 변환
   // const txSend = await serverWallet.sendTransaction({
   //   to: walletAddress,
