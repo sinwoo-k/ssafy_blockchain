@@ -1,0 +1,4 @@
+export const CONTRACT_CONFIG = {
+    NFT_MARKETPLACE_ADDRESS: process.env.NFT_MARKETPLACE_ADDRESS,
+    WALLET_ADDRESS: process.env.WALLET_ADDRESS,
+  };

@@ -53,6 +53,9 @@ public class Webtoon {
     @Column(name = "rating_count")
     private Long ratingCount;
 
+    @Column(name = "favorite_count")
+    private Long favoriteCount;
+
     @Column(name = "deleted", length = 1)
     private String deleted;
 
@@ -66,6 +69,7 @@ public class Webtoon {
         viewCount = 0L;
         ratingSum = 0L;
         ratingCount = 0L;
+        favoriteCount = 0L;
         deleted = "N";
         createdAt = LocalDateTime.now();
     }

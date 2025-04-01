@@ -2,6 +2,9 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
+import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
@@ -90,10 +93,15 @@ public class WebtoonService {
                 .map(tag -> tag.getTagId().getTag())
                 .toList();
 
+        // 작성자 조회
+        User user = userRepository.findById(webtoon.getUserId())
+                .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()));
+
         // 응답 dto 생성
         return WebtoonResponseDto.builder()
                 .webtoonId(webtoon.getWebtoonId())
                 .userId(webtoon.getUserId())
+                .writer(user.getNickname())
                 .webtoonName(webtoon.getWebtoonName())
                 .genre(webtoon.getGenre())
                 .summary(webtoon.getSummary())
@@ -103,6 +111,7 @@ public class WebtoonService {
                 .episodeCount(webtoon.getEpisodeCount())
                 .viewCount(webtoon.getViewCount())
                 .rating(rating)
+                .favoriteCount(webtoon.getFavoriteCount())
                 .tags(tags)
                 .build();
     }
@@ -173,7 +182,7 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
+    public SearchResponseDto<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
         // 페이지네이션 및 정렬 설정 (최신 업데이트 순)
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
@@ -181,7 +190,11 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return toDtoList(webtoonPage);
+        return SearchResponseDto.<WebtoonListResponseDto>builder()
+                .type(SearchType.WEBTOON.getValue())
+                .totalCount(webtoonPage.getTotalElements())
+                .searchResult(toDtoList(webtoonPage))
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -291,6 +304,10 @@ public class WebtoonService {
 
         // 데이터베이스에 저장
         favoriteWebtoonRepository.save(favoriteWebtoon);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() + 1);
+        webtoonRepository.save(webtoon);
     }
 
     @Transactional
@@ -305,5 +322,9 @@ public class WebtoonService {
 
         // 데이터베이스에서 삭제
         favoriteWebtoonRepository.deleteById(id);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() - 1);
+        webtoonRepository.save(webtoon);
     }
 }

@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.user.dto.response;
 
+import com.c109.chaintoon.domain.search.dto.response.SearchResult;
 import lombok.*;
 
 @Getter
@@ -7,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SearchUserResponseDto {
+public class SearchUserResponseDto implements SearchResult {
 
     private Integer id;
     private String nickname;

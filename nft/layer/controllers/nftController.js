@@ -1,14 +1,14 @@
-import { mintNftService, getNftMetadata, sellNftService, buyNftService, getMyNftsService } from '../services/nftService.js';
+import { mintNftService, getNftMetadata, sellNftService, buyNftService, confirmSignatureService } from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 
 export async function mintNftController(req, res) {
     try {
 
-        const { webtoonId, type, userId , typeId, s3Url, originalCreator, registrant} = req.body;
+        const { webtoonId, type, userId, typeId, s3Url, originalCreator, registrant } = req.body;
 
         // 필수 파라미터 확인
-        if (!webtoonId ) {
+        if (!webtoonId) {
             return res.status(400).json({ error: 'webtoonId는 필수입니다.' });
         } else if (!type) {
             return res.status(400).json({ error: 'type은 필수입니다.' });
@@ -49,7 +49,7 @@ export const getNftDetails = async (req, res, next) => {
 
 export async function sellNftController(req, res) {
     try {
-        const { tokenId, price, privateKey } = req.body;
+        const { tokenId, price, userId } = req.body;
 
         // 필수 파라미터 확인
         if (!tokenId) {
@@ -59,7 +59,7 @@ export async function sellNftController(req, res) {
         }
 
 
-        const result = await sellNftService({ tokenId, price , privateKey});
+        const result = await sellNftService({ tokenId, price, userId });
         res.status(200).json(result);
     } catch (err) {
         console.error(err);
@@ -70,7 +70,7 @@ export async function sellNftController(req, res) {
 
 export async function buyNftController(req, res) {
     try {
-        const { tokenId, price, privateKey } = req.body;
+        const { tokenId, price, userId } = req.body;
 
         // 필수 파라미터 확인
         if (!tokenId) {
@@ -79,7 +79,7 @@ export async function buyNftController(req, res) {
             return res.status(400).json({ error: 'price는 필수입니다.' });
         }
 
-        const result = await buyNftService({ tokenId, price , privateKey});
+        const result = await buyNftService({ tokenId, price, userId });
         res.status(200).json(result);
     } catch (err) {
         console.error(err);
@@ -88,25 +88,16 @@ export async function buyNftController(req, res) {
     }
 }
 
-export async function getMyNftsController(req, res, next) {
+export async function confirmSignatureController(req, res, next) {
     try {
-      // 예시: 인증 미들웨어에서 req.user에 사용자 정보가 담겨 있다고 가정
-      const { userId } = req.parmas;
-      if (!userId) {
-        return res.status(400).json({ error: 'userId는 필수입니다.' });
-      }
-      const nfts = await getMyNftsService(userId);
-      res.status(200).json({ nfts });
+        const { userId, signature } = req.body; // userId가 제대로 들어오는지 확인
+        if (!userId) {
+            return res.status(400).json({ error: 'userId는 필수입니다.' });
+        }
+        const result = await confirmSignatureService({ userId, signature });
+        res.status(200).json(result);
     } catch (error) {
-      next(error);
+        next(error);
     }
-  }
+}
 
-  export async function getAllNftsController(req, res, next) {
-    try {
-      const nfts = await getAllNftsService();
-      res.status(200).json({ nfts });
-    } catch (error) {
-      next(error);
-    }
-  }

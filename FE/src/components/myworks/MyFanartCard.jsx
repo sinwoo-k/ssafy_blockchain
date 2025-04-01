@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
 
@@ -7,15 +7,10 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 
 const MyFanartCard = ({ fanart }) => {
-  const [isHover, setIsHover] = useState(false)
   return (
     <div className='flex justify-center'>
       <div className='flex flex-col gap-3'>
-        <div
-          className='relative'
-          onMouseOver={() => setIsHover(true)}
-          onMouseOut={() => setIsHover(false)}
-        >
+        <div className='relative'>
           <Link to={`/fanart/${fanart.fanartId}`}>
             <img
               src={fanart.fanartImage}

@@ -110,7 +110,7 @@ const FanartWebtoonInfo = () => {
         </div>
         {/* 버튼 */}
         <div className='mt-10 flex gap-10 text-black'>
-          <Link>
+          <Link to={`/fanart/webtoon/${webtoon.webtoonId}/create`}>
             <button
               className='bg-chaintoon h-[45px] w-[250px] 
             cursor-pointer rounded'

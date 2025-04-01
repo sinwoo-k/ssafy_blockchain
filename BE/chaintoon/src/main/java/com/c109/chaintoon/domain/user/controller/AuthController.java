@@ -4,7 +4,6 @@ import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,11 +55,16 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         // JWT 쿠키 제거
-        Cookie jwtCookie = new Cookie("jwt", null); // 쿠키 이름은 "jwt"
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(0); // 쿠키 즉시 삭제
-        response.addCookie(jwtCookie);
+        ResponseCookie cookie = ResponseCookie.from("jwt", null)
+                .httpOnly(true)
+                .secure(true) // HTTPS 환경에서만 사용
+                .path("/")
+                .maxAge(0) // 즉시 삭제
+                .sameSite("None") // CSRF 보호
+//            .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok("로그아웃 성공");
     }
