@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import StarIcon from '@mui/icons-material/Star'
 import StarHalfIcon from '@mui/icons-material/StarHalf'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
+import { createRating } from '../../api/webtoonAPI'
 
 const EpisodeRatingModal = ({
   setShowModal,
@@ -35,6 +36,7 @@ const EpisodeRatingModal = ({
   const submitRating = async () => {
     const ratingData = rating * 2
     try {
+      const result = await createRating(episodeId, ratingData)
       setRatingCountData((prev) => prev + 1)
       setRatingSumData((prev) => prev + ratingData)
       setIsRate(true)

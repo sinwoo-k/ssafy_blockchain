@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
-import WebtoonEpisodeComment from '../../components/webtoon/WebtoonEpisodeComment'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
 import { getEpisode, getWebtoon } from '../../api/webtoonAPI'
 import CommentList from '../../components/comment/CommentList'
@@ -99,8 +98,11 @@ const WebtoonEpisode = () => {
         episodeId={episode.episodeId}
       />
       {/* 댓글 */}
-      <WebtoonEpisodeComment episodeId={params.episodeId} />
-      <CommentList usageId={params.episodeId} type={'COMMENT_EPISODE'} />
+      <CommentList
+        usageId={params.episodeId}
+        type={'COMMENT_EPISODE'}
+        commentCount={episode.commentCount}
+      />
     </div>
   )
 }

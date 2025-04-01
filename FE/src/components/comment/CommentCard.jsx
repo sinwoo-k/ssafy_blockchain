@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
 import { getRandomColor } from '../../utils/randomColor'
 // 아이콘
@@ -8,11 +9,14 @@ import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRig
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 
 const CommentCard = ({ comment }) => {
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+
   const [randomColor, setRandomColor] = useState(getRandomColor())
-  const [replies, setReplies] = useState(comment.replies)
   const [replyRandomColor, setReplyRandomColor] = useState(
-    comment.replies.map((_) => getRandomColor()),
+    comment.replies?.map((_) => getRandomColor()),
   )
+
+  const [content, setContent] = useState('')
 
   // 답글 보기
   const [showChildren, setShowChildren] = useState(false)
@@ -23,7 +27,7 @@ const CommentCard = ({ comment }) => {
   }
 
   return (
-    <div className='flex flex-col gap-3 border-b px-5 py-3'>
+    <div className='flex w-[1000px] flex-col gap-3 border-b px-5 py-3'>
       {/* 유저 프로필 */}
       <div className='flex items-center gap-3'>
         {comment.profileImage ? (
@@ -36,10 +40,10 @@ const CommentCard = ({ comment }) => {
         ) : (
           <AccountCircleIcon sx={{ fontSize: 35, color: randomColor }} />
         )}
-        <p>{comment.userNickname}</p>
+        <p>{comment.nickname}</p>
       </div>
       {/* 댓글 본문 */}
-      <p>{comment.content}</p>
+      <p className='break-words'>{comment.content}</p>
       {/* 댓글 작성일 */}
       <p className='text-text/75'>
         {dayjs(comment.createdAt).format('YYYY.MM.DD')}
@@ -51,23 +55,23 @@ const CommentCard = ({ comment }) => {
           onClick={toggleChildren}
         >
           <span>답글</span>
-          <span>{comment.replies.length}</span>
+          <span>{comment.replies?.length || 0}</span>
         </button>
         {/* 좋아요&싫어요 */}
         <div className='flex gap-3'>
           <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
             <ThumbUpIcon sx={{ fontSize: 20, color: '#ff5099' }} />
-            <span>{comment.likes}</span>
+            <span>{comment.likeCount}</span>
           </button>
           <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
             <ThumbDownIcon sx={{ fontSize: 20, color: '#5099ff' }} />
-            <span>{comment.dislikes}</span>
+            <span>{comment.hateCount}</span>
           </button>
         </div>
       </div>
       {showChildren && (
         <div className='flex flex-col'>
-          {replies.map((reply, index) => (
+          {comment.replies?.map((reply, index) => (
             <div className='flex gap-5 py-2'>
               {/* 답글 표시 */}
               <div className='flex w-[50px] justify-center'>
@@ -120,14 +124,25 @@ const CommentCard = ({ comment }) => {
               <SubdirectoryArrowRightIcon sx={{ fontSize: 20 }} />
             </div>
             {/* 답글 */}
-            <div className='flex grow gap-3'>
-              <input
-                type='text'
-                className='bg-text/50 h-[45px] grow rounded-lg'
-              />
-              <button className='bg-chaintoon h-[45px] w-[100px] flex-none rounded-lg text-black'>
-                등록
-              </button>
+            <div className='bg-text/30 flex grow flex-col items-center rounded-lg border px-3 py-2'>
+              <textarea
+                className='h-[72px] w-full resize-none focus:outline-none'
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                maxLength={255}
+                placeholder={
+                  isAuthenticated
+                    ? '답글을 입력해주세요.'
+                    : '로그인 후 이용가능합니다.'
+                }
+                disabled={!isAuthenticated}
+              ></textarea>
+              <div className='flex w-full items-end justify-end gap-3'>
+                <span className='text-text/75'>{content.length} / 255</span>
+                <button className='bg-chaintoon flex-none cursor-pointer rounded-lg px-3 py-1 text-black'>
+                  등록
+                </button>
+              </div>
             </div>
           </div>
         </div>

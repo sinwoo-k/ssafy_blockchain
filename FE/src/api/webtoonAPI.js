@@ -162,5 +162,9 @@ export const deleteEpisode = async (episodeId) => {
 
 /** 별점 등록 */
 export const createRating = async (episodeId, rating) => {
-  const response = await API.post()
+  const response = await API.post(
+    `/episodes/${episodeId}/rating?rating=${rating}`,
+  )
+  console.log(response)
+  return response.data
 }
