@@ -15,6 +15,7 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void setValue(String key, Object value, long timeout) {
+        key = "Chaintoon:" + key;
         redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.MINUTES);
     }
 
