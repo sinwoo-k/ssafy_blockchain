@@ -51,7 +51,7 @@ public class EpisodeService {
         return episodeImages.stream()
                 .map(episodeImage -> ImageResponseDto.builder()
                         .imageId(episodeImage.getEpisodeId())
-                        .imageUrl(episodeImage.getImageUrl())
+                        .imageUrl(s3Service.getPresignedUrl(episodeImage.getImageUrl()))
                         .fileSize(episodeImage.getFileSize())
                         .build())
                 .collect(Collectors.toList());
@@ -72,7 +72,7 @@ public class EpisodeService {
                 .webtoonId(episode.getWebtoonId())
                 .episodeName(episode.getEpisodeName())
                 .uploadDate(episode.getUploadDate())
-                .thumbnail(episode.getThumbnail())
+                .thumbnail(s3Service.getPresignedUrl(episode.getThumbnail()))
                 .commentCount(episode.getCommentCount())
                 .rating(rating)
                 .build();
@@ -90,7 +90,7 @@ public class EpisodeService {
                 .writerComment(episode.getWriterComment())
                 .commentable(episode.getCommentable())
                 .uploadDate(episode.getUploadDate())
-                .thumbnail(episode.getThumbnail())
+                .thumbnail(s3Service.getPresignedUrl(episode.getThumbnail()))
                 .commentCount(episode.getCommentCount())
                 .ratingSum(episode.getRatingSum())
                 .ratingCount(episode.getRatingCount())
