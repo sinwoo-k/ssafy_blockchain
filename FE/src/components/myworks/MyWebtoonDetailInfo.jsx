@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { getWebtoon } from '../../api/webtoonAPI'
+import { Link, useNavigate } from 'react-router-dom'
+import { deleteWebtoon, getWebtoon } from '../../api/webtoonAPI'
+import { formattingNumber } from '../../utils/formatting'
+
 // 디폴트 이미지
 import fantasyCover from '../../assets/defaultCover/fantasy.webp'
 // 아이콘
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
-import { formattingNumber } from '../../utils/formatting'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 const MyWebtoonDetailInfo = ({ webtoonId }) => {
+  const navigate = useNavigate()
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
 
@@ -23,6 +26,15 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
       setBackgroundImg(result.garoThumbnail)
     } catch (error) {
       console.error('웹툰 정보 불러오기 실패: ', error)
+    }
+  }
+
+  const deleteData = async () => {
+    try {
+      const result = await deleteWebtoon(webtoonId)
+      navigate('/myworks/webtoon')
+    } catch (error) {
+      console.error('웹툰 정보 삭제 실패: ', error)
     }
   }
 
@@ -42,7 +54,18 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
         }}
       ></div>
       <div className='relative w-[1000px]'>
-        <div className='mt-24 flex gap-10'>
+        <div className='mb-10'>
+          <Link
+            to={'/myworks/webtoon'}
+            className='text-text/75 flex items-center gap-3'
+          >
+            <ArrowBackIcon />
+            <span className='inline-block translate-y-[1px] transform'>
+              목록으로 돌아가기
+            </span>
+          </Link>
+        </div>
+        <div className='flex gap-10'>
           {/* 웹툰 이미지 및 아이콘 정보 */}
           <div>
             {/* 웹툰 이미지 */}
@@ -132,6 +155,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
             <button
               className='bg-chaintoon h-[45px] w-[150px] 
               cursor-pointer rounded'
+              onClick={deleteData}
             >
               작품 삭제
             </button>

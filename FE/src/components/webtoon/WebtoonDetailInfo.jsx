@@ -10,7 +10,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
 
 const WebtoonDetailInfo = ({ webtoon }) => {
-  console.log(webtoon)
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
 

@@ -5,18 +5,15 @@ import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
 import WebtoonEpisodeComment from '../../components/webtoon/WebtoonEpisodeComment'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
-import { getEpisode } from '../../API/webtoonAPI'
-
-const dummyData = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-  23, 24, 25, 26, 27, 28, 29, 30,
-].map((num) => `https://picsum.photos/600/800.jpg?ramdom=${num}`)
+import { getEpisode, getWebtoon } from '../../api/webtoonAPI'
+import CommentList from '../../components/comment/CommentList'
 
 const WebtoonEpisode = () => {
   const params = useParams()
 
   // 에피소드 데이터
-  const [episode, setEpisode] = useState(dummyData)
+  const [episode, setEpisode] = useState([])
+  const [webtoonName, setWebtoonName] = useState()
 
   // 뷰어 내비게이션 show
   const [navbarShow, setNavbarShow] = useState(true)
@@ -49,15 +46,19 @@ const WebtoonEpisode = () => {
 
   const getData = async () => {
     try {
-      const data = await getEpisode(params.episodeId)
-      setEpisode(data)
+      const result = await getEpisode(params.episodeId)
+      console.log(result)
+      setEpisode(result)
+      const webtoonNameResult = await getWebtoon(result.webtoonId)
+      setWebtoonName(webtoonNameResult.webtoonName)
     } catch (error) {
       console.error('회차 불러오기 실패: ', error)
     }
   }
   useEffect(() => {
     getData()
-  }, [])
+  }, [params.episodeId])
+
   useEffect(() => {
     // mount
     if (inView) {
@@ -77,23 +78,29 @@ const WebtoonEpisode = () => {
       {navbarShow && (
         <WebtoonViewerNavBar
           title={episode.episodeName}
-          webtoon={episode.webtoon}
+          webtoonId={episode.webtoonId}
+          webtoonName={webtoonName}
+          prevEpisode={episode.previousEpisodeId}
+          nextEpisode={episode.nextEpisodeId}
         />
       )}
       {/* 웹툰 뷰어 */}
       <div ref={ref} className='mb-24'>
         <WebtoonViewer
           handleClickViewer={handleClickViewer}
-          images={dummyData}
+          images={episode.images}
         />
       </div>
       {/* 유틸 기능 */}
       <WebtoonEpisodeUtility
         writerComment={episode.writerComment}
-        rating={episode.rating}
+        ratingCount={episode.ratingCount}
+        ratingSum={episode.ratingSum}
+        episodeId={episode.episodeId}
       />
       {/* 댓글 */}
       <WebtoonEpisodeComment episodeId={params.episodeId} />
+      <CommentList usageId={params.episodeId} type={'COMMENT_EPISODE'} />
     </div>
   )
 }

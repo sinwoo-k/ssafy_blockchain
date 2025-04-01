@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
 
-const MyEpisodeCard = ({ episode }) => {
+const MyEpisodeCard = ({ episode, deleteData }) => {
   return (
     <div className='border-text flex h-[100px] items-center gap-10 border-b px-3'>
       {/* 썸네일 이미지 */}
@@ -20,7 +20,7 @@ const MyEpisodeCard = ({ episode }) => {
       </div>
       {/* 회차 정보 */}
       <div className='flex h-[80px] grow flex-col justify-evenly'>
-        <p className=''>{episode.title}</p>
+        <p className=''>{episode.episodeName}</p>
         <div className='flex w-full justify-between'>
           <div className='flex items-center gap-2'>
             <span className='flex items-center gap-1'>
@@ -42,11 +42,13 @@ const MyEpisodeCard = ({ episode }) => {
                 style={{ color: '#2599ff' }}
               />
             </Link>
-            <IconButton
-              Icon={DeleteIcon}
-              tooltip={'삭제하기'}
-              style={{ color: '#ff5050' }}
-            />
+            <div onClick={() => deleteData(episode.episodeId)}>
+              <IconButton
+                Icon={DeleteIcon}
+                tooltip={'삭제하기'}
+                style={{ color: '#ff5050' }}
+              />
+            </div>
           </div>
         </div>
       </div>

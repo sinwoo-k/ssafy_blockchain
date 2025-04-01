@@ -3,7 +3,7 @@ import MyEpisodeCard from './MyEpisodeCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-import { getEpisodeList } from '../../api/webtoonAPI'
+import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 
 const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
   // 에피소드 리스트
@@ -38,6 +38,16 @@ const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
       setEpisodes(result.slice(0, 10))
     } catch (error) {
       console.error('에피소드 목록 불러오기 실패: ', error)
+    }
+  }
+
+  const deleteData = async (episodeId) => {
+    try {
+      const result = await deleteEpisode(episodeId)
+      setEpisodeData((prev) => prev.filter((v) => v.episodeId !== episodeId))
+      setEpisodes((prev) => prev.filter((v) => v.episodeId !== episodeId))
+    } catch (error) {
+      console.error('회차 정보 삭제 실패: ', error)
     }
   }
 
@@ -77,9 +87,13 @@ const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
           ) : (
             <>
               {episodes.map((episode) => (
-                <MyEpisodeCard key={episode.episodeId} episode={episode} />
+                <MyEpisodeCard
+                  key={episode.episodeId}
+                  episode={episode}
+                  deleteData={deleteData}
+                />
               ))}
-              {episodes.length !== dummyData.length && (
+              {episodes.length !== episodeData.length && (
                 <div className='flex h-[80px] items-center justify-center'>
                   <button
                     className='cursor-pointer text-lg'

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import EpisodeCard from './EpisodeCard'
 
 // 아이콘
@@ -7,6 +7,7 @@ import ErrorIcon from '@mui/icons-material/Error'
 import { getEpisodeList } from '../../api/webtoonAPI'
 
 const WebtoonDetailEpisodeList = () => {
+  const params = useParams()
   const [episodeData, setEpisodeData] = useState([])
   // 보여줄 에피소드 리스트
   const [episodes, setEpisodes] = useState([])
@@ -16,10 +17,10 @@ const WebtoonDetailEpisodeList = () => {
     let tempData
     if (keyword === 'first') {
       tempData = episodeData.sort((a, b) => a.episodeId - b.episodeId)
-      setDummyData(tempData)
+      setEpisodeData(tempData)
     } else {
       tempData = episodeData.sort((a, b) => b.episodeId - a.episodeId)
-      setDummyData(tempData)
+      setEpisodeData(tempData)
     }
     setEpisodes(tempData.slice(0, 10))
   }
@@ -34,9 +35,9 @@ const WebtoonDetailEpisodeList = () => {
 
   const getData = async () => {
     try {
-      const data = await getEpisodeList(params.webtoonId)
-      setEpisodeData(data)
-      setEpisodes(data.slice(0, 10))
+      const result = await getEpisodeList(params.webtoonId)
+      setEpisodeData(result)
+      setEpisodes(result.slice(0, 10))
     } catch (error) {
       console.error(error)
     }

@@ -18,18 +18,6 @@ export const getWebtoon = async (webtoonId) => {
   return response.data
 }
 
-/** 회차 목록 조회 */
-export const getEpisodeList = async (webtoonId) => {
-  const response = await API.get(`/episodes?webtoonId=${webtoonId}`)
-  return response.data
-}
-
-/** 회차 상세 조회 */
-export const getEpisode = async (episodeId) => {
-  const response = await API.get(`/episodes/${episodeId}`)
-  return response.data
-}
-
 /** 내 웹툰 조회 */
 export const getMyWebtoon = async (page = 1, pageSize = 10) => {
   const response = await API.get(
@@ -77,5 +65,102 @@ export const patchWebtoon = async (
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 
-  return response
+  return response.data
+}
+
+/** 웹툰 삭제 */
+export const deleteWebtoon = async (webtoonId) => {
+  const response = await API.delete(`/webtoons/${webtoonId}`)
+  return response.data
+}
+
+/** 회차 목록 조회 */
+export const getEpisodeList = async (webtoonId) => {
+  const response = await API.get(`/episodes?webtoonId=${webtoonId}`)
+  return response.data
+}
+
+/** 회차 상세 조회 */
+export const getEpisode = async (episodeId) => {
+  const response = await API.get(`/episodes/${episodeId}`)
+  return response.data
+}
+
+/** 첫 회차 조회  */
+export const getFirstEpisode = async (webtoonId) => {
+  const response = await API.get(`/episodes/first?webtoonId=${webtoonId}`)
+  console.log(response)
+  return response.data
+}
+
+/** 회차 등록 */
+export const createEpisode = async (episode, thumbnail, images) => {
+  const formData = new FormData()
+  formData.append(
+    'episode',
+    new Blob([JSON.stringify(episode)], { type: 'application/json' }),
+  )
+  formData.append('thumbnail', thumbnail)
+  images.forEach((obj) => {
+    formData.append('images', obj.file)
+  })
+  const response = await API.post(`/episodes`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data
+}
+
+/** 회차 수정 */
+export const patchEpisode = async (
+  episodeId,
+  episode,
+  thumbnail,
+  imagesData,
+) => {
+  const formData = new FormData()
+  formData.append(
+    'episode',
+    new Blob([JSON.stringify(episode)], { type: 'application/json' }),
+  )
+  if (thumbnail) {
+    formData.append('thumbnail', thumbnail)
+  }
+  const images = []
+  const newImages = []
+  imagesData.forEach((image) => {
+    if (image.type === 'old') {
+      images.push({ imageId: image.file.imageId })
+    }
+    if (image.type === 'new') {
+      const newFileName = Date.now() + '_' + image.file.name
+      const newFile = new File([image.file], newFileName, {
+        type: image.file.type,
+      })
+      images.push({ newImage: newFileName })
+      newImages.push(newFile)
+    }
+  })
+  formData.append(
+    'images',
+    new Blob([JSON.stringify(images)], { type: 'application/json' }),
+  )
+  newImages.forEach((obj) => {
+    formData.append('newImages', obj)
+  })
+
+  const response = await API.patch(`/episodes/${episodeId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data
+}
+
+/** 회차 삭제 */
+export const deleteEpisode = async (episodeId) => {
+  const response = await API.delete(`/episodes/${episodeId}`)
+  return response.data
+}
+
+/** 별점 등록 */
+export const createRating = async (episodeId, rating) => {
+  const response = await API.post()
 }

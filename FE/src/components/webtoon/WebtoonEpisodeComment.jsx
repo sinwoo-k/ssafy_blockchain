@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
 import CommentCard from './CommentCard'
-import { getComments } from '../../API/commentAPI'
+import { getComments } from '../../api/commentAPI'
 
 const WebtoonEpisodeComment = ({ episodeId }) => {
   // 댓글 목록

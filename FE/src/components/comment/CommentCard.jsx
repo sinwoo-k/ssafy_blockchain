@@ -1,11 +1,19 @@
 import React, { useState } from 'react'
 import dayjs from 'dayjs'
+import { getRandomColor } from '../../utils/randomColor'
 // 아이콘
 import ThumbUpIcon from '@mui/icons-material/ThumbUp'
 import ThumbDownIcon from '@mui/icons-material/ThumbDown'
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight'
+import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 
 const CommentCard = ({ comment }) => {
+  const [randomColor, setRandomColor] = useState(getRandomColor())
+  const [replies, setReplies] = useState(comment.replies)
+  const [replyRandomColor, setReplyRandomColor] = useState(
+    comment.replies.map((_) => getRandomColor()),
+  )
+
   // 답글 보기
   const [showChildren, setShowChildren] = useState(false)
 
@@ -18,9 +26,16 @@ const CommentCard = ({ comment }) => {
     <div className='flex flex-col gap-3 border-b px-5 py-3'>
       {/* 유저 프로필 */}
       <div className='flex items-center gap-3'>
-        <div className='border-chaintoon rounded-full border'>
-          <img alt='' className='bg-text/50 h-[30px] w-[30px] rounded-full' />
-        </div>
+        {comment.profileImage ? (
+          <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
+            <img
+              alt={comment.profileImage}
+              className='bg-text/30 h-[30px] w-[30px] rounded-full'
+            />
+          </div>
+        ) : (
+          <AccountCircleIcon sx={{ fontSize: 35, color: randomColor }} />
+        )}
         <p>{comment.userNickname}</p>
       </div>
       {/* 댓글 본문 */}
@@ -52,7 +67,7 @@ const CommentCard = ({ comment }) => {
       </div>
       {showChildren && (
         <div className='flex flex-col'>
-          {comment.replies.map((reply) => (
+          {replies.map((reply, index) => (
             <div className='flex gap-5 py-2'>
               {/* 답글 표시 */}
               <div className='flex w-[50px] justify-center'>
@@ -62,20 +77,25 @@ const CommentCard = ({ comment }) => {
               <div className='flex w-full flex-col gap-3'>
                 {/* 유저 프로필 */}
                 <div className='flex items-center gap-3'>
-                  <div className='border-chaintoon rounded-full border'>
-                    <img
-                      src=''
-                      alt=''
-                      className='bg-text/50 h-[30px] w-[30px] rounded-full'
+                  {reply.profileImage ? (
+                    <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
+                      <img
+                        alt={reply.profileImage}
+                        className='bg-text/30 h-[30px] w-[30px] rounded-full'
+                      />
+                    </div>
+                  ) : (
+                    <AccountCircleIcon
+                      sx={{ fontSize: 35, color: replyRandomColor[index] }}
                     />
-                  </div>
-                  <p>{comment.userNickname}</p>
+                  )}
+                  <p>{reply.userNickname}</p>
                 </div>
                 {/* 답글 본문 */}
-                <p>{comment.content}</p>
+                <p>{reply.content}</p>
                 {/* 답글 작성일 */}
                 <p className='text-text/75'>
-                  {dayjs(comment.createdAt).format('YYYY.MM.DD')}
+                  {dayjs(reply.createdAt).format('YYYY.MM.DD')}
                 </p>
                 {/* 버튼 영역 */}
                 <div className='flex justify-end'>
@@ -83,11 +103,11 @@ const CommentCard = ({ comment }) => {
                   <div className='flex gap-3'>
                     <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
                       <ThumbUpIcon sx={{ fontSize: 20, color: '#ff5099' }} />
-                      <span>{comment.likes}</span>
+                      <span>{reply.likes}</span>
                     </button>
                     <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
                       <ThumbDownIcon sx={{ fontSize: 20, color: '#5099ff' }} />
-                      <span>{comment.dislikes}</span>
+                      <span>{reply.dislikes}</span>
                     </button>
                   </div>
                 </div>

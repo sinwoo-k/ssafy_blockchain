@@ -20,7 +20,11 @@ const WebtoonViewer = ({ handleClickViewer, images }) => {
     >
       {images?.map((image, index) => (
         <div key={`image-${index}`} className='w-[690px]'>
-          <img src={image} alt={`웹툰 이미지-${index}`} className='w-[690px]' />
+          <img
+            src={image.imageUrl}
+            alt={`웹툰 이미지-${index}`}
+            className='w-[690px]'
+          />
         </div>
       ))}
     </div>

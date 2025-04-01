@@ -1,3 +1,4 @@
+/** kmb 단위로 숫자 변환 */
 export const formattingNumber = (number) => {
   if (number >= 1_000_000_000) {
     // 10억 이상
@@ -12,4 +13,10 @@ export const formattingNumber = (number) => {
     // 1천 미만
     return String(number)
   }
+}
+
+/** 숫자 콤마 찍기 */
+export const addComma = (number) => {
+  let returnString = number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return returnString
 }

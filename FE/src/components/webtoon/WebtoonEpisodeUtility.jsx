@@ -1,14 +1,42 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { addComma } from '../../utils/formatting'
 
 // 아이콘
 import StarIcon from '@mui/icons-material/Star'
 import EpisodeRatingModal from './EpisodeRatingModal'
 
-const WebtoonEpisodeUtility = ({ writerComment, rating }) => {
+const WebtoonEpisodeUtility = ({
+  writerComment,
+  ratingCount,
+  ratingSum,
+  episodeId,
+}) => {
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+  const [rating, setRating] = useState(0)
+  const [ratingCountData, setRatingCountData] = useState()
+  const [ratingSumData, setRatingSumData] = useState()
+
   // 별점 등록 여부
   const [isRate, setIsRate] = useState(false)
   // 별점 모달 on/off
   const [showModal, setShowModal] = useState(false)
+
+  const modalOpen = () => {
+    if (isAuthenticated) {
+      setShowModal(true)
+    } else {
+      alert('로그인이 필요합니다.')
+    }
+  }
+  useEffect(() => {
+    setRatingCountData(ratingCount)
+    setRatingSumData(ratingSum)
+  }, [ratingCount, ratingSum])
+
+  useEffect(() => {
+    setRating(ratingSumData / ratingCountData || 0)
+  }, [ratingCountData, ratingSumData])
 
   return (
     <div className='mb-10 flex justify-center'>
@@ -26,24 +54,29 @@ const WebtoonEpisodeUtility = ({ writerComment, rating }) => {
           <div className='flex items-end gap-1'>
             <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
             <span className='inline-block w-[45px] translate-y-[1px] transform'>
-              {rating}
+              {(rating / 2).toFixed(2)}
             </span>
             <span className='text-text/75 inline-block translate-y-[1px] transform'>
-              1,100명
+              {addComma(ratingCountData || 0)}명
             </span>
           </div>
           {/* 별점 주기 */}
           {isRate ? (
             <span>참여 완료</span>
           ) : (
-            <button
-              className='cursor-pointer'
-              onClick={() => setShowModal(true)}
-            >
+            <button className='cursor-pointer' onClick={modalOpen}>
               별점 주기
             </button>
           )}
-          {showModal && <EpisodeRatingModal setShowModal={setShowModal} />}
+          {showModal && (
+            <EpisodeRatingModal
+              setShowModal={setShowModal}
+              setRatingSumData={setRatingSumData}
+              setRatingCountData={setRatingCountData}
+              setIsRate={setIsRate}
+              episodeId={episodeId}
+            />
+          )}
         </div>
       </div>
     </div>
