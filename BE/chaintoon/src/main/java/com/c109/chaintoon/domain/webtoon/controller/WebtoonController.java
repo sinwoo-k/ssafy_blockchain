@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.controller;
 
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
@@ -60,8 +61,8 @@ public class WebtoonController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam String keyword
     ) {
-        List<WebtoonListResponseDto> webtoonList = webtoonService.searchWebtoon(page, pageSize, keyword);
-        return new ResponseEntity<>(webtoonList, HttpStatus.OK);
+        SearchResponseDto<WebtoonListResponseDto> searchResponseDto = webtoonService.searchWebtoon(page, pageSize, keyword);
+        return new ResponseEntity<>(searchResponseDto, HttpStatus.OK);
     }
 
     @GetMapping("/favorites")

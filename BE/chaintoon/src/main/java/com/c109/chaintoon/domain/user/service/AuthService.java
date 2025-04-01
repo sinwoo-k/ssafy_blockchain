@@ -5,6 +5,7 @@ import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
+import com.c109.chaintoon.domain.sso.enums.SsoProvider;
 import com.c109.chaintoon.domain.user.dto.request.SsoUserRequestDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -33,6 +34,12 @@ public class AuthService {
     // 이메일을 받아 인증 코드 작성
     @Transactional
     public void emailLogin(String email) {
+        // 소셜 유저 확인
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null && !SsoProvider.CHAINTOON.name().equals(user.getSsoType())) {
+           throw new IllegalArgumentException("소셜 로그인 유저입니다. 소셜 로그인을 이용하세요.");
+        }
+
         // 인증 코드 생성 (매개변수는 인증 코드 자릿수)
         String authCode = AuthCodeGenerator.generateCode(12);
 
@@ -95,20 +102,21 @@ public class AuthService {
                 .status("Y")
                 .backgroundImage("")
                 .profileImage("")
+                .ssoType(SsoProvider.CHAINTOON.name())
                 .build();
 
         return userRepository.save(newUser);
     }
 
-    public Integer saveUserIfAbsent(SsoUserRequestDto userRequest) {
+    public Integer saveUserIfAbsent(SsoUserRequestDto userRequest, SsoProvider ssoProvider) {
         // 이메일을 기준으로 사용자 조회
         Optional<User> foundUser = this.userRepository.findByEmail(userRequest.getLoginId());
 
         if (foundUser.isPresent()) {
             // 사용자가 이미 존재하는 경우
             User user = foundUser.get();
-            if (!user.getId().equals(userRequest.getUserId())) {
-                // 동일한 이메일이 다른 사용자에게 등록된 경우 예외 처리
+            if (!user.getSsoType().equals(ssoProvider.name())) {
+                // 이메일이 동일한 소셜 로그인으로 있지 않을 경우
                 throw new ServerException("동일한 Email이 다른 사용자에 등록되어 있어 등록이 불가능합니다.\n" + "userId: " + userRequest.getUserId() + ", email: " + userRequest.getLoginId());
             }
             return user.getId(); // 기존 사용자의 이메일 반환
@@ -136,6 +144,7 @@ public class AuthService {
                     .status("Y")
                     .backgroundImage("")
                     .profileImage("")
+                    .ssoType(ssoProvider.name())
                     .build();
 
             // 사용자 저장

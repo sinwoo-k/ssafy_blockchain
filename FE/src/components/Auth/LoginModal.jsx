@@ -7,6 +7,7 @@ import { isMetaMaskInstalled } from '../../utils/metamask';
 import LogoImg from '../../assets/logo2.png';
 import saffylogo from '../../assets/ssafylogo.png';
 import metamasklogo from '../../assets/metamask_logo.png';
+import { getAuthorizationUri } from '../../api/authApi';
 
 const LoginModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -63,9 +64,38 @@ const LoginModal = ({ isOpen, onClose }) => {
     dispatch(metaMaskLoginAction());
   };
 
-  const handleSaffyLogin = () => {
-    dispatch(userReducerActions.setAuthenticated(true));
-    onClose();
+  const handleSaffyLogin = async () => {
+    try {
+      // 1. SSAFY 인가 코드 요청 URL 조회
+      const authCodeUrl = await getAuthorizationUri('ssafy');
+      
+      if (!authCodeUrl) {
+        throw new Error('SSAFY 인증 서버에 연결할 수 없습니다.');
+      }
+  
+      // 2. 현재 경로 정보 저장 (로그인 후 복귀용)
+      const returnPath = window.location.pathname;
+      const returnQuery = JSON.stringify(Object.fromEntries(
+        new URLSearchParams(window.location.search)
+      ));
+  
+      // 3. state 파라미터 구성 (URL Safe하게 인코딩)
+      const state = new URLSearchParams();
+      state.append('ssoReturnPath', returnPath);
+      state.append('ssoReturnQuery', returnQuery);
+  
+      // 4. 인가 URL에 state 추가 후 리다이렉트
+      const redirectUrl = new URL(authCodeUrl);
+      redirectUrl.searchParams.append('state', state.toString());
+      
+      window.location.href = redirectUrl.toString();
+  
+    } catch (error) {
+      dispatch(authActions.setErrorMessage(
+        error.response?.data?.message || 
+        'SSAFY 로그인 처리 중 오류가 발생했습니다.'
+      ));
+    }
   };
 
   const handleBackToEmailInput = () => {

@@ -2,6 +2,8 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -180,7 +182,7 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
+    public SearchResponseDto<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
         // 페이지네이션 및 정렬 설정 (최신 업데이트 순)
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
@@ -188,7 +190,11 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return toDtoList(webtoonPage);
+        return SearchResponseDto.<WebtoonListResponseDto>builder()
+                .type(SearchType.WEBTOON.getValue())
+                .totalCount(webtoonPage.getTotalElements())
+                .searchResult(toDtoList(webtoonPage))
+                .build();
     }
 
     @Transactional(readOnly = true)

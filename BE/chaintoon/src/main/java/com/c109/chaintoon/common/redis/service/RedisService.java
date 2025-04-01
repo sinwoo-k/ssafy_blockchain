@@ -1,7 +1,6 @@
 package com.c109.chaintoon.common.redis.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,15 +14,15 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void setValue(String key, Object value, long timeout) {
-        redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("Chaintoon:" + key, value, timeout, TimeUnit.MINUTES);
     }
 
     public Object getValue(String key) {
-        return redisTemplate.opsForValue().get(key);
+        return redisTemplate.opsForValue().get("Chaintoon:" + key);
     }
 
     public void deleteValue(String key) {
-        redisTemplate.delete(key);
+        redisTemplate.delete("Chaintoon:" + key);
     }
 
     public String testRedis() {
