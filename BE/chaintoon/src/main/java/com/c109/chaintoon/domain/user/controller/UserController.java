@@ -44,7 +44,7 @@ public class UserController {
     }
 
     // 내 정보 조회
-    @GetMapping("/my-info")
+    @GetMapping("/self/information")
     public ResponseEntity<?> getMyInfo(
             @AuthenticationPrincipal Integer loginId) {
         MyInfoResponseDto user = userService.getMyInfo(loginId);
