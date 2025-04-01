@@ -15,16 +15,15 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void setValue(String key, Object value, long timeout) {
-        key = "Chaintoon:" + key;
-        redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("Chaintoon" + key, value, timeout, TimeUnit.MINUTES);
     }
 
     public Object getValue(String key) {
-        return redisTemplate.opsForValue().get(key);
+        return redisTemplate.opsForValue().get("Chaintoon" + key);
     }
 
     public void deleteValue(String key) {
-        redisTemplate.delete(key);
+        redisTemplate.delete("Chaintoon" + key);
     }
 
     public String testRedis() {
