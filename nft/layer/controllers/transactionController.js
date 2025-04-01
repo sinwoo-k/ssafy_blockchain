@@ -5,6 +5,8 @@ import {
   syncNewTransactions, 
   getContractTransactionLogs 
 } from '../services/transactionService.js';
+import { CONTRACT_CONFIG } from '../config/config.js';
+const NFT_MARKETPLACE_ADDRESS = CONTRACT_CONFIG.NFT_MARKETPLACE_ADDRESS;
 
 /**
  * GET /api/nft/transaction/sync/new
@@ -12,7 +14,7 @@ import {
  */
 export async function syncNewTransactionsController(req, res, next) {
   try {
-    const contractAddress = process.env.NFT_MARKETPLACE_ADDRESS;
+    const contractAddress = NFT_MARKETPLACE_ADDRESS;
     const result = await syncNewTransactions(contractAddress);
     res.status(200).json({ status: 'success', data: result });
   } catch (error) {

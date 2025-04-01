@@ -1,10 +1,11 @@
 import cron from 'node-cron';
 import { syncNewTransactions } from '../layer/services/transactionService.js';
+import { CONTRACT_CONFIG } from '../layer/config/config.js';
 
 // 환경 변수나 별도 설정으로 동기화할 컨트랙트 주소를 지정합니다.
-const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
-if (!contractAddress) {
-  console.error("환경 변수 CONTRACT_ADDRESS가 설정되지 않았습니다.");
+const NFT_MARKETPLACE_ADDRESS = CONTRACT_CONFIG.NFT_MARKETPLACE_ADDRESS;
+if (!NFT_MARKETPLACE_ADDRESS) {
+  console.error("환경 변수 NFT_MARKETPLACE_ADDRESS가가 설정되지 않았습니다.");
   process.exit(1);
 }
 
@@ -12,7 +13,7 @@ if (!contractAddress) {
 cron.schedule('0 * * * *', async () => {
   console.log(`[${new Date().toISOString()}] 자동 동기화 시작...`);
   try {
-    const result = await syncNewTransactions(contractAddress);
+    const result = await syncNewTransactions(NFT_MARKETPLACE_ADDRESS);
     console.log(`[${new Date().toISOString()}] 동기화 결과:`, result);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] 동기화 에러:`, error);
