@@ -50,7 +50,7 @@ public class EpisodeService {
         List<EpisodeImage> episodeImages = episodeImageRepository.findByEpisodeIdAndDeletedOrderByImageOrderAsc(episodeId, "N");
         return episodeImages.stream()
                 .map(episodeImage -> ImageResponseDto.builder()
-                        .imageId(episodeImage.getEpisodeId())
+                        .imageId(episodeImage.getEpisodeImageId())
                         .imageUrl(s3Service.getPresignedUrl(episodeImage.getImageUrl()))
                         .fileSize(episodeImage.getFileSize())
                         .build())
