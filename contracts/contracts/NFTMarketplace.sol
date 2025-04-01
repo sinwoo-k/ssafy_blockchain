@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTMarketplace is ERC721URIStorage, Ownable {
+contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // NFT 민팅 관련 변수
     uint256 private _tokenIds;
 
@@ -36,7 +37,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
     /**
      * @dev NFT를 민팅하는 함수 (소유자만 호출 가능).
      * @param to 민팅된 NFT의 소유자 주소
-     * @param tokenURI NFT 메타데이터 URI
+     * @param _tokenURI NFT 메타데이터 URI
      * @param originalCreator 원작자 지갑 주소
      * @param registrant 등록자 지갑 주소
      * @param adminWallet 관리자 지갑 주소
@@ -44,31 +45,30 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
      */
     function mint(
         address to,
-        string memory tokenURI,
+        string memory _tokenURI,
         address originalCreator,
         address registrant,
         address adminWallet
     ) public returns (uint256) {
-        require(bytes(tokenURI).length > 0, "Token URI cannot be empty");
+        require(bytes(_tokenURI).length > 0, "Token URI cannot be empty");
 
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
 
-        // 1) 실제 NFT 민팅
+        // 실제 NFT 민팅
         _mint(to, newTokenId);
-        _setTokenURI(newTokenId, tokenURI);
+        _setTokenURI(newTokenId, _tokenURI);
 
-        // 2) 로열티 정보를 on-chain에 저장
+        // 로열티 정보 저장
         royaltyInfoByToken[newTokenId] = RoyaltyInfo({
             originalCreator: originalCreator,
             registrant: registrant,
             adminWallet: adminWallet
         });
 
-        emit NFTMinted(to, newTokenId, tokenURI);
+        emit NFTMinted(to, newTokenId, _tokenURI);
         return newTokenId;
     }
-
     /**
      * @dev NFT를 판매 목록에 등록하는 함수.
      * @param tokenId 판매할 토큰 ID
@@ -121,5 +121,46 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
 
         // (5) 이벤트 발생
         emit NFTSold(tokenId, msg.sender, listing.price);
+    }
+
+    // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(ERC721, ERC721Enumerable, ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _burn(
+        uint256 tokenId
+    ) internal virtual override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    )
+        public
+        view
+        virtual
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
     }
 }
