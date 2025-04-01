@@ -3,7 +3,8 @@ package com.c109.chaintoon.domain.sso.enums;
 import java.util.Arrays;
 
 public enum SsoProvider {
-    SSAFY;
+    SSAFY,
+    CHAINTOON;
 
     public static SsoProvider fromType(String type) {
         return Arrays.stream(SsoProvider.values())

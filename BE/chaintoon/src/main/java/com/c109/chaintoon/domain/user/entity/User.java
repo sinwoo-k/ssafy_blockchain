@@ -1,9 +1,7 @@
 package com.c109.chaintoon.domain.user.entity;
 
-import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -45,6 +43,9 @@ public class User {
 
     @Column(name = "join_date", length = 10)
     private String joinDate;
+
+    @Column(name = "sso_type", length = 50)
+    private String ssoType;
 
     @Column(name = "deleted", length = 1)
     private String deleted;

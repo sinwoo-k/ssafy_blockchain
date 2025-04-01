@@ -4,6 +4,9 @@ import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
 import CollectionPage from '../pages/store/CollectionPage'
 
+// Sso Callback
+const SsoCallback = lazy(() => import('../components/Auth/SsoCallback')) 
+
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
 const WebtoonDetail = lazy(() => import('../pages/webtoon/WebtoonDetail'))
@@ -55,6 +58,16 @@ const router = createBrowserRouter([
     path: '/',
     element: <RootPage />,
     children: [
+      // SSO 콜백
+      {
+        path: '/sso/providers/:provider/callback',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <SsoCallback />
+          </Suspense>
+        ),
+      },
+
       // 웹툰 section
       {
         path: '',

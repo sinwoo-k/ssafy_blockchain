@@ -9,7 +9,7 @@ const getUserInfo = async (userId) => {
 // 내 정보 조회 API
 export const getMyUserInfo = async () => {
   try {
-    const res = await API.get('/users/my-info');
+    const res = await API.get('/users/self/information');
     console.log(res)
     return res.data;
     

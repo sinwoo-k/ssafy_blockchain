@@ -25,6 +25,16 @@ export const verifyMetaMaskSignature = async (address, signature, nonce) => {
   return res.data;
 };
 
+export const getAuthorizationUri = async (provider) => {
+  const res = await API.get(`/sso/providers/${provider}/authorization-uri`);
+  return res.data;
+}
+
+export const verifySsoCode = async (provider, code) => {
+  const res = await API.post(`/sso/providers/${provider}/login`, { code });
+  return res.data;
+}
+
 export const logout = async () => {
   const res = await API.post('/auth/logout');
   return res.data;
