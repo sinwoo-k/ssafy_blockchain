@@ -2,16 +2,12 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { promisify } from 'util';
 import pinataSDK from '@pinata/sdk';
 import {
   getWebtoonById,
   saveNftToDatabase,
   getEpisodeById, getFanartById,
   getGoodsById,
-  getNftById,
-  getNftsByUserId,
-  getAllNfts,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -19,10 +15,22 @@ import { Readable } from 'stream';
 import { getWalletByUserId } from '../repositories/walletRepository.js';
 import { encrypt, decrypt } from '../../cryptoHelper.js';
 import { redisClient } from '../../db/db.js';
+import { CONTRACT_CONFIG } from '../config/config.js';
+const NFT_MARKETPLACE_ADDRESS = CONTRACT_CONFIG.NFT_MARKETPLACE_ADDRESS;
+
 // __dirname 대체 (ES Module 환경)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function id(text) {
+  return ethers.keccak256(ethers.toUtf8Bytes(text));
+}
+
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+
+const ERC721_ABI = [
+  "function tokenURI(uint256 tokenId) view returns (string)"
+];
 
 // Pinata 클라이언트 생성 (반드시 new 연산자를 사용)
 const pinata = new pinataSDK(
@@ -31,21 +39,21 @@ const pinata = new pinataSDK(
 );
 
 export async function setChallenge(userId, challengeData) {
-  const key = `challenge:${userId}`;
+  const key = `Chaintoon::challenge:${userId}`;
   // Redis v4에서는 옵션 객체를 사용하여 EX 옵션을 지정할 수 있습니다.
   await redisClient.set(key, JSON.stringify(challengeData), { EX: 300 });
 }
 
 // 챌린지 조회
 async function getChallenge(userId) {
-  const key = `challenge:${userId}`;
+  const key = `Chaintoon::challenge:${userId}`;
   const data = await redisClient.get(key);
   return data ? JSON.parse(data) : null;
 }
 
 // 챌린지 삭제
 async function deleteChallenge(userId) {
-  const key = `challenge:${userId}`;
+  const key = `Chaintoon::challenge:${userId}`;
   await redisClient.del(key);
 }
 
@@ -150,9 +158,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     const nftArtifactPath = path.join(process.cwd(), 'dist', 'contracts', 'NFTMarketplace.json');
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
     const NFT_MARKETPLACE_ABI = nftArtifact.abi;
-    const NFT_MARKETPLACE_ADDRESS = process.env.NFT_MARKETPLACE_ADDRESS;
 
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
     // 사용자의 지갑 정보
     const userWallet = await getWalletByUserId(userId);
 
@@ -212,7 +218,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       type,
       typeId,
       tokenId,
-      contractAddress: process.env.NFT_MARKETPLACE_ADDRESS,
+      contractAddress: NFT_MARKETPLACE_ADDRESS,
       metadataUri,
     });
     return { message: 'NFT 민팅 성공', tokenId, metadata };
@@ -225,9 +231,8 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
 export async function getNftMetadata(tokenId) {
   try {
     // 온체인 데이터 조회
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
     const contract = new ethers.Contract(
-      process.env.NFT_MARKETPLACE_ADDRESS,
+      NFT_MARKETPLACE_ADDRESS,
       ['function tokenURI(uint256) view returns (string)'],
       provider
     );
@@ -241,7 +246,7 @@ export async function getNftMetadata(tokenId) {
     return {
       tokenId,
       ...metadata,
-      contractAddress: process.env.NFT_MARKETPLACE_ADDRESS,
+      contractAddress: NFT_MARKETPLACE_ADDRESS,
     };
   } catch (error) {
     throw new AppError(`NFT 조회 실패: ${error.message}`, 500);
@@ -254,13 +259,10 @@ export async function sellNftService({ tokenId, price, userId }) {
     const nftArtifactPath = path.join(process.cwd(), 'dist', 'contracts', 'NFTMarketplace.json');
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
     const NFT_MARKETPLACE_ABI = nftArtifact.abi;
-    const NFT_MARKETPLACE_ADDRESS = process.env.NFT_MARKETPLACE_ADDRESS;
 
     // price를 ETH 단위(소수)에서 Wei(BigInt)로 변환 (예: "0.001" -> 1e15)
     const priceWei = ethers.parseUnits(price.toString(), 'ether');
 
-    // RPC Provider 생성
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 
     // userId로 지갑 정보 조회
     const wallet = await getWalletByUserId(userId);
@@ -325,13 +327,10 @@ export async function buyNftService({ tokenId, price, userId }) {
     const nftArtifactPath = path.join(process.cwd(), 'dist', 'contracts', 'NFTMarketplace.json');
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
     const NFT_MARKETPLACE_ABI = nftArtifact.abi;
-    const NFT_MARKETPLACE_ADDRESS = process.env.NFT_MARKETPLACE_ADDRESS;
 
     // price를 ETH 단위에서 Wei(BigInt)로 변환
     const priceWei = ethers.parseUnits(price.toString(), 'ether');
 
-    // RPC Provider 생성
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 
     // userId로 지갑 정보 조회
     const wallet = await getWalletByUserId(userId);
@@ -379,23 +378,6 @@ export async function buyNftService({ tokenId, price, userId }) {
   }
 }
 
-// 내 NFT 조회
-export async function getMyNftsService(userId) {
-  const nfts = await getNftsByUserId(userId);
-  if (!nfts || nfts.length === 0) {
-    throw new AppError('보유한 NFT가 없습니다.', 404);
-  }
-  return nfts;
-}
-
-// 모든 NFT 조회
-export async function getAllNftsService() {
-  const nfts = await getAllNfts();
-  if (!nfts || nfts.length === 0) {
-    throw new AppError('NFT가 없습니다.', 404);
-  }
-  return nfts;
-}
 
 // MetaMask 서명 검증 및 트랜잭션 진행
 export async function confirmSignatureService({ userId, signature }) {
@@ -422,7 +404,6 @@ export async function confirmSignatureService({ userId, signature }) {
     // 스마트 컨트랙트 아티팩트 로드
     const nftArtifactPath = path.join(process.cwd(), 'dist', 'contracts', 'NFTMarketplace.json');
     const nftArtifact = JSON.parse(fs.readFileSync(nftArtifactPath, 'utf8'));
-    const NFT_MARKETPLACE_ADDRESS = process.env.NFT_MARKETPLACE_ADDRESS;
     const iface = new ethers.Interface(nftArtifact.abi);
 
     if (operation === 'mint') {
@@ -501,7 +482,6 @@ export default {
   getNftMetadata,
   sellNftService,
   buyNftService,
-  getMyNftsService,
   confirmSignatureService,
   setChallenge,
 };

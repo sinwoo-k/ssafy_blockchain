@@ -1,4 +1,4 @@
-import { mintNftService, getNftMetadata, sellNftService, buyNftService, getMyNftsService,  confirmSignatureService} from '../services/nftService.js';
+import { mintNftService, getNftMetadata, sellNftService, buyNftService, confirmSignatureService } from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 
@@ -88,39 +88,16 @@ export async function buyNftController(req, res) {
     }
 }
 
-export async function getMyNftsController(req, res, next) {
+export async function confirmSignatureController(req, res, next) {
     try {
-        // 예시: 인증 미들웨어에서 req.user에 사용자 정보가 담겨 있다고 가정
-        const { userId } = req.parmas;
+        const { userId, signature } = req.body; // userId가 제대로 들어오는지 확인
         if (!userId) {
             return res.status(400).json({ error: 'userId는 필수입니다.' });
         }
-        const nfts = await getMyNftsService(userId);
-        res.status(200).json({ nfts });
+        const result = await confirmSignatureService({ userId, signature });
+        res.status(200).json(result);
     } catch (error) {
         next(error);
     }
 }
 
-export async function getAllNftsController(req, res, next) {
-    try {
-        const nfts = await getAllNftsService();
-        res.status(200).json({ nfts });
-    } catch (error) {
-        next(error);
-    }
-}
-
-export async function confirmSignatureController(req, res, next) {
-    try {
-      const { userId, signature } = req.body; // userId가 제대로 들어오는지 확인
-      if (!userId) {
-        return res.status(400).json({ error: 'userId는 필수입니다.' });
-      }
-      const result = await confirmSignatureService({ userId, signature });
-      res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
-  
