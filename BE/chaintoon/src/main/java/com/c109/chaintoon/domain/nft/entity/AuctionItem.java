@@ -22,6 +22,9 @@ public class AuctionItem {
     @Column(name = "nft_id")
     private Integer nftId;
 
+    @Column(name = "type", length = 50)
+    private String type;
+
     @Column(name = "bidding_price")
     private Double biddingPrice;
 
@@ -43,12 +46,16 @@ public class AuctionItem {
     @Column(name = "success", length = 1)
     private String success;
 
+    @Column(name = "blockchain_status", length = 20)
+    private String blockchainStatus;
+
     @PrePersist
     protected void onCreate() {
         startTime = LocalDateTime.now();
         ended = "N";
         createdAt = LocalDateTime.now();
         success = "N";
+        blockchainStatus = "PENDING";
     }
 
 }

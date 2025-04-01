@@ -6,15 +6,21 @@ import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionBidResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionBuyNowResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionCreateResponseDto;
+import com.c109.chaintoon.domain.nft.dto.response.BiddingHistoryResponseDto;
+import com.c109.chaintoon.domain.nft.entity.BiddingHistory;
 import com.c109.chaintoon.domain.nft.entity.Nft;
+import com.c109.chaintoon.domain.nft.exception.AuctionItemNotFoundException;
 import com.c109.chaintoon.domain.nft.exception.NftNotFoundException;
 import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.service.AuctionItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,6 +66,18 @@ public class AuctionItemController {
         return ResponseEntity.ok(response);
     }
 
+    // 입찰 목록
+    @GetMapping("/{auctionItemId}/bidding-history")
+    public ResponseEntity<?> getBiddingHistory(
+            @PathVariable Integer auctionItemId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "biddingPrice") String orderBy
+    ) {
+        List<BiddingHistoryResponseDto> response = auctionItemService.getBiddingHistoryByAuctionItem(auctionItemId, page, pageSize, orderBy);
+        return ResponseEntity.ok(response);
+    }
+
     // 즉시 구매
     @PostMapping("buy-now")
     public ResponseEntity<?> buyNow (
@@ -72,5 +90,20 @@ public class AuctionItemController {
 
         AuctionBuyNowResponseDto response = auctionItemService.buyNow(buyNowRequestDto);
         return ResponseEntity.ok(response);
+    }
+
+    // 낙찰자 선정 - 비동기 ver
+    @PostMapping("/{auctionItemId}/select-winner")
+    public ResponseEntity<?> selectAuctionWinner(
+            @PathVariable Integer auctionItemId
+    ) {
+        try {
+            auctionItemService.selectAuctionWinner(auctionItemId);
+            return ResponseEntity.ok("낙찰자 선정 작업이 실행되었습니다.");
+        } catch (AuctionItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("낙찰자 선정 중 오류 발생: " + e.getMessage());
+        }
     }
 }

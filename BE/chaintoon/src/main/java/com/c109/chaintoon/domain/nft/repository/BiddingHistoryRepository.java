@@ -1,6 +1,9 @@
 package com.c109.chaintoon.domain.nft.repository;
 
+import com.c109.chaintoon.domain.nft.dto.response.BiddingHistoryResponseDto;
 import com.c109.chaintoon.domain.nft.entity.BiddingHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +15,6 @@ public interface BiddingHistoryRepository extends JpaRepository<BiddingHistory, 
     Optional<BiddingHistory> findByAuctionItemIdAndUserId(Integer auctionItemId, Integer bidderId);
 
     List<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItem);
+
+    Page<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItemId, Pageable pageable);
 }
