@@ -12,7 +12,8 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // 판매 목록 구조체 정의
     struct Listing {
         address seller;
-        uint256 price;
+        uint256 price; // 원래 가격
+        uint256 amount; // 판매 금액 (여기서 기록)
         bool isListed;
     }
     // 토큰 ID -> Listing (판매 정보)
@@ -21,9 +22,18 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // 로열티 관련 구조체 정의 (원작자, 등록자, 관리자 지갑)
     struct RoyaltyInfo {
         address originalCreator;
-        address registrant;
+        address ownerShare;
         address adminWallet;
     }
+    // Purchase 정보를 저장할 구조체 정의
+    struct PurchaseRecord {
+        address buyer;
+        uint256 price;
+        uint256 purchaseTime;
+    }
+
+    // tokenId별 구매 기록 저장 매핑
+    mapping(uint256 => PurchaseRecord) public purchaseRecords;
     // 토큰 ID -> RoyaltyInfo (분배 주소 보관)
     mapping(uint256 => RoyaltyInfo) public royaltyInfoByToken;
 
@@ -39,7 +49,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @param to 민팅된 NFT의 소유자 주소
      * @param _tokenURI NFT 메타데이터 URI
      * @param originalCreator 원작자 지갑 주소
-     * @param registrant 등록자 지갑 주소
+     * @param ownerShare 소유자자 지갑 주소
      * @param adminWallet 관리자 지갑 주소
      * @return newTokenId 발행된 NFT의 tokenId
      */
@@ -47,7 +57,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         address to,
         string memory _tokenURI,
         address originalCreator,
-        address registrant,
+        address ownerShare,
         address adminWallet
     ) public returns (uint256) {
         require(bytes(_tokenURI).length > 0, "Token URI cannot be empty");
@@ -62,7 +72,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // 로열티 정보 저장
         royaltyInfoByToken[newTokenId] = RoyaltyInfo({
             originalCreator: originalCreator,
-            registrant: registrant,
+            ownerShare: ownerShare,
             adminWallet: adminWallet
         });
 
@@ -79,8 +89,12 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // NFT의 소유자만 판매할 수 있도록 체크
         require(ownerOf(tokenId) == msg.sender, "Only owner can list NFT");
 
-        listings[tokenId] = Listing(msg.sender, price, true);
-
+        listings[tokenId] = Listing({
+            seller: msg.sender,
+            price: price,
+            amount: price, // 판매 금액을 amount에 기록
+            isListed: true
+        });
         emit NFTListed(tokenId, msg.sender, price);
     }
 
@@ -103,22 +117,30 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(msg.value >= listing.price, "Insufficient funds");
 
         // (1) 이 NFT의 로열티 정보 가져오기
-        RoyaltyInfo memory info = royaltyInfoByToken[tokenId];
+        RoyaltyInfo storage info = royaltyInfoByToken[tokenId];
 
         // (2) 예: 4% / 95% / 1% 분배 계산
         uint256 originalCreatorShare = (listing.price * 4) / 100;
-        uint256 registrantShare = (listing.price * 95) / 100;
+        uint256 ownerShare = (listing.price * 95) / 100;
         uint256 adminShare = (listing.price * 1) / 100;
 
         // (3) 각각 분배
         payable(info.originalCreator).transfer(originalCreatorShare);
-        payable(info.registrant).transfer(registrantShare);
+        payable(info.ownerShare).transfer(ownerShare);
         payable(info.adminWallet).transfer(adminShare);
 
         // (4) NFT 소유권 이전
         _transfer(listing.seller, msg.sender, tokenId);
         listings[tokenId].isListed = false;
 
+        // 구매 후 ownerShare 주소를 구매자의 주소로 업데이트
+        info.ownerShare = msg.sender;
+
+        purchaseRecords[tokenId] = PurchaseRecord({
+            buyer: msg.sender,
+            price: listing.price,
+            purchaseTime: block.timestamp
+        });
         // (5) 이벤트 발생
         emit NFTSold(tokenId, msg.sender, listing.price);
     }

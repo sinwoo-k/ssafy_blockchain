@@ -1,61 +1,59 @@
-// file: src/controllers/transactionController.js
+// layer/controllers/transactionController.js
 import AppError from '../../utils/AppError.js';
-import { 
-  getTransactionDetails, 
-  syncNewTransactions, 
-  getContractTransactionLogs 
+import {
+  getWalletTransactionsService,
+  getWalletNFTsService,
+  syncNewTransactionsService,
+  getTransactionDetailsService,
+  getSaleTransactionsService
 } from '../services/transactionService.js';
-import { CONTRACT_CONFIG } from '../config/config.js';
-const NFT_MARKETPLACE_ADDRESS = CONTRACT_CONFIG.NFT_MARKETPLACE_ADDRESS;
+import { NFT_MARKETPLACE_ADDRESS } from '../config/contract.js';
 
-/**
- * GET /api/nft/transaction/sync/new
- * DB의 마지막 동기화 블록 이후부터 최신 블록까지 이벤트 로그 동기화
- */
-export async function syncNewTransactionsController(req, res, next) {
+export async function getWalletTransactionsController(req, res, next) {
   try {
-    const contractAddress = NFT_MARKETPLACE_ADDRESS;
-    const result = await syncNewTransactions(contractAddress);
-    res.status(200).json({ status: 'success', data: result });
+    const { walletAddress } = req.params;
+    const data = await getWalletTransactionsService(walletAddress);
+    res.status(200).json({ success: true, data });
   } catch (error) {
-    next(new AppError("신규 동기화 실패: " + error.message, error.statusCode || 500));
+    next(new AppError("지갑 거래 내역 조회 실패: " + error.message, error.statusCode || 500));
   }
 }
 
-/**
- * GET /api/nft/transaction/details/:txHash
- */
+export async function getWalletNFTsController(req, res, next) {
+  try {
+    const { walletAddress } = req.params;
+    const data = await getWalletNFTsService(walletAddress);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(new AppError("NFT 목록 조회 실패: " + error.message, error.statusCode || 500));
+  }
+}
+
+export async function syncNewTransactionsController(req, res, next) {
+  try {
+    const result = await syncNewTransactionsService(NFT_MARKETPLACE_ADDRESS);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(new AppError("신규 트랜잭션 동기화 실패: " + error.message, error.statusCode || 500));
+  }
+}
+
 export async function getTransactionDetailsController(req, res, next) {
   try {
     const { txHash } = req.params;
-    if (!txHash) {
-      throw new AppError("txHash가 필요합니다.", 400);
-    }
-    const receipt = await getTransactionDetails(txHash);
-    res.status(200).json({ status: 'success', data: receipt });
+    const receipt = await getTransactionDetailsService(txHash);
+    res.status(200).json({ success: true, data: receipt });
   } catch (error) {
-    next(new AppError(`트랜잭션 정보 조회 실패: ${error.message}`, error.statusCode || 500));
+    next(new AppError("트랜잭션 정보 조회 실패: " + error.message, error.statusCode || 500));
   }
 }
 
-/**
- * GET /api/nft/transaction/logs?page=1&size=20
- */
-export async function getTransactionLogsController(req, res, next) {
+export async function getSaleTransactionsController(req, res, next) {
   try {
-    const { page, size } = req.query;
-    const logs = await getContractTransactionLogs({
-      page: Number(page) || 1,
-      size: Number(size) || 20
-    });
-    res.status(200).json({ status: 'success', data: logs });
+    const { walletAddress } = req.params;
+    const data = await getSaleTransactionsService(walletAddress);
+    res.status(200).json({ success: true, data });
   } catch (error) {
-    next(new AppError("로그 조회 실패: " + error.message, error.statusCode || 500));
+    next(new AppError("판매 거래 내역 조회 실패: " + error.message, error.statusCode || 500));
   }
 }
-
-export default {
-  syncNewTransactionsController,
-  getTransactionDetailsController,
-  getTransactionLogsController,
-};

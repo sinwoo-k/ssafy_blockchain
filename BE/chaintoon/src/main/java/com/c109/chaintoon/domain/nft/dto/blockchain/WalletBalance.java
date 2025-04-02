@@ -8,5 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class WalletBalance {
+    private String walletAddress;
     private Double amount;
 }

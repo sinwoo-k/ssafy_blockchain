@@ -52,15 +52,13 @@ export const verifyEmailCode = (email, code) => async (dispatch) => {
     // 1. 인증 요청 → JWT 쿠키 설정됨
     await authService.verifyEmailCode(email, code);
 
-    // 2. JWT로 내 정보 요청 → 사용자 정보 받아오기
-    const userData = await getMyUserInfo();
-
-    // 3. 리덕스 상태 업데이트
-    dispatch(userReducerActions.setAuthenticated(true));
-    dispatch(userReducerActions.setUser(userData));
+    // 2. 현재 페이지 새로고침
+    window.location.reload();
 
   } catch (error) {
-    dispatch(authActions.setErrorMessage(error.response?.data?.message || '인증 코드 확인 실패'));
+    dispatch(authActions.setErrorMessage(
+      error.response?.data?.message || '인증 코드 확인 실패'
+    ));
   } finally {
     dispatch(authActions.setLoading(false));
   }

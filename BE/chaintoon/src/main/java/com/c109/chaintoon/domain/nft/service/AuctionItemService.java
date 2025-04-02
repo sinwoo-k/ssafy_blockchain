@@ -3,7 +3,6 @@ package com.c109.chaintoon.domain.nft.service;
 import com.c109.chaintoon.common.scheduler.service.SchedulingService;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainSaleRequestDto;
-import com.c109.chaintoon.domain.nft.dto.blockchain.response.BlockchainSaleResponseDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
@@ -26,15 +25,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -309,11 +307,20 @@ public class AuctionItemService {
         // 경매 아이템의 입찰 내역을 입찰가 내림차순으로 가져오기
         List<BiddingHistory> biddingHistories = biddingHistoryRepository.findByAuctionItemIdOrderByBiddingPriceDesc(auctionItemId);
 
+        log.debug("BiddingHistory count for auctionItemId {}: {}", auctionItemId, biddingHistories.size());
+
         for (BiddingHistory history : biddingHistories) {
             System.out.println("입찰가 : " + history.getBiddingPrice());
         }
 
-        // TODO : 입찰 내역이 없을 경우 어떻게 처리할까
+        // 입찰 내역이 없을 경우
+        if (biddingHistories.isEmpty()) {
+            auctionItem.setEnded("Y");
+            auctionItem.setSuccess("N");
+            auctionItemRepository.save(auctionItem);
+            log.info("입찰 내역이 없어 경매 종료 처리: auctionItemId={}", auctionItemId);
+            return;
+        }
 
         // 입찰자 ID를 키로, 입찰가를 값으로 하는 Map 생성
         Map<Integer, Double> bidderBidMap = biddingHistories.stream()
@@ -444,7 +451,7 @@ public class AuctionItemService {
             log.info("모든 입찰자가 잔액 부족으로 낙찰 조건을 충족하지 못했습니다.");
         } else {
             // 낙찰자가 결정되면 블록체인에 구매 요청
-            Nft nft = nftRepository.findById(biddingHistories.get(0).getAuctionItemId())
+            Nft nft = nftRepository.findById(auctionItemId)
                     .orElseThrow(() -> new NftNotFoundException(auctionItemId));
 
             BlockchainBuyRequestDto buyNowRequestDto = new BlockchainBuyRequestDto().builder()
@@ -458,9 +465,37 @@ public class AuctionItemService {
         }
     }
 
+    // 에피소드, 굿즈, 팬아트별 목록 조회
+    public Page<AuctionCreateResponseDto> getFilteredAuctionItems(String type, String ended, int page, int pageSize, String orderBy) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
+        Page<AuctionItem> pageResult;
+
+        if(StringUtils.hasText(ended) && !"전체".equalsIgnoreCase(ended)) {
+            pageResult = auctionItemRepository.findByTypeAndEnded(type, ended, pageable);
+        } else {
+            pageResult = auctionItemRepository.findByType(type, pageable);
+        }
+
+        Page<AuctionCreateResponseDto> dtoPage = pageResult.map(item -> AuctionCreateResponseDto.builder()
+                .auctionItemId(item.getAuctionItemId())
+                .nftId(item.getNftId())
+                .biddingPrice(item.getBiddingPrice())
+                .buyNowPrice(item.getBuyNowPrice())
+                .startTime(item.getStartTime() != null ?item.getStartTime() : null)
+                .endTime(item.getEndTime() != null ? item.getEndTime() : null)
+                .ended(item.getEnded())
+                .type(item.getType())
+                .build()
+        );
+        return dtoPage;
+    }
+
+
     private Sort getSort(String orderBy) {
         if("biddingPrice".equalsIgnoreCase(orderBy)) {
             return Sort.by(Sort.Direction.DESC, "biddingPrice");
+        } else if ("createdAt".equalsIgnoreCase(orderBy)) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
         } else {
             return Sort.by(Sort.Direction.DESC, "biddingPrice");
         }

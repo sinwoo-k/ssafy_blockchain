@@ -51,6 +51,19 @@ public class AuctionItemController {
         return ResponseEntity.ok(response);
     }
 
+    // 에피소드, 굿즈, 팬아트별 판매 목록 조회
+    @GetMapping
+    public ResponseEntity<?> getAuctionItems(
+            @RequestParam String type,
+            @RequestParam(defaultValue = "전체") String ended,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String orderBy
+    ) {
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(type, ended, page, pageSize, orderBy);
+        return ResponseEntity.ok(result);
+    }
+
     // 경매 입찰
     @PostMapping("/bid")
     public ResponseEntity<?> tenderBid (
