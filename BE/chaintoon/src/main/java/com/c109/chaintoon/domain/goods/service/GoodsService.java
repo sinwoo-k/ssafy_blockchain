@@ -44,6 +44,7 @@ public class GoodsService {
                 .userId(goods.getUserId())
                 .webtoonId(goods.getWebtoonId())
                 .goodsName(goods.getGoodsName())
+                .description(goods.getDescription())
                 .goodsImage(s3Service.getPresignedUrl(goods.getGoodsImage()))
                 .build();
     }
@@ -51,8 +52,13 @@ public class GoodsService {
     // 굿즈 등록
     public GoodsResponseDto createGoods(Integer userId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
         // 웹툰 조회
-        webtoonRepository.findById(goodsRequestDto.getWebtoonId())
+        Webtoon webtoon = webtoonRepository.findById(goodsRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(goodsRequestDto.getWebtoonId()));
+
+        // 웹툰 작가만 등록 가능
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("웹툰 작가만 굿즈를 등록할 수 있습니다.");
+        }
 
         // 유저 조회
         userRepository.findById(userId)
@@ -63,6 +69,7 @@ public class GoodsService {
                 .userId(userId)
                 .webtoonId(goodsRequestDto.getWebtoonId())
                 .goodsName(goodsRequestDto.getGoodsName())
+                .description(goodsRequestDto.getDescription())
                 .build();
 
         // 굿즈 저장

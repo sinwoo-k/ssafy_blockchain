@@ -110,9 +110,19 @@ public class FanartService {
         Webtoon webtoon = webtoonRepository.findById(fanartRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanartRequestDto.getWebtoonId()));
 
+        // 2차 창작 비허용
+        if ("N".equals(webtoon.getAdaptable())) {
+            throw new IllegalArgumentException("팬아트 작성이 불가능한 웹툰입니다.");
+        }
+
         // 등록한 사용자 조회 (닉네임 가져오기)
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        // 원작자는 팬아트 등록 불가
+        if (user.getId().equals(webtoon.getUserId())) {
+            throw new IllegalArgumentException("웹툰 원작자는 팬아트 등록이 불가능합니다.");
+        }
 
         // 팬아트 엔티티 생성
         Fanart fanart = Fanart.builder()

@@ -17,4 +17,7 @@ public class GoodsRequestDto {
 
     @NotBlank(message = "굿즈 이름을 입력하세요.")
     private String goodsName;
+
+    @NotBlank(message = "굿즈 설명을 입력하세요.")
+    private String description;
 }

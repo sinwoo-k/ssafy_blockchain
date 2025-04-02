@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
+import com.c109.chaintoon.common.exception.NotFoundException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
@@ -79,8 +80,19 @@ public class EpisodeService {
     }
 
     private EpisodeResponseDto buildEpisodeResponseDto(Episode episode) {
+        return buildEpisodeResponseDto(episode, null); // 유저 정보 없이 호출
+    }
+
+    private EpisodeResponseDto buildEpisodeResponseDto(Episode episode, Integer userId) {
         // 이미지 URL 목록 조회
         List<ImageResponseDto> imageUrls = getImageUrls(episode.getEpisodeId());
+
+        String hasRated = "N";
+        if (userId != null) {
+            RatingId ratingId = new RatingId(episode.getEpisodeId(), userId);
+            Rating rating = ratingRepository.findById(ratingId).orElse(null);
+            hasRated = (rating == null) ? "N" : "Y";
+        }
 
         // DTO 변환
         return EpisodeResponseDto.builder()
@@ -94,6 +106,7 @@ public class EpisodeService {
                 .commentCount(episode.getCommentCount())
                 .ratingSum(episode.getRatingSum())
                 .ratingCount(episode.getRatingCount())
+                .hasRated(hasRated)
                 .previousEpisodeId(episode.getPreviousEpisodeId())
                 .nextEpisodeId(episode.getNextEpisodeId())
                 .images(imageUrls)
@@ -128,7 +141,16 @@ public class EpisodeService {
     }
 
     @Transactional
-    public EpisodeResponseDto addEpisode(EpisodeRequestDto episodeRequest, MultipartFile thumbnail, List<MultipartFile> images) {
+    public EpisodeResponseDto addEpisode(Integer userId, EpisodeRequestDto episodeRequest, MultipartFile thumbnail, List<MultipartFile> images) {
+        // 웹툰 조회
+        Webtoon webtoon = webtoonRepository.findById(episodeRequest.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(episodeRequest.getWebtoonId()));
+
+        // 웹툰 작가가 아니면 에피소드 등록 불가능
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("본인 웹툰에만 에피소드를 등록할 수 있습니다.");
+        }
+
         // EpisodeRequestDto -> Episode 엔티티 변환
         Episode episode = Episode.builder()
                 .webtoonId(episodeRequest.getWebtoonId())
@@ -171,10 +193,6 @@ public class EpisodeService {
             episodeImageRepository.save(episodeImage);
         }
 
-        // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(savedEpisode.getWebtoonId())
-                .orElseThrow(() -> new WebtoonNotFoundException(savedEpisode.getWebtoonId()));
-
         // 에피소드 수 증가, 최근 업로드 날짜 변경
         webtoon.setEpisodeCount(webtoon.getEpisodeCount() + 1);
         webtoon.setLastUploadDate(savedEpisode.getUploadDate());
@@ -190,7 +208,7 @@ public class EpisodeService {
         return buildEpisodeResponseDto(savedEpisode);
     }
 
-    public EpisodeResponseDto getEpisode(Integer episodeId) {
+    public EpisodeResponseDto getEpisode(Integer episodeId, Integer userId) {
         // 에피소드 조회
         Episode episode = episodeRepository.findByEpisodeIdAndDeleted(episodeId, "N")
                 .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
@@ -199,31 +217,31 @@ public class EpisodeService {
         increaseViewCount(episode.getWebtoonId());
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
-    public EpisodeResponseDto getFirstEpisode(Integer webtoonId) {
+    public EpisodeResponseDto getFirstEpisode(Integer webtoonId, Integer userId) {
         // 첫화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdAsc(webtoonId, "N")
-                .orElseThrow(() -> new EpisodeNotFoundException(0));
+                .orElseThrow(() -> new NotFoundException("등록된 에피소드가 없습니다."));
 
         // 조회수 증가
         increaseViewCount(webtoonId);
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
-    public EpisodeResponseDto getLatestEpisode(Integer webtoonId) {
+    public EpisodeResponseDto getLatestEpisode(Integer webtoonId, Integer userId) {
         // 최신화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(webtoonId, "N")
-                .orElseThrow(() -> new EpisodeNotFoundException(0));
+                .orElseThrow(() -> new NotFoundException("등록된 에피소드가 없습니다."));
 
         // 조회수 증가
         increaseViewCount(webtoonId);
 
         // Dto 변환 후 반환
-        return buildEpisodeResponseDto(episode);
+        return buildEpisodeResponseDto(episode, userId);
     }
 
 
@@ -296,7 +314,7 @@ public class EpisodeService {
         Episode updatedEpisode = episodeRepository.save(episode);
 
         // DTO 변환 후 반환
-        return buildEpisodeResponseDto(updatedEpisode);
+        return buildEpisodeResponseDto(updatedEpisode, userId);
     }
 
     @Transactional
@@ -315,6 +333,21 @@ public class EpisodeService {
         // 에피소드 소프트 삭제
         episode.setDeleted("Y");
         episodeRepository.save(episode);
+
+        // 에피소드 수 감소
+        webtoon.setEpisodeCount(webtoon.getEpisodeCount() - 1);
+        webtoonRepository.save(webtoon);
+
+        // 최신화가 삭제될 경우 최근 업로드 날짜가 불일치 할 가능성 존재하므로 삭제되지 않은 최신화의 날짜로 변경
+        Episode latestEpisode = episodeRepository
+                .findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(webtoon.getWebtoonId(), "N")
+                .orElse(null);
+        String latestUploadDate = "";
+        if (latestEpisode != null) {
+            latestUploadDate = latestEpisode.getUploadDate();
+        }
+        webtoon.setLastUploadDate(latestUploadDate);
+        webtoonRepository.save(webtoon);
 
         // 썸네일, 에피소드 이미지 S3 & DB 삭제
         s3Service.deleteFile(episode.getThumbnail());
@@ -351,6 +384,5 @@ public class EpisodeService {
         webtoon.setRatingSum(webtoon.getRatingSum() + rating);
         webtoon.setRatingCount(webtoon.getRatingCount() + 1);
         webtoonRepository.save(webtoon);
-
     }
 }

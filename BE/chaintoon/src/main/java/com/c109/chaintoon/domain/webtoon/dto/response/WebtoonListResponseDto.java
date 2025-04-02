@@ -17,6 +17,7 @@ public class WebtoonListResponseDto implements SearchResult {
     private Long episodeCount;
     private Long viewCount;
     private Double rating;
+    private String lastUploadDate;
     private String garoThumbnail;
     private String seroThumbnail;
 }
