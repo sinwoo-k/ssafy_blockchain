@@ -2,6 +2,7 @@ package com.c109.chaintoon.domain.comment.service;
 
 import com.c109.chaintoon.common.exception.DuplicatedException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.domain.comment.code.CommentType;
 import com.c109.chaintoon.domain.comment.dto.request.CommentRequestDto;
 import com.c109.chaintoon.domain.comment.dto.request.CommentUpdateDto;
 import com.c109.chaintoon.domain.comment.dto.response.CommentResponseDto;
@@ -10,9 +11,11 @@ import com.c109.chaintoon.domain.comment.entity.CommentPreference;
 import com.c109.chaintoon.domain.comment.exception.CommentNotFoundException;
 import com.c109.chaintoon.domain.comment.repository.CommentPreferenceRepository;
 import com.c109.chaintoon.domain.comment.repository.CommentRepository;
+import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.webtoon.repository.EpisodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,27 +35,49 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentPreferenceRepository commentPreferenceRepository;
     private final UserRepository userRepository;
+    private final EpisodeRepository episodeRepository;
+    private final FanartRepository fanartRepository;
 
     private CommentResponseDto convertToDto(Comment comment) {
+        return convertToDto(comment, null);
+    }
+
+    private CommentResponseDto convertToDto(Comment comment, Integer userId) {
         // 날짜와 시간을 포맷팅
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-        User user = userRepository.findById(comment.getUserId()).orElseThrow(
+        User writer = userRepository.findById(comment.getUserId()).orElseThrow(
                 () -> new UserIdNotFoundException(comment.getUserId())
         );
+
+        String hasLiked = "N";
+        String hasHated = "N";
+        if (userId != null) {
+            CommentPreference commentPreference = commentPreferenceRepository
+                    .findByCommentIdAndUserId(comment.getCommentId(), userId)
+                    .orElse(null);
+            if (commentPreference != null && "Y".equals(commentPreference.getLiked())) {
+                hasLiked = "Y";
+            }
+            else if (commentPreference != null && "N".equals(commentPreference.getLiked())) {
+                hasHated = "Y";
+            }
+        }
 
         return CommentResponseDto.builder()
                 .commentId(comment.getCommentId())
                 .userId(comment.getUserId())
-                .nickname(user.getNickname())
-                .profileImage(user.getProfileImage())
+                .nickname(writer.getNickname())
+                .profileImage(writer.getProfileImage())
                 .usageId(comment.getUsageId())
                 .type(comment.getType())
                 .parentId(comment.getParentId())
                 .content(comment.getContent())
-                .updateDate(comment.getUpdatedAt().format(dateFormatter)) // updated_at을 날짜 형식으로 변환
-                .updateTime(comment.getUpdatedAt().format(timeFormatter)) // updated_at을 시간 형식으로 변환
+                .hasLiked(hasLiked)
+                .hasHated(hasHated)
+                .createDate(comment.getCreatedAt().format(dateFormatter)) // updated_at을 날짜 형식으로 변환
+                .createTime(comment.getCreatedAt().format(timeFormatter)) // updated_at을 시간 형식으로 변환
                 .replyCount(comment.getReplyCount())
                 .likeCount(comment.getLikeCount())
                 .hateCount(comment.getHateCount())
@@ -60,7 +85,7 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> getCommentList(Integer usageId, String type, int page, int pageSize) {
+    public List<CommentResponseDto> getCommentList(Integer userId, Integer usageId, String type, int page, int pageSize) {
         // 페이징 처리를 위한 Pageable 객체 생성
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
@@ -70,7 +95,7 @@ public class CommentService {
 
         // Comment 엔티티 Dto 변환
         return commentPage.getContent().stream()
-                .map(this::convertToDto)
+                .map(comment -> convertToDto(comment, userId))
                 .collect(Collectors.toList());
     }
 
@@ -97,15 +122,25 @@ public class CommentService {
                 .content(commentRequestDto.getContent())
                 .build();
 
+        if (CommentType.EPISODE.getValue().equals(commentRequestDto.getType())) {
+            episodeRepository.incrementCommentCount(commentRequestDto.getUsageId());
+        }
+        else if (CommentType.FANART.getValue().equals(commentRequestDto.getType())) {
+            fanartRepository.incrementCommentCount(commentRequestDto.getUsageId());
+        }
+        else {
+            throw new IllegalArgumentException("존재하지 않는 댓글 타입입니다.");
+        }
+
         // 댓글 저장
         Comment savedComment = commentRepository.save(comment);
 
         // 저장된 댓글 Dto 변환 후 반환
-        return convertToDto(savedComment);
+        return convertToDto(savedComment, userId);
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> getReplyList(Integer commentId, int page, int pageSize) {
+    public List<CommentResponseDto> getReplyList(Integer userId, Integer commentId, int page, int pageSize) {
         // 기존 댓글 조회
         commentRepository.findByCommentIdAndDeleted(commentId, "N")
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
@@ -118,7 +153,7 @@ public class CommentService {
 
         // Comment 엔티티 Dto 변환
         return commentPage.getContent().stream()
-                .map(this::convertToDto)
+                .map(comment -> convertToDto(comment, userId))
                 .collect(Collectors.toList());
     }
 
@@ -147,7 +182,7 @@ public class CommentService {
 
 
         // Dto 변환 후 반환
-        return convertToDto(savedComment);
+        return convertToDto(savedComment, userId);
     }
 
     @Transactional
