@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/socket") // WebSocket 연결 엔드포인트
                 .setAllowedOrigins(
                         "https://j12c109.p.ssafy.io/",
-                        "https://min9805.github.io" // TODO: 테스트 웹사이트 주소, 테스트 종료 후 삭제
+                        "http://localhost:5173"
                 );
     }
 

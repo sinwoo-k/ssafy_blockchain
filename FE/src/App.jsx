@@ -7,6 +7,7 @@ import './App.css';
 import { setupMetaMaskListeners, removeMetaMaskListeners } from './utils/metamask';
 import { metaMaskLoginAction, fetchMyUserInfo } from './redux/actions/authActions';
 import { userReducerActions } from './redux/reducers/userSlice';
+import { connect } from './utils/socket/stompClient';
 
 const { logout } = userReducerActions;
 
@@ -42,6 +43,13 @@ function App() {
         console.log('사용자 ID:', data.id);
         console.log('사용자 이메일:', data.email);
       }
+      
+      // 소켓 연결
+      connect(data.id, (message) => {
+        // TODO: 새로운 알림 도착 시 알림 목록 조회 로직 추가
+        console.log(message)
+      });
+      
     })
     .catch((err) => {
       console.error('🚨 내 정보 로딩 실패:', err);
