@@ -21,12 +21,13 @@ public class CommentController {
 
     @GetMapping
     public ResponseEntity<?> getCommentList(
+            @AuthenticationPrincipal Integer userId,
             @RequestParam Integer usageId,
             @RequestParam String type,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<CommentResponseDto> commentList = commentService.getCommentList(usageId, type, page, pageSize);
+        List<CommentResponseDto> commentList = commentService.getCommentList(userId, usageId, type, page, pageSize);
         return new ResponseEntity<>(commentList, HttpStatus.OK);
     }
 
@@ -41,11 +42,12 @@ public class CommentController {
 
     @GetMapping("/{commentId}")
     public ResponseEntity<?> getReplyList(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer commentId,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<CommentResponseDto> replyList = commentService.getReplyList(commentId, page, pageSize);
+        List<CommentResponseDto> replyList = commentService.getReplyList(userId, commentId, page, pageSize);
         return new ResponseEntity<>(replyList, HttpStatus.OK);
     }
 
