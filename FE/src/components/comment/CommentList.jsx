@@ -6,8 +6,12 @@ import CommentCard from './CommentCard'
 import { createComment, getComments } from '../../api/commentAPI'
 import { addComma } from '../../utils/formatting'
 
-const CommentList = ({ usageId, type }) => {
+const CommentList = ({ usageId, type, commentCount }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+
   // 댓글 목록
   const [comments, setComments] = useState([])
 
@@ -15,9 +19,12 @@ const CommentList = ({ usageId, type }) => {
 
   const getData = async () => {
     try {
-      const result = await getComments(usageId, type)
-      console.log(result)
-      setComments(result)
+      const result = await getComments(usageId, type, page)
+      setComments((prev) => [...prev, ...result])
+      setPage((prev) => prev + 1)
+      if (result.length < 10) {
+        setHasMore(false)
+      }
     } catch (error) {
       console.error('댓글 조회 실패: ', error)
     }
@@ -33,6 +40,7 @@ const CommentList = ({ usageId, type }) => {
     try {
       const result = await createComment(payload)
       setComments((prev) => [...prev, result])
+      setContent('')
     } catch (error) {
       console.error('댓글 등록 실패: ', error)
     }
@@ -50,7 +58,7 @@ const CommentList = ({ usageId, type }) => {
       <div className='w-[1000px]'>
         <div className='mb-3 flex items-end gap-3'>
           <h2 className='text-xl'>댓글</h2>
-          <span className='text-text/75 '>{addComma(comments.length)}</span>
+          <span className='text-text/75 '>{addComma(commentCount || 0)}</span>
         </div>
         {/* 댓글 입력창 */}
         <div className='mb-5 flex gap-3'>
@@ -88,11 +96,25 @@ const CommentList = ({ usageId, type }) => {
           ) : (
             <div className='border-t'>
               {comments.map((comment) => (
-                <CommentCard key={comment.commentId} comment={comment} />
+                <CommentCard
+                  key={comment.commentId}
+                  comment={comment}
+                  patchData={getData}
+                />
               ))}
             </div>
           )}
         </div>
+        {comments.length !== 0 && hasMore && (
+          <div className='mt-5 flex w-full justify-center'>
+            <button
+              className='hover:text-chaintoon cursor-pointer'
+              onClick={getData}
+            >
+              더보기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

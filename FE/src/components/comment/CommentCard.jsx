@@ -1,22 +1,46 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
 import { getRandomColor } from '../../utils/randomColor'
+import {
+  createComment,
+  createCommentHate,
+  createCommentLike,
+  deleteComment,
+  deleteCommentHate,
+  deleteCommentLike,
+  getCommentReplies,
+  patchComment,
+} from '../../api/commentAPI'
+import ReplyCard from './ReplyCard'
+import IconButton from '../common/IconButton'
+
 // 아이콘
 import ThumbUpIcon from '@mui/icons-material/ThumbUp'
 import ThumbDownIcon from '@mui/icons-material/ThumbDown'
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 
-const CommentCard = ({ comment }) => {
+const CommentCard = ({ comment, patchData }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+  const userData = useSelector((state) => state.user.userData.id)
 
+  const [replies, setReplies] = useState([])
   const [randomColor, setRandomColor] = useState(getRandomColor())
-  const [replyRandomColor, setReplyRandomColor] = useState(
-    comment.replies?.map((_) => getRandomColor()),
-  )
+
+  const [commentContent, setCommentContent] = useState('')
 
   const [content, setContent] = useState('')
+  const [updateContent, setUpdateContent] = useState('')
+
+  const [isLike, setIsLike] = useState(false)
+  const [isHate, setIsHate] = useState(false)
+  const [like, setLike] = useState(0)
+  const [hate, setHate] = useState(0)
+
+  const [isUpdate, setIsUpdate] = useState(false)
 
   // 답글 보기
   const [showChildren, setShowChildren] = useState(false)
@@ -26,27 +50,189 @@ const CommentCard = ({ comment }) => {
     setShowChildren(!showChildren)
   }
 
+  const getData = async () => {
+    try {
+      const result = await getCommentReplies(comment.commentId)
+      setReplies(result)
+    } catch (error) {
+      console.error('답글 조회 실패: ', error)
+    }
+  }
+
+  const createReply = async () => {
+    const payload = {
+      usageId: comment.usageId,
+      type: 'COMMENT_EPISODE',
+      parentId: comment.commentId,
+      content: content,
+    }
+    try {
+      const result = await createComment(payload)
+      patchData()
+      getData()
+      setContent('')
+    } catch (error) {
+      console.error('답글 등록 실패: ', error)
+    }
+  }
+
+  const toggleLike = async () => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    if (isHate) {
+      alert('싫어요한 댓글입니다.')
+      return
+    }
+    if (isLike) {
+      try {
+        const result = await deleteCommentLike(comment.commentId)
+        setIsLike(false)
+        setLike((prev) => prev - 1)
+      } catch (error) {
+        console.error('좋아요 취소 실패: ', error)
+      }
+    } else {
+      try {
+        const result = await createCommentLike(comment.commentId)
+        setIsLike(true)
+        setLike((prev) => prev + 1)
+      } catch (error) {
+        console.error('좋아요 실패: ', error)
+      }
+    }
+  }
+
+  const toggleHate = async () => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    if (isLike) {
+      alert('좋아요한 댓글입니다.')
+      return
+    }
+    if (isHate) {
+      try {
+        const result = await deleteCommentHate(comment.commentId)
+        setIsHate(false)
+        setHate((prev) => prev - 1)
+      } catch (error) {
+        console.error('싫어요 취소 실패: ', error)
+      }
+    } else {
+      try {
+        const result = await createCommentHate(comment.commentId)
+        setIsHate(true)
+        setHate((prev) => prev + 1)
+      } catch (error) {
+        console.error('싫어요 실패: ', error)
+      }
+    }
+  }
+
+  const toggleEdit = () => {
+    if (isUpdate) {
+      setIsUpdate(false)
+      setUpdateContent('')
+    } else {
+      setIsUpdate(true)
+      setUpdateContent(commentContent)
+    }
+  }
+
+  const updateComment = async () => {
+    const payload = {
+      content: updateContent,
+    }
+    try {
+      const result = await patchComment(comment.commentId, payload)
+      setCommentContent(result.content)
+      setIsUpdate(false)
+    } catch (error) {
+      console.error('댓글 수정 실패: ', error)
+    }
+  }
+
+  const deleteData = async () => {
+    try {
+      const result = await deleteComment(comment.commentId)
+      patchData()
+    } catch (error) {
+      console.error('답글 삭제 실패: ', error)
+    }
+  }
+
+  useEffect(() => {
+    setIsLike(comment.hasLiked === 'Y' ? true : false)
+    setIsHate(comment.hasHated === 'Y' ? true : false)
+    setLike(comment.likeCount)
+    setHate(comment.hateCount)
+    setCommentContent(comment.content)
+  }, [comment])
+
+  useEffect(() => {
+    // mount
+    getData()
+    // unmount
+    return () => {}
+  }, [])
+
   return (
     <div className='flex w-[1000px] flex-col gap-3 border-b px-5 py-3'>
-      {/* 유저 프로필 */}
-      <div className='flex items-center gap-3'>
-        {comment.profileImage ? (
-          <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
-            <img
-              alt={comment.profileImage}
-              className='bg-text/30 h-[30px] w-[30px] rounded-full'
-            />
+      <div className='flex justify-between'>
+        {/* 유저 프로필 */}
+        <div className='flex items-center gap-3'>
+          {comment.profileImage ? (
+            <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
+              <img
+                alt={comment.profileImage}
+                className='bg-text/30 h-[30px] w-[30px] rounded-full'
+              />
+            </div>
+          ) : (
+            <AccountCircleIcon sx={{ fontSize: 35, color: randomColor }} />
+          )}
+          <p>{comment.nickname}</p>
+        </div>
+        {/* 댓글 수정 & 삭제 */}
+        {userData === comment.userId && (
+          <div className='flex gap-3'>
+            <div className='text-blue-500' onClick={toggleEdit}>
+              <IconButton Icon={EditIcon} tooltip={'댓글 수정'} />
+            </div>
+            <div className='text-red-500' onClick={deleteData}>
+              <IconButton Icon={DeleteIcon} tooltip={'댓글 삭제'} />
+            </div>
           </div>
-        ) : (
-          <AccountCircleIcon sx={{ fontSize: 35, color: randomColor }} />
         )}
-        <p>{comment.nickname}</p>
       </div>
       {/* 댓글 본문 */}
-      <p className='break-words'>{comment.content}</p>
+      {isUpdate ? (
+        <div className='bg-text/30 flex grow flex-col items-center rounded-lg border px-3 py-2'>
+          <textarea
+            className='h-[72px] w-full resize-none focus:outline-none'
+            value={updateContent}
+            onChange={(event) => setUpdateContent(event.target.value)}
+            maxLength={255}
+          ></textarea>
+          <div className='flex w-full items-end justify-end gap-3'>
+            <span className='text-text/75'>{updateContent.length} / 255</span>
+            <button
+              className='bg-chaintoon flex-none cursor-pointer rounded-lg px-3 py-1 text-black'
+              onClick={updateComment}
+            >
+              수정
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className='break-words'>{commentContent}</p>
+      )}
       {/* 댓글 작성일 */}
       <p className='text-text/75'>
-        {dayjs(comment.createdAt).format('YYYY.MM.DD')}
+        {dayjs(comment.createDate).format('YYYY.MM.DD')}
       </p>
       {/* 버튼 영역 */}
       <div className='flex justify-between'>
@@ -55,68 +241,34 @@ const CommentCard = ({ comment }) => {
           onClick={toggleChildren}
         >
           <span>답글</span>
-          <span>{comment.replies?.length || 0}</span>
+          <span>{comment.replyCount}</span>
         </button>
         {/* 좋아요&싫어요 */}
         <div className='flex gap-3'>
-          <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
+          <button
+            className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'
+            onClick={toggleLike}
+          >
             <ThumbUpIcon sx={{ fontSize: 20, color: '#ff5099' }} />
-            <span>{comment.likeCount}</span>
+            <span>{like}</span>
           </button>
-          <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
+          <button
+            className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'
+            onClick={toggleHate}
+          >
             <ThumbDownIcon sx={{ fontSize: 20, color: '#5099ff' }} />
-            <span>{comment.hateCount}</span>
+            <span>{hate}</span>
           </button>
         </div>
       </div>
       {showChildren && (
         <div className='flex flex-col'>
-          {comment.replies?.map((reply, index) => (
-            <div className='flex gap-5 py-2'>
-              {/* 답글 표시 */}
-              <div className='flex w-[50px] justify-center'>
-                <SubdirectoryArrowRightIcon sx={{ fontSize: 20 }} />
-              </div>
-              {/* 답글 */}
-              <div className='flex w-full flex-col gap-3'>
-                {/* 유저 프로필 */}
-                <div className='flex items-center gap-3'>
-                  {reply.profileImage ? (
-                    <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
-                      <img
-                        alt={reply.profileImage}
-                        className='bg-text/30 h-[30px] w-[30px] rounded-full'
-                      />
-                    </div>
-                  ) : (
-                    <AccountCircleIcon
-                      sx={{ fontSize: 35, color: replyRandomColor[index] }}
-                    />
-                  )}
-                  <p>{reply.userNickname}</p>
-                </div>
-                {/* 답글 본문 */}
-                <p>{reply.content}</p>
-                {/* 답글 작성일 */}
-                <p className='text-text/75'>
-                  {dayjs(reply.createdAt).format('YYYY.MM.DD')}
-                </p>
-                {/* 버튼 영역 */}
-                <div className='flex justify-end'>
-                  {/* 좋아요&싫어요 */}
-                  <div className='flex gap-3'>
-                    <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
-                      <ThumbUpIcon sx={{ fontSize: 20, color: '#ff5099' }} />
-                      <span>{reply.likes}</span>
-                    </button>
-                    <button className='border-chaintoon flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm'>
-                      <ThumbDownIcon sx={{ fontSize: 20, color: '#5099ff' }} />
-                      <span>{reply.dislikes}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {replies?.map((reply) => (
+            <ReplyCard
+              key={reply.commentId}
+              reply={reply}
+              patchData={getData}
+            />
           ))}
           <div className='border-text/50 flex gap-5 border-t py-2'>
             {/* 답글 표시 */}
@@ -139,7 +291,10 @@ const CommentCard = ({ comment }) => {
               ></textarea>
               <div className='flex w-full items-end justify-end gap-3'>
                 <span className='text-text/75'>{content.length} / 255</span>
-                <button className='bg-chaintoon flex-none cursor-pointer rounded-lg px-3 py-1 text-black'>
+                <button
+                  className='bg-chaintoon flex-none cursor-pointer rounded-lg px-3 py-1 text-black'
+                  onClick={createReply}
+                >
                   등록
                 </button>
               </div>

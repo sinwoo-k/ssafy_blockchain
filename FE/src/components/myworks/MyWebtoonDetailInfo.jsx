@@ -73,7 +73,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
               <img
                 src={webtoon.seroThumbnail}
                 alt={`${webtoon?.title} 대표 이미지`}
-                className='h-[300px] w-[250px] rounded-xl'
+                className='h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}
@@ -102,9 +102,9 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
               <p className='text-2xl'>{webtoon.webtoonName}</p>
-              <p className='text-xl text-[#b9b9b9]'>{webtoon.writer}</p>
-              <p className='text-xl text-[#b9b9b9]'>{webtoon.genre}</p>
-              <div className='text-xl'>
+              <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+              <p className='text-lg text-[#b9b9b9]'>{webtoon.genre}</p>
+              <div className=''>
                 {webtoon.summary?.split('\n').map((line, index) => (
                   <p key={`summary-${index}`}>{line}</p>
                 ))}

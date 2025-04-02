@@ -6,7 +6,9 @@ const WebtoonMain = () => {
   return (
     <div className='relative min-h-screen bg-black'>
       <TodayRecommend />
-      <WebtoonList />
+      <div className='flex'>
+        <WebtoonList />
+      </div>
     </div>
   )
 }

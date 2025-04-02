@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { formattingNumber } from '../../utils/formatting'
 
 // 디폴트 이미지
@@ -8,14 +9,44 @@ import fantasyCover from '../../assets/defaultCover/fantasy.webp'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
+import {
+  createFavoriteWebtoon,
+  deleteFavoriteWebtoon,
+} from '../../api/webtoonAPI'
 
-const WebtoonDetailInfo = ({ webtoon }) => {
+const WebtoonDetailInfo = ({ webtoon, patchData }) => {
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState(fantasyCover)
+  const [favorites, setFavorites] = useState([])
+  const [isFavorite, setIsFavorite] = useState(false) // 관심 웹툰 여부
+
+  const toggleFavorite = async () => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    if (isFavorite) {
+      try {
+        const result = await deleteFavoriteWebtoon(webtoon.webtoonId)
+        patchData()
+      } catch (error) {
+        console.error('관심 웹툰 취소 실패: ', error)
+      }
+    } else {
+      try {
+        const result = await createFavoriteWebtoon(webtoon.webtoonId)
+        patchData()
+      } catch (error) {
+        console.error('관심 웹툰 등록 실패: ', error)
+      }
+    }
+  }
 
   useEffect(() => {
     // mount
     setBackgroundImg(webtoon.garoThumbnail)
+    setIsFavorite(webtoon.hasFavorited === 'Y' ? true : false)
     // unmount
     return () => {}
   }, [webtoon])
@@ -47,12 +78,12 @@ const WebtoonDetailInfo = ({ webtoon }) => {
               <div className='flex items-center gap-1'>
                 <FavoriteIcon sx={{ fontSize: 25, color: '#ff1919' }} />
                 <span className='inline-block  translate-y-[1px] transform'>
-                  {formattingNumber(109000)}
+                  {formattingNumber(webtoon.favoriteCount)}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <VisibilityIcon sx={{ fontSize: 30, color: '#3cc3ec' }} />
-                <span className='] inline-block translate-y-[1px] transform'>
+                <span className='inline-block translate-y-[1px] transform'>
                   {formattingNumber(webtoon.viewCount)}
                 </span>
               </div>
@@ -67,12 +98,12 @@ const WebtoonDetailInfo = ({ webtoon }) => {
           {/* 웹툰 정보 */}
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
-              <p className='text-2xl'>{webtoon?.webtoonName}</p>
-              <p className='text-text/75 text-xl'>
+              <p className='text-2xl break-words'>{webtoon?.webtoonName}</p>
+              <p className='text-text/75 text-lg'>
                 {webtoon?.writer || '미상'}
               </p>
-              <p className='text-text/75 text-xl'>{webtoon?.genre}</p>
-              <div className='text-xl'>
+              <p className='text-text/75 text-lg'>{webtoon?.genre}</p>
+              <div className=''>
                 {webtoon?.summary?.split('\n').map((line, index) => (
                   <p key={`summary-${index}`}>{line}</p>
                 ))}
@@ -100,8 +131,9 @@ const WebtoonDetailInfo = ({ webtoon }) => {
           <button
             className='bg-chaintoon h-[45px] w-[250px] 
             cursor-pointer rounded'
+            onClick={toggleFavorite}
           >
-            관심 웹툰 등록
+            {isFavorite ? '관심 웹툰 취소' : '관심 웹툰 등록'}
           </button>
           <Link>
             <button

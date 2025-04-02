@@ -5,12 +5,13 @@ import Loader from '../components/common/Loader'
 import CollectionPage from '../pages/store/CollectionPage'
 
 // Sso Callback
-const SsoCallback = lazy(() => import('../components/Auth/SsoCallback')) 
+const SsoCallback = lazy(() => import('../components/Auth/SsoCallback'))
 
 // 웹툰 section
 const WebtoonMain = lazy(() => import('../pages/webtoon/WebtoonMain'))
 const WebtoonDetail = lazy(() => import('../pages/webtoon/WebtoonDetail'))
 const WebtoonEpisode = lazy(() => import('../pages/webtoon/WebtoonEpisode'))
+const FavoriteWebtoon = lazy(() => import('../pages/webtoon/FavoriteWebtoon'))
 
 // 내 작품 목록 section
 const MyWorks = lazy(() => import('../pages/myworks/MyWorks'))
@@ -90,6 +91,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <WebtoonEpisode />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/webtoon/myfavorite',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <FavoriteWebtoon />
           </Suspense>
         ),
       },

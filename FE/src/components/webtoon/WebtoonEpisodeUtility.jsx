@@ -6,12 +6,7 @@ import { addComma } from '../../utils/formatting'
 import StarIcon from '@mui/icons-material/Star'
 import EpisodeRatingModal from './EpisodeRatingModal'
 
-const WebtoonEpisodeUtility = ({
-  writerComment,
-  ratingCount,
-  ratingSum,
-  episodeId,
-}) => {
+const WebtoonEpisodeUtility = ({ episode }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const [rating, setRating] = useState(0)
   const [ratingCountData, setRatingCountData] = useState()
@@ -30,9 +25,10 @@ const WebtoonEpisodeUtility = ({
     }
   }
   useEffect(() => {
-    setRatingCountData(ratingCount)
-    setRatingSumData(ratingSum)
-  }, [ratingCount, ratingSum])
+    setRatingCountData(episode.ratingCount)
+    setRatingSumData(episode.ratingSum)
+    setIsRate(episode.hasRated === 'Y' ? true : false)
+  }, [episode])
 
   useEffect(() => {
     setRating(ratingSumData / ratingCountData || 0)
@@ -45,7 +41,7 @@ const WebtoonEpisodeUtility = ({
         <div className='flex flex-col gap-2'>
           <h2 className='text-lg'>작가의 말</h2>
           <div className='border-text min-h-[80px] rounded-lg border px-2 py-1'>
-            {writerComment}
+            {episode.writerComment}
           </div>
         </div>
         {/* 별점 기능 */}
@@ -74,7 +70,7 @@ const WebtoonEpisodeUtility = ({
               setRatingSumData={setRatingSumData}
               setRatingCountData={setRatingCountData}
               setIsRate={setIsRate}
-              episodeId={episodeId}
+              episodeId={episode.episodeId}
             />
           )}
         </div>

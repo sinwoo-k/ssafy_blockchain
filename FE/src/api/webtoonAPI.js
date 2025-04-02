@@ -89,7 +89,12 @@ export const getEpisode = async (episodeId) => {
 /** 첫 회차 조회  */
 export const getFirstEpisode = async (webtoonId) => {
   const response = await API.get(`/episodes/first?webtoonId=${webtoonId}`)
-  console.log(response)
+  return response.data
+}
+
+/** 최신 회차 조회 */
+export const getLatestEpisode = async (webtoonId) => {
+  const response = await API.get(`/episodes/latest?webtoonId=${webtoonId}`)
   return response.data
 }
 
@@ -165,6 +170,23 @@ export const createRating = async (episodeId, rating) => {
   const response = await API.post(
     `/episodes/${episodeId}/rating?rating=${rating}`,
   )
-  console.log(response)
+  return response.data
+}
+
+/** 관심 웹툰 조회 */
+export const getFavoriteWebtoon = async () => {
+  const response = await API.get('/webtoons/favorites')
+  return response.data
+}
+
+/** 관심 웹툰 등록 */
+export const createFavoriteWebtoon = async (webtoonId) => {
+  const response = await API.post(`/webtoons/${webtoonId}/favorite`)
+  return response.data
+}
+
+/** 관심 웹툰 취소 */
+export const deleteFavoriteWebtoon = async (webtoonId) => {
+  const response = await API.delete(`/webtoons/${webtoonId}/favorite`)
   return response.data
 }

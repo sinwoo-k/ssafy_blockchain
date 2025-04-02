@@ -14,8 +14,8 @@ const IconButton = ({ Icon, tooltip, style }) => {
       </div>
       {showTooltip && (
         <span
-          className='bg-chaintoon absolute top-full left-1/2 mt-2 -translate-x-1/2 rounded
-            px-2 py-1 text-xs whitespace-nowrap text-black shadow-md'
+          className='bg-chaintoon absolute top-full left-1/2 mt-2 -translate-x-1/2
+            rounded px-2 py-1 text-xs whitespace-nowrap text-black shadow-md'
         >
           {tooltip}
         </span>

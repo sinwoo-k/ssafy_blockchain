@@ -91,12 +91,7 @@ const WebtoonEpisode = () => {
         />
       </div>
       {/* 유틸 기능 */}
-      <WebtoonEpisodeUtility
-        writerComment={episode.writerComment}
-        ratingCount={episode.ratingCount}
-        ratingSum={episode.ratingSum}
-        episodeId={episode.episodeId}
-      />
+      <WebtoonEpisodeUtility episode={episode} />
       {/* 댓글 */}
       <CommentList
         usageId={params.episodeId}

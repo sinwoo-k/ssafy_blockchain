@@ -11,8 +11,8 @@ const WebtoonDetail = () => {
 
   const getData = async () => {
     try {
-      const data = await getWebtoon(params.webtoonId)
-      setWebtoon(data)
+      const result = await getWebtoon(params.webtoonId)
+      setWebtoon(result)
     } catch (error) {
       console.error('웹툰 불러오기 실패: ', error)
     }
@@ -26,7 +26,7 @@ const WebtoonDetail = () => {
   }, [])
   return (
     <div>
-      <WebtoonDetailInfo webtoon={webtoon} />
+      <WebtoonDetailInfo webtoon={webtoon} patchData={getData} />
       <WebtoonDetailEpisodeList webtoonId={webtoon.webtoonId} />
     </div>
   )
