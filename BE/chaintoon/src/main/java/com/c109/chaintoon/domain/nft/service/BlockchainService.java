@@ -1,18 +1,19 @@
 package com.c109.chaintoon.domain.nft.service;
 
+import com.c109.chaintoon.domain.nft.dto.blockchain.*;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainSaleRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.BlockchainSaleResponseDto;
-import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
-import com.c109.chaintoon.domain.nft.dto.blockchain.WalletInfo;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataItemResponseDto;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataResponseDto;
+import com.c109.chaintoon.domain.nft.exception.NFTMetadataNotfoundException;
 import com.c109.chaintoon.domain.nft.exception.WalletBalanceNotFoundException;
+import com.c109.chaintoon.domain.nft.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -21,6 +22,7 @@ import reactor.core.publisher.Mono;
 public class BlockchainService {
 
     private final WebClient webClient;
+    private final WalletRepository walletRepository;
 
     // 판매 등록 요청 메서드
     public Mono<BlockchainSaleResponseDto> registerSale(BlockchainSaleRequestDto saleRequestDto) {
@@ -63,7 +65,7 @@ public class BlockchainService {
                 .block();
 
         // walletInfo 객체가 null이거나, 객체의 balances 필드가 null이거나, eth키가 존재 하지 않으면 에러
-        if (walletInfo == null || walletInfo.getBalances() == null || !walletInfo.getBalances().containsKey("eth")){
+        if (walletInfo == null || walletInfo.getBalances() == null || !walletInfo.getBalances().containsKey("eth")) {
             throw new WalletBalanceNotFoundException("해당 userId(" + userId + ")의 지갑 잔액 정보를 가져올 수 없습니다.");
         }
 
@@ -72,11 +74,11 @@ public class BlockchainService {
 
         System.out.println(ethBalanceStr);
         double balance = Double.parseDouble(ethBalanceStr.replace("ETH", "").trim());
-
+        String walletAddress = walletInfo.getWalletAddress();
 
         System.out.println("balance = " + balance);
 
-        return new WalletBalance(balance);
+        return new WalletBalance(walletAddress, balance);
     }
 
     // 백그라운드용 지갑 잔액 조회
@@ -87,12 +89,70 @@ public class BlockchainService {
                 .retrieve()
                 .bodyToMono(WalletInfo.class)
                 .map(walletInfo -> {
-                    if (walletInfo == null || walletInfo.getBalances() == null || !walletInfo.getBalances().containsKey("eth")){
+                    if (walletInfo == null || walletInfo.getBalances() == null || !walletInfo.getBalances().containsKey("eth")) {
                         throw new WalletBalanceNotFoundException("해당 userId(" + userId + ")의 지갑 잔액 정보를 가져올 수 없습니다.");
                     }
                     String ethBalanceStr = walletInfo.getBalances().get("eth");
                     double balance = Double.parseDouble(ethBalanceStr.replace("ETH", "").trim());
-                    return new WalletBalance(balance);
+                    String walletAddress = walletInfo.getWalletAddress();
+                    return new WalletBalance(walletAddress, balance);
+                });
+    }
+
+    public Mono<NftMetadataResponseDto> getNFTMetadata(Integer tokenId) {
+        String url = "/nft/nft-details/" + tokenId;
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(NftMetadataWrapper.class)
+                .map(wrapper -> {
+                    NftMetadata nftMetadata = wrapper.getData();
+                    if (nftMetadata == null || nftMetadata.getTokenId() == null) {
+                        throw new NFTMetadataNotfoundException("해당 토큰 아이디에 해당하는 NFT가 존재하지 않습니다.");
+                    }
+                    return NftMetadataResponseDto.builder()
+                            .tokenId(nftMetadata.getTokenId())
+                            .title(nftMetadata.getTitle())
+                            .description(nftMetadata.getDescription())
+                            .image(nftMetadata.getImage())
+                            .originalCreatorWallet(nftMetadata.getWallets().getOriginalCreator())
+                            .originalCreatorUserId(walletRepository.findUserIdByWalletAddress(nftMetadata.getWallets().getOriginalCreator()).orElse(null))
+                            .ownerWallet(nftMetadata.getWallets().getOwner())
+                            .ownerWalletUserId(walletRepository.findUserIdByWalletAddress(nftMetadata.getWallets().getOwner()).orElse(null))
+                            .build();
+                });
+    }
+
+    public Flux<NftMetadataItemResponseDto> getNFTMetadataList(Integer userId) {
+        String userAddress = walletRepository.findWalletAddressByUserId(userId).orElse(null);
+        String url = "/nft/wallet-nfts/" + userAddress;
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(NftMetadataListWrapper.class)
+                .flatMapMany(wrapper -> {
+                    if(wrapper == null || wrapper.getData() == null) {
+                        return Flux.empty();
+                    }
+                    return Flux.fromIterable(wrapper.getData());
+                })
+                .map(item-> {
+                    if (item == null || item.getTokenId() == null) {
+                        throw new NFTMetadataNotfoundException("보유한 NFT가 없습니다.");
+                    }
+
+                    return NftMetadataItemResponseDto.builder()
+                            .tokenId(item.getTokenId())
+                            .title(item.getMetadata().getTitle())
+                            .description(item.getMetadata().getDescription())
+                            .image(item.getMetadata().getImage())
+                            .originalCreatorWallet(item.getMetadata().getWallets().getOriginalCreator())
+                            .originalCreatorUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOriginalCreator()).orElse(null))
+                            .ownerWallet(item.getMetadata().getWallets().getOwner())
+                            .ownerWalletUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOwner()).orElse(null))
+                            .build();
                 });
     }
 
