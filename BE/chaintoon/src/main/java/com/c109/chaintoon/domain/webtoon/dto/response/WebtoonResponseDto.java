@@ -16,6 +16,7 @@ public class WebtoonResponseDto {
     private String genre;
     private String summary;
     private String adaptable;
+    private String hasFavorited;
     private Long episodeCount;
     private Long viewCount;
     private Double rating;

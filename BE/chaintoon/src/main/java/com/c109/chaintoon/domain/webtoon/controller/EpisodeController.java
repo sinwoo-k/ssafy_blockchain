@@ -34,11 +34,12 @@ public class EpisodeController {
 
     @PostMapping
     public ResponseEntity<?> addEpisode(
+            @AuthenticationPrincipal Integer userId,
             @Valid @RequestPart(name = "episode") EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail") MultipartFile thumbnail,
             @RequestPart(name = "images") List<MultipartFile> images
     ) {
-        EpisodeResponseDto episode = episodeService.addEpisode(episodeRequest, thumbnail, images);
+        EpisodeResponseDto episode = episodeService.addEpisode(userId, episodeRequest, thumbnail, images);
         return new ResponseEntity<>(episode, HttpStatus.CREATED);
     }
 
