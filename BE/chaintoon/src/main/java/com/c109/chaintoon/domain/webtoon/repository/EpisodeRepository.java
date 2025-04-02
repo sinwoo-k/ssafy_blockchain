@@ -27,4 +27,8 @@ public interface EpisodeRepository extends JpaRepository<Episode, Integer> {
     @Modifying
     @Query("UPDATE Episode e SET e.commentCount = e.commentCount + 1 WHERE e.episodeId = :episodeId")
     void incrementCommentCount(@Param("episodeId") Integer episodeId);
+
+    @Modifying
+    @Query("UPDATE Episode e SET e.commentCount = e.commentCount - 1 WHERE e.episodeId = :episodeId")
+    void decrementCommentCount(@Param("episodeId") Integer episodeId);
 }

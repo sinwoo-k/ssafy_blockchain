@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.webtoon.service;
 
+import com.c109.chaintoon.common.exception.NotFoundException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
@@ -217,7 +218,7 @@ public class EpisodeService {
     public EpisodeResponseDto getFirstEpisode(Integer webtoonId, Integer userId) {
         // 첫화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdAsc(webtoonId, "N")
-                .orElseThrow(() -> new EpisodeNotFoundException(0));
+                .orElseThrow(() -> new NotFoundException("등록된 에피소드가 없습니다."));
 
         // 조회수 증가
         increaseViewCount(webtoonId);
@@ -229,7 +230,7 @@ public class EpisodeService {
     public EpisodeResponseDto getLatestEpisode(Integer webtoonId, Integer userId) {
         // 최신화 조회
         Episode episode = episodeRepository.findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(webtoonId, "N")
-                .orElseThrow(() -> new EpisodeNotFoundException(0));
+                .orElseThrow(() -> new NotFoundException("등록된 에피소드가 없습니다."));
 
         // 조회수 증가
         increaseViewCount(webtoonId);
@@ -327,6 +328,21 @@ public class EpisodeService {
         // 에피소드 소프트 삭제
         episode.setDeleted("Y");
         episodeRepository.save(episode);
+
+        // 에피소드 수 감소
+        webtoon.setEpisodeCount(webtoon.getEpisodeCount() - 1);
+        webtoonRepository.save(webtoon);
+
+        // 최신화가 삭제될 경우 최근 업로드 날짜가 불일치 할 가능성 존재하므로 삭제되지 않은 최신화의 날짜로 변경
+        Episode latestEpisode = episodeRepository
+                .findFirstByWebtoonIdAndDeletedOrderByEpisodeIdDesc(webtoon.getWebtoonId(), "N")
+                .orElse(null);
+        String latestUploadDate = "";
+        if (latestEpisode != null) {
+            latestUploadDate = latestEpisode.getUploadDate();
+        }
+        webtoon.setLastUploadDate(latestUploadDate);
+        webtoonRepository.save(webtoon);
 
         // 썸네일, 에피소드 이미지 S3 & DB 삭제
         s3Service.deleteFile(episode.getThumbnail());
