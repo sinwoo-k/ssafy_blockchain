@@ -141,7 +141,16 @@ public class EpisodeService {
     }
 
     @Transactional
-    public EpisodeResponseDto addEpisode(EpisodeRequestDto episodeRequest, MultipartFile thumbnail, List<MultipartFile> images) {
+    public EpisodeResponseDto addEpisode(Integer userId, EpisodeRequestDto episodeRequest, MultipartFile thumbnail, List<MultipartFile> images) {
+        // 웹툰 조회
+        Webtoon webtoon = webtoonRepository.findById(episodeRequest.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(episodeRequest.getWebtoonId()));
+
+        // 웹툰 작가가 아니면 에피소드 등록 불가능
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("본인 웹툰에만 에피소드를 등록할 수 있습니다.");
+        }
+
         // EpisodeRequestDto -> Episode 엔티티 변환
         Episode episode = Episode.builder()
                 .webtoonId(episodeRequest.getWebtoonId())
@@ -183,10 +192,6 @@ public class EpisodeService {
                     .build();
             episodeImageRepository.save(episodeImage);
         }
-
-        // 웹툰 조회
-        Webtoon webtoon = webtoonRepository.findById(savedEpisode.getWebtoonId())
-                .orElseThrow(() -> new WebtoonNotFoundException(savedEpisode.getWebtoonId()));
 
         // 에피소드 수 증가, 최근 업로드 날짜 변경
         webtoon.setEpisodeCount(webtoon.getEpisodeCount() + 1);

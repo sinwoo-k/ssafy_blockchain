@@ -77,9 +77,10 @@ public class WebtoonController {
 
     @GetMapping("/{webtoonId}")
     public ResponseEntity<?> getWebtoon(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer webtoonId
     ) {
-        WebtoonResponseDto webtoon = webtoonService.getWebtoon(webtoonId);
+        WebtoonResponseDto webtoon = webtoonService.getWebtoon(userId, webtoonId);
         return new ResponseEntity<>(webtoon, HttpStatus.OK);
     }
 
