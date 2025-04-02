@@ -72,11 +72,12 @@ public class WebtoonService {
                             .writer(writer)
                             .webtoonName(webtoon.getWebtoonName())
                             .genre(webtoon.getGenre())
-                            .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
-                            .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                             .episodeCount(webtoon.getEpisodeCount())
                             .viewCount(webtoon.getViewCount())
                             .rating(rating)
+                            .lastUploadDate(webtoon.getLastUploadDate())
+                            .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                            .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                             .build();
                 })
                 .collect(Collectors.toList());
