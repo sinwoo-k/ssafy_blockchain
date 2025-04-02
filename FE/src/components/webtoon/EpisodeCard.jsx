@@ -11,16 +11,19 @@ const EpisodeCard = ({ episode }) => {
           src={episode.thumbnail}
           alt=''
           className='h-auto w-[150px] rounded-lg'
+          onError={(event) =>
+            (event.target.src = `https://placehold.co/200x100?text=episode${episode.episodeId}`)
+          }
         />
       </div>
       {/* 회차 정보 */}
       <div className='flex h-[80px] flex-col justify-evenly'>
-        <p className=''>{episode.title}</p>
+        <p className=''>{episode.episodeName}</p>
         <div className='flex items-center gap-2'>
           <span className='flex items-center gap-1'>
             <StarIcon sx={{ color: '#ffff19' }} />
             <span className='inline-block w-[45px] translate-y-[1px] transform'>
-              4.56
+              {(episode.rating / 2).toFixed(2)}
             </span>
           </span>
           <span className='text-text/50 inline-block translate-y-[1px] transform'>

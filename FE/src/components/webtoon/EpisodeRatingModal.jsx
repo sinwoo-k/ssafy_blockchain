@@ -4,8 +4,15 @@ import React, { useState } from 'react'
 import StarIcon from '@mui/icons-material/Star'
 import StarHalfIcon from '@mui/icons-material/StarHalf'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
+import { createRating } from '../../api/webtoonAPI'
 
-const EpisodeRatingModal = ({ setShowModal }) => {
+const EpisodeRatingModal = ({
+  setShowModal,
+  setRatingSumData,
+  setRatingCountData,
+  setIsRate,
+  episodeId,
+}) => {
   // 선택된 별점(0.5 ~ 5.0)
   const [rating, setRating] = useState(5.0)
 
@@ -23,6 +30,20 @@ const EpisodeRatingModal = ({ setShowModal }) => {
   // 별 클릭 시 rating을 변경
   const handleClick = (newRating) => {
     setRating(newRating)
+  }
+
+  /** 별점 주기 */
+  const submitRating = async () => {
+    const ratingData = rating * 2
+    try {
+      const result = await createRating(episodeId, ratingData)
+      setRatingCountData((prev) => prev + 1)
+      setRatingSumData((prev) => prev + ratingData)
+      setIsRate(true)
+      setShowModal(false)
+    } catch (error) {
+      console.error('별점 등록 실패: ', error)
+    }
   }
 
   return (
@@ -73,7 +94,10 @@ const EpisodeRatingModal = ({ setShowModal }) => {
               <p className='text-chaintoon text-2xl'>{rating.toFixed(1)}</p>
               <p className='text-text/75 text-lg'>별점을 클릭해주세요.</p>
             </div>
-            <button className='hover:text-chaintoon cursor-pointer'>
+            <button
+              className='hover:text-chaintoon cursor-pointer'
+              onClick={submitRating}
+            >
               별점 주기
             </button>
           </div>

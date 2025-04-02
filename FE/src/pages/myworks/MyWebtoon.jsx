@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getMyWebtoon } from '../../api/webtoonAPI'
 
 // 컴포넌트
 import MyWebtoonCard from '../../components/myworks/MyWebtoonCard'
@@ -14,51 +15,22 @@ import romanceCover from '../../assets/defaultCover/romance.webp'
 import dramaCover from '../../assets/defaultCover/drama.webp'
 import historyCover from '../../assets/defaultCover/history.webp'
 
-const dummyData = [
-  {
-    id: 0,
-    title: '판타지',
-    genre: 'fantasy',
-    cover: fantasyCover,
-    episodeCount: 51,
-  },
-  {
-    id: 1,
-    title: '액션',
-    genre: 'action',
-    cover: actionCover,
-    episodeCount: 11,
-  },
-  {
-    id: 2,
-    title: '로맨스',
-    genre: 'romance',
-    cover: romanceCover,
-    episodeCount: 230,
-  },
-  {
-    id: 3,
-    title: '드라마',
-    genre: 'drama',
-    cover: dramaCover,
-    episodeCount: 1,
-  },
-  {
-    id: 4,
-    title: '무협/사극',
-    genre: 'history',
-    cover: historyCover,
-    episodeCount: 10,
-  },
-]
-
 const MyWebtoon = () => {
   // 내 작품 목록
   const [webtoons, setWebtoons] = useState([])
 
+  const getData = async (page = 1, pageSize = 10) => {
+    try {
+      const data = await getMyWebtoon(page, pageSize)
+      setWebtoons(data)
+    } catch (error) {
+      console.error('내 웹툰 불러오기 실패: ', error)
+    }
+  }
+
   useEffect(() => {
     // mount
-    setWebtoons(dummyData)
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -86,7 +58,10 @@ const MyWebtoon = () => {
             </div>
           ) : (
             webtoons.map((webtoon) => (
-              <Link key={webtoon.id} to={`/myworks/webtoon/${webtoon.id}`}>
+              <Link
+                key={webtoon.webtoonId}
+                to={`/myworks/webtoon/${webtoon.webtoonId}`}
+              >
                 <MyWebtoonCard webtoon={webtoon} />
               </Link>
             ))

@@ -5,10 +5,11 @@ import MyWebtoonDetailEpisodeList from '../../components/myworks/MyWebtoonDetail
 
 const MyWebtoonDetail = () => {
   const params = useParams()
+
   return (
     <div className='py-[60px]'>
       <MyWebtoonDetailInfo webtoonId={params.webtoonId} />
-      <MyWebtoonDetailEpisodeList />
+      <MyWebtoonDetailEpisodeList webtoonId={params.webtoonId} />
     </div>
   )
 }

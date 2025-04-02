@@ -1,14 +1,22 @@
 import React, { useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
+import MyWebtoonEpisodePreview from '../../components/myworks/MyWebtoonEpisodePreview'
+import IconButton from '../../components/common/IconButton'
+import { checkWidthSize } from '../../utils/image/limiteSize'
+import { createEpisode } from '../../api/webtoonAPI'
 
 // 아이콘
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import MyWebtoonEpisodePreview from '../../components/myworks/MyWebtoonEpisodePreview'
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
 const MyWebtoonEpisodeCreate = () => {
+  const params = useParams()
+  const navigate = useNavigate()
+
   const [episodeName, setEpisodeName] = useState('') // 회차명
   const [thumbnail, setThumbnail] = useState(null) // 썸네일
   const thumbnailRef = useRef(null)
@@ -31,11 +39,15 @@ const MyWebtoonEpisodeCreate = () => {
 
   // 에피소드 이미지 관련 함수
   // 에피소드 이미지 등록
-  const changeEpisodeImageInput = (event) => {
-    const tempImages = Array.from(event.target.files).map((file) => {
-      return { name: file.name, file: file }
+  const changeEpisodeImageInput = async (event) => {
+    const files = Array.from(event.target.files)
+    const processedFiles = await Promise.all(
+      files.map((file) => checkWidthSize(690, file)),
+    )
+    const tempImages = processedFiles.map((file) => {
+      return { name: file.name, file: file, type: 'new' }
     })
-    setEpisodeImages(tempImages)
+    setEpisodeImages((prev) => [...prev, ...tempImages])
     setSelectEpisodeImage({ name: tempImages[0].name, index: 0 })
     episodeImageRef.current.value = ''
   }
@@ -78,23 +90,37 @@ const MyWebtoonEpisodeCreate = () => {
   }
 
   // 회차 등록 함수
-  const submitEpisodeForm = (event) => {
+  const submitEpisodeForm = async (event) => {
     event.preventDefault()
     if (episodeName.trim() === '') {
       alert('회차명을 작성해주세요.')
-    } else if (thumbnail === null) {
+      return
+    }
+    if (thumbnail === null) {
       alert('썸네일을 등록해주세요.')
-    } else if (episodeImages.length === 0) {
+      return
+    }
+    if (episodeImages.length === 0) {
       alert('원고를 등록해주세요.')
-    } else if (writerComment.trim() === '') {
+      return
+    }
+    if (writerComment.trim() === '') {
       alert('작가의 말을 작성해주세요.')
-    } else {
-      const payload = {
-        episodeName: episodeName,
-        writerComment: writerComment,
-        commentable: commentable ? 'Y' : 'N',
-      }
-      console.log(payload)
+      return
+    }
+
+    const payload = {
+      webtoonId: params.webtoonId,
+      episodeName: episodeName,
+      writerComment: writerComment,
+      commentable: commentable ? 'Y' : 'N',
+    }
+
+    try {
+      const result = await createEpisode(payload, thumbnail, episodeImages)
+      navigate(`/myworks/webtoon/${params.webtoonId}`)
+    } catch (error) {
+      console.error('회차 등록 실패: ', error)
     }
   }
   return (
@@ -110,7 +136,7 @@ const MyWebtoonEpisodeCreate = () => {
             >
               회차명
             </label>
-            <div className='bg-text/50 flex grow gap-1 rounded-lg border p-3'>
+            <div className='bg-text/30 flex grow gap-1 rounded-lg border p-3'>
               <input
                 type='text'
                 id='title-input'
@@ -132,7 +158,7 @@ const MyWebtoonEpisodeCreate = () => {
             </label>
             <div className='flex flex-col gap-3'>
               <div
-                className='bg-text/50 flex h-[150px] w-[300px] gap-1 overflow-hidden rounded-lg border'
+                className='bg-text/30 flex h-[150px] w-[300px] cursor-pointer gap-1 overflow-hidden rounded-lg border'
                 onClick={() => thumbnailRef.current.click()}
               >
                 {thumbnail && (
@@ -165,44 +191,59 @@ const MyWebtoonEpisodeCreate = () => {
             <label className='h-[48px] w-[135px] flex-none text-lg/[48px]'>
               원고 등록
             </label>
-            <div className='flex flex-col gap-3'>
-              <div className='flex h-[350px] w-[550px] flex-col overflow-hidden rounded-lg border bg-neutral-800'>
-                <div className='bg-text/50 grow overflow-y-scroll py-2'>
-                  {episodeImages.map((img, index) => (
-                    <p
-                      key={`episode-image-${index}`}
-                      className={`${selectEpisodeImage && selectEpisodeImage.name === img.name && 'bg-chaintoon text-black'} 
+            <div className='flex grow gap-3'>
+              <div className='flex h-[350px] w-[450px] flex-col rounded-lg border bg-neutral-800'>
+                <div className='grow overflow-hidden rounded-t-lg'>
+                  <div className='bg-text/30 h-full overflow-y-scroll py-2'>
+                    {episodeImages.map((img, index) => (
+                      <p
+                        key={`episode-image-${index}`}
+                        className={`${selectEpisodeImage && selectEpisodeImage.name === img.name && 'bg-chaintoon text-black'} 
                       cursor-pointer px-2`}
-                      onClick={() =>
-                        setSelectEpisodeImage({ name: img.name, index: index })
-                      }
-                    >
-                      {img.name}
-                    </p>
-                  ))}
+                        onClick={() =>
+                          setSelectEpisodeImage({
+                            name: img.name,
+                            index: index,
+                          })
+                        }
+                      >
+                        {img.name}
+                      </p>
+                    ))}
+                  </div>
                 </div>
                 <div className='flex h-[25px] justify-between px-2'>
-                  <div className='flex gap-3'>
-                    <button
-                      className='hover:text-chaintoon cursor-pointer'
+                  <div className='flex items-center gap-3'>
+                    <div
+                      className='hover:text-chaintoon'
                       onClick={() => imageUp(selectEpisodeImage.index)}
                     >
-                      <ArrowDropUpIcon />
-                      위로 올리기
-                    </button>
-                    <button
-                      className='hover:text-chaintoon cursor-pointer'
+                      <IconButton
+                        Icon={ArrowDropUpIcon}
+                        tooltip={'위로 올리기'}
+                        style={{ fontSize: 30 }}
+                      />
+                    </div>
+                    <div
+                      className='hover:text-chaintoon'
                       onClick={() => imageDown(selectEpisodeImage.index)}
                     >
-                      <ArrowDropDownIcon />
-                      아래로 내리기
-                    </button>
-                    <button
-                      className='cursor-pointer hover:text-red-500'
+                      <IconButton
+                        Icon={ArrowDropDownIcon}
+                        tooltip={'아래로 내리기'}
+                        style={{ fontSize: 30 }}
+                      />
+                    </div>
+                    <div
+                      className='hover:text-red-500'
                       onClick={() => imageDelete(selectEpisodeImage.index)}
                     >
-                      삭제
-                    </button>
+                      <IconButton
+                        Icon={DeleteForeverIcon}
+                        tooltip={'이미지 삭제'}
+                        style={{ fontSize: 20 }}
+                      />
+                    </div>
                   </div>
                   <button
                     className='hover:text-chaintoon cursor-pointer'
@@ -218,15 +259,23 @@ const MyWebtoonEpisodeCreate = () => {
                   />
                 )}
               </div>
-              <button
-                className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
-                onClick={() => episodeImageRef.current.click()}
-              >
-                회차 이미지 등록하기
-              </button>
+              <div className='flex grow flex-col justify-end gap-5'>
+                <div className='text-text/50 px-1'>
+                  <p>원고는 순서대로 등록됩니다.</p>
+                  <p>원고의 가로 사이즈는 690px로 제한됩니다.</p>
+                  <p>원고의 세로 사이즈는 제한이 없습니다.</p>
+                  <p></p>
+                </div>
+                <button
+                  className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
+                  onClick={() => episodeImageRef.current.click()}
+                >
+                  회차 이미지 등록하기
+                </button>
+              </div>
               <input
                 type='file'
-                accept='image/*'
+                accept='image/jpeg, image/jpg'
                 multiple
                 className='hidden'
                 onChange={changeEpisodeImageInput}
@@ -242,7 +291,7 @@ const MyWebtoonEpisodeCreate = () => {
             >
               작가의 말
             </label>
-            <div className='bg-text/50 grow rounded-lg border p-3'>
+            <div className='bg-text/30 grow rounded-lg border p-3'>
               <textarea
                 id='writer-comment-textarea'
                 className='placeholder:text-text/75 h-[100px] w-full resize-none focus:outline-none'

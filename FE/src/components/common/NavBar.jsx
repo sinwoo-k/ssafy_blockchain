@@ -51,7 +51,7 @@ const NavBar = () => {
     <>
       <div
         className={`border-text text-text ${scroll && 'bg-black'} 
-      fixed top-0 z-10 flex h-[60px] w-full justify-between border-b`}
+      fixed top-0 z-20 flex h-[60px] w-full justify-between border-b`}
       >
         <div className='flex'>
           {/* 로고 */}
@@ -82,7 +82,7 @@ const NavBar = () => {
           {isAuthenticated && (
             <div className='flex h-full w-[100px] items-center justify-center gap-5'>
               <IconLink
-                path={'/'}
+                path={'/webtoon/myfavorite'}
                 Icon={CollectionsBookmarkIcon}
                 tooltip={'관심 웹툰'}
               />

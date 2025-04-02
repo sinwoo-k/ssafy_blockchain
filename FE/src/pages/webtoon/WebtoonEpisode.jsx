@@ -1,29 +1,18 @@
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
-import WebtoonEpisodeComment from '../../components/webtoon/WebtoonEpisodeComment'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
-
-const dummyData = {
-  title: '테스트 에피소드',
-  webtoon: '웹툰',
-  images: [
-    'https://picsum.photos/600/800.jpg?ramdom=1',
-    'https://picsum.photos/600/800.jpg?ramdom=2',
-    'https://picsum.photos/600/800.jpg?ramdom=3',
-    'https://picsum.photos/600/800.jpg?ramdom=4',
-    'https://picsum.photos/600/800.jpg?ramdom=5',
-    'https://picsum.photos/600/800.jpg?ramdom=6',
-    'https://picsum.photos/600/800.jpg?ramdom=7',
-    'https://picsum.photos/600/800.jpg?ramdom=8',
-    'https://picsum.photos/600/800.jpg?ramdom=9',
-  ],
-}
+import { getEpisode, getWebtoon } from '../../api/webtoonAPI'
+import CommentList from '../../components/comment/CommentList'
 
 const WebtoonEpisode = () => {
+  const params = useParams()
+
   // 에피소드 데이터
-  const [episode, setEpisode] = useState(dummyData)
+  const [episode, setEpisode] = useState([])
+  const [webtoonName, setWebtoonName] = useState()
 
   // 뷰어 내비게이션 show
   const [navbarShow, setNavbarShow] = useState(true)
@@ -53,6 +42,22 @@ const WebtoonEpisode = () => {
       setNavbarShow(!navbarShow)
     }
   }
+
+  const getData = async () => {
+    try {
+      const result = await getEpisode(params.episodeId)
+      console.log(result)
+      setEpisode(result)
+      const webtoonNameResult = await getWebtoon(result.webtoonId)
+      setWebtoonName(webtoonNameResult.webtoonName)
+    } catch (error) {
+      console.error('회차 불러오기 실패: ', error)
+    }
+  }
+  useEffect(() => {
+    getData()
+  }, [params.episodeId])
+
   useEffect(() => {
     // mount
     if (inView) {
@@ -70,19 +75,29 @@ const WebtoonEpisode = () => {
     <div className='relative py-[60px]'>
       {/* 웹툰 내비바 */}
       {navbarShow && (
-        <WebtoonViewerNavBar title={episode.title} webtoon={episode.webtoon} />
+        <WebtoonViewerNavBar
+          title={episode.episodeName}
+          webtoonId={episode.webtoonId}
+          webtoonName={webtoonName}
+          prevEpisode={episode.previousEpisodeId}
+          nextEpisode={episode.nextEpisodeId}
+        />
       )}
       {/* 웹툰 뷰어 */}
-      <div ref={ref} className='mb-32'>
+      <div ref={ref} className='mb-24'>
         <WebtoonViewer
           handleClickViewer={handleClickViewer}
           images={episode.images}
         />
       </div>
       {/* 유틸 기능 */}
-      <WebtoonEpisodeUtility />
+      <WebtoonEpisodeUtility episode={episode} />
       {/* 댓글 */}
-      <WebtoonEpisodeComment />
+      <CommentList
+        usageId={params.episodeId}
+        type={'COMMENT_EPISODE'}
+        commentCount={episode.commentCount}
+      />
     </div>
   )
 }

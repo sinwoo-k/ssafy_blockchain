@@ -5,6 +5,8 @@ import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCrop
 import CloseIcon from '@mui/icons-material/Close'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import { createWebtoon } from '../../api/webtoonAPI'
+import { useNavigate } from 'react-router-dom'
 
 const MyWebtoonCreate = () => {
   const [webtoonName, setWebtoonName] = useState('') // 웹툰명
@@ -33,10 +35,12 @@ const MyWebtoonCreate = () => {
   const [adaptable, setAdaptable] = useState(false) // 팬아트 허용
   const [confirmAgreement, setConfirmAgreement] = useState(false) // 약관동의
 
+  const navigate = useNavigate()
+
   // 태그 등록 함수
   const handleTags = (event) => {
     event.preventDefault()
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' || event.target.value.length >= 10) {
       setTags([...tags, event.target.value])
       event.target.value = ''
     }
@@ -69,29 +73,47 @@ const MyWebtoonCreate = () => {
     }
   }
 
-  const submitWebtoonForm = (event) => {
+  const submitWebtoonForm = async (event) => {
     event.preventDefault()
     if (webtoonName.trim() === '') {
       alert('웹툰명을 입력해주세요.')
-    } else if (genre === '') {
+      return
+    }
+    if (genre === '') {
       alert('장르를 선택해주세요.')
-    } else if (tags.length === 0) {
+      return
+    }
+    if (tags.length === 0) {
       alert('태그를 1개 이상 입력해주세요.')
-    } else if (summary.trim() === '') {
+      return
+    }
+    if (summary.trim() === '') {
       alert('줄거리를 입력해주세요.')
-    } else if (garoImage === null || seroImage === null) {
+      return
+    }
+    if (garoImage === null || seroImage === null) {
       alert('이미지를 등록해주세요.')
-    } else if (!confirmAgreement) {
+      return
+    }
+    if (!confirmAgreement) {
       alert('약관에 동의해주세요.')
-    } else {
-      const payload = {
-        webtoonName: webtoonName,
-        genre: genre,
-        tags: tags,
-        summary: summary,
-        adaptable: adaptable ? 'Y' : 'N',
-      }
-      console.log(payload)
+      return
+    }
+
+    const payload = {
+      webtoonName,
+      genre,
+      tags,
+      summary,
+      adaptable: adaptable ? 'Y' : 'N',
+    }
+
+    try {
+      const result = await createWebtoon(payload, garoImage, seroImage)
+      navigate('/myworks/webtoon')
+    } catch (error) {
+      console.error('웹툰 등록 중 에러 발생:', error)
+      alert('웹툰 등록에 실패하였습니다. 다시 시도해주세요.')
     }
   }
   return (
@@ -190,7 +212,7 @@ const MyWebtoonCreate = () => {
                 </span>
               </div>
               <p className='text-text/50'>
-                태그는 최대 10개까지 등록이 가능합니다.
+                태그는 10글자까지 최대 10개 등록이 가능합니다.
                 <br />
                 원하는 태그 입력 후 엔터키를 누르면 등록이 됩니다.
               </p>
@@ -225,7 +247,7 @@ const MyWebtoonCreate = () => {
               <div>
                 <p className='px-2'>포스터형 (200x300)</p>
                 <div
-                  className='bg-text/30 h-[300px] w-[200px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[200px] cursor-pointer overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('sero')}
                 >
                   {seroImage && (
@@ -258,7 +280,7 @@ const MyWebtoonCreate = () => {
               <div>
                 <p className='px-2'>가로형 (400 x 300)</p>
                 <div
-                  className='bg-text/30 h-[300px] w-[400px] overflow-hidden rounded-lg border'
+                  className='bg-text/30 h-[300px] w-[400px] cursor-pointer overflow-hidden rounded-lg border'
                   onClick={() => handleImageInput('garo')}
                 >
                   {garoImage && (
