@@ -191,6 +191,11 @@ public class CommentService {
         Comment comment = commentRepository.findByCommentIdAndDeleted(commentId, "N")
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
 
+        // 댓글 삭제 권한 확인
+        if (!comment.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("댓글 삭제 권한이 없습니다.");
+        }
+
         Integer parentId = comment.getParentId();
         // 대댓글인 경우
         if (parentId != 0) {
@@ -203,9 +208,12 @@ public class CommentService {
             commentRepository.save(parentComment);
         }
 
-        // 댓글 삭제 권한 확인
-        if (!comment.getUserId().equals(userId)) {
-            throw new UnauthorizedAccessException("댓글 삭제 권한이 없습니다.");
+        // 사용처 댓글 수 감소
+        if (CommentType.EPISODE.getValue().equals(comment.getType())) {
+            episodeRepository.decrementCommentCount(comment.getUsageId());
+        }
+        else if (CommentType.FANART.getValue().equals(comment.getType())) {
+            fanartRepository.decrementCommentCount(comment.getUsageId());
         }
 
         // 댓글 소프트 삭제

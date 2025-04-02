@@ -23,4 +23,8 @@ public interface FanartRepository extends JpaRepository<Fanart, Integer>, JpaSpe
     @Modifying
     @Query("UPDATE Fanart f SET f.comment = f.comment + 1 WHERE f.fanartId = :fanartId")
     void incrementCommentCount(@Param("fanartId") Integer fanartId);
+
+    @Modifying
+    @Query("UPDATE Fanart f SET f.comment = f.comment - 1 WHERE f.fanartId = :fanartId")
+    void decrementCommentCount(@Param("fanartId") Integer fanartId);
 }
