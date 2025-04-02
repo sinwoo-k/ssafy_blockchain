@@ -1,112 +1,154 @@
-import { ethers } from 'ethers';
-import axios from 'axios';
+// layer/services/transactionService.js
 import AppError from '../../utils/AppError.js';
-import { insertTransactionLog, getTransactionLogs, getLastSyncedBlock } from '../repositories/transactionRepository.js';
+import {
+  dbInsertTransactionLog,
+  dbGetTransactionLogs,
+  dbGetLastSyncedBlock,
+  apiFetchWalletTransactions,
+  bcFetchWalletNFTs,
+  apiGetAllTransactionsForContract,
+  bcGetTransactionReceipt,
+  bcGetSaleLogs,
+  bcGetTransactionSender
+} from '../repositories/transactionRepository.js';
+import { ethers } from 'ethers';
+import { NFT_MARKETPLACE_ABI, NFT_MARKETPLACE_ADDRESS, FIRST_SYNC_BLOCK } from '../config/contract.js';
 
-const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-const ETHERSCAN_BASE_URL = "https://api-holesky.etherscan.io/api";
-
-// Holesky EtherScan API에서 txlist 조회
-export async function getAllTransactionsForContract(contractAddress, fromBlock = "0", toBlock = "latest") {
+/**
+ * 지갑 거래 내역 조회 서비스
+ */
+export async function getWalletTransactionsService(walletAddress) {
   try {
-    const apiKey = process.env.ETHERSCAN_API_KEY;
-    if (!apiKey) {
-      throw new AppError("Etherscan API 키가 제공되지 않았습니다.", 500);
-    }
-    let toBlockParam = toBlock;
-    if (toBlock === "latest") {
-      const latestBlock = await provider.getBlockNumber();
-      toBlockParam = latestBlock.toString();
-    }
-    const url = `${ETHERSCAN_BASE_URL}?module=account&action=txlist&address=${contractAddress}&startblock=${fromBlock}&endblock=${toBlockParam}&sort=asc&apikey=${apiKey}`;
-    console.log("Etherscan API 호출 URL:", url);
-
-    const response = await axios.get(url);
-    console.log("Etherscan API 응답:", response.data);
-
-    if (response.data.status !== "1") {
-      console.log("Etherscan 트랜잭션 조회 결과:", response.data.message);
+    const data = await apiFetchWalletTransactions(walletAddress);
+    if (data.status !== "1") {
+      // 비즈니스 로직: 거래 내역이 없으면 빈 배열 반환
       return [];
     }
-    return response.data.result;
+    // NFT 컨트랙트와 관련된 거래만 필터링 (서비스 계층에서 비즈니스 로직 처리)
+    const filtered = data.result.filter(tx => {
+      return tx.to && tx.to.toLowerCase() === process.env.NFT_MARKETPLACE_ADDRESS.toLowerCase();
+    });
+    return filtered;
   } catch (error) {
-    throw new AppError("트랜잭션 조회 실패: " + error.message, 500);
+    throw new AppError("서비스: 지갑 거래 내역 조회 실패 - " + error.message, 500);
   }
 }
 
-// 새로운 트랜잭션 동기화
-export async function syncNewTransactions(contractAddress) {
+/**
+ * 지갑 보유 NFT 목록 조회 서비스
+ */
+export async function getWalletNFTsService(walletAddress) {
   try {
-    let lastSyncedBlock = await getLastSyncedBlock();
-    if (lastSyncedBlock === 0) {
-      lastSyncedBlock = Number(process.env.FIRST_SYNC_BLOCK) || 0;
-      console.log(`DB에 기록된 트랜잭션이 없으므로, FIRST_SYNC_BLOCK(${lastSyncedBlock})부터 동기화를 시작합니다.`);
-    } else {
-      console.log(`DB에 기록된 마지막 블록: ${lastSyncedBlock}`);
+    // 추가 유효성 검사: walletAddress 형식 검증 등
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new AppError("유효한 지갑 주소가 아닙니다.", 400);
     }
-    const latestBlock = await provider.getBlockNumber();
-    console.log(`현재 최신 블록 번호: ${latestBlock}`);
+    const tokens = await bcFetchWalletNFTs(walletAddress);
+    return tokens;
+  } catch (error) {
+    throw new AppError("서비스: NFT 목록 조회 실패 - " + error.message, 500);
+  }
+}
 
-    if (lastSyncedBlock >= latestBlock) {
+/**
+ * 신규 트랜잭션 동기화 서비스
+ */
+export async function syncNewTransactionsService(contractAddress) {
+  try {
+    
+    const lastSyncedBlock = await dbGetLastSyncedBlock();
+    const startBlock = lastSyncedBlock === 0 ? (Number(process.env.FIRST_SYNC_BLOCK) || 0) : lastSyncedBlock + 1;
+    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+    const endBlock = await provider.getBlockNumber();
+    if (startBlock > endBlock) {
       return { success: true, message: "새로운 트랜잭션이 없습니다." };
     }
-
-    let startBlock = lastSyncedBlock + 1;
-    const endBlock = latestBlock;
     const chunkSize = 1000;
     let totalInserted = 0;
-
-    while (startBlock <= endBlock) {
-      const toBlock = Math.min(startBlock + chunkSize - 1, endBlock);
-      console.log(`동기화: 블록 ${startBlock} ~ ${toBlock}`);
-      try {
-        // 각 청크에 대해 txlist 조회
-        const transactions = await getAllTransactionsForContract(contractAddress, startBlock.toString(), toBlock.toString());
-        // 값이 존재하고 필수 필드(from, hash)가 있는 트랜잭션만 필터링
-        const validTransactions = transactions.filter(tx => tx && tx.from && tx.hash);
-        for (const txData of validTransactions) {
-          // 필요 시 timeStamp를 변환해서 로그에 남길 수 있음
-          // 예: txData.timestamp = new Date(Number(txData.timeStamp) * 1000 + 9 * 3600 * 1000);
-          await insertTransactionLog(txData, contractAddress);
-          totalInserted++;
-        }
-      } catch (chunkError) {
-        console.error(`청크 처리 중 오류 (블록 ${startBlock} ~ ${toBlock}):`, chunkError);
+    let currentBlock = startBlock;
+    while (currentBlock <= endBlock) {
+      const toBlock = Math.min(currentBlock + chunkSize - 1, endBlock);
+      
+      const apiResponse = await apiGetAllTransactionsForContract(
+        contractAddress,
+        currentBlock.toString(),
+        toBlock.toString()
+      );
+    
+      // ✔️ result 배열 추출 (정상 응답일 때만)
+      const transactions = apiResponse.status === "1" ? apiResponse.result : [];
+    
+      // ✔️ 유효성 검사
+      const validTransactions = transactions.filter(tx => tx && tx.from && tx.hash);
+    
+      for (const txData of validTransactions) {
+        await dbInsertTransactionLog(txData, contractAddress);
+        totalInserted++;
       }
-      startBlock = toBlock + 1;
+    
+      currentBlock = toBlock + 1;
     }
     return { success: true, message: `${totalInserted}개의 트랜잭션이 저장되었습니다.` };
   } catch (error) {
-    throw new AppError("신규 트랜잭션 동기화 실패: " + error.message, 500);
+    throw new AppError("서비스: 신규 트랜잭션 동기화 실패 - " + error.message, 500);
   }
 }
 
-// 트랜잭션 로그 조회 (페이지네이션)
-export async function getContractTransactionLogs({ page, size }) {
+/**
+ * 특정 트랜잭션 영수증 조회 서비스
+ */
+export async function getTransactionDetailsService(txHash) {
   try {
-    const logs = await getTransactionLogs({ page, size });
-    return logs;
-  } catch (error) {
-    throw new AppError("트랜잭션 로그 조회 실패: " + error.message, 500);
-  }
-}
-
-// 특정 트랜잭션의 영수증 조회
-export async function getTransactionDetails(txHash) {
-  try {
-    const receipt = await provider.getTransactionReceipt(txHash);
+    const receipt = await bcGetTransactionReceipt(txHash);
     if (!receipt) {
-      throw new AppError("트랜잭션 영수증을 찾을 수 없습니다.", 404);
+      throw new AppError("영수증이 존재하지 않습니다.", 404);
     }
     return receipt;
   } catch (error) {
-    throw new AppError("트랜잭션 정보 조회 실패: " + error.message, 500);
+    throw new AppError("서비스: 트랜잭션 정보 조회 실패 - " + error.message, 500);
+  }
+}
+
+/**
+ * 판매 완료 거래 내역 조회 서비스
+ */
+export async function getSaleTransactionsService(walletAddress) {
+  try {
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new AppError("유효한 지갑 주소가 아닙니다.", 400);
+    }
+    const logs = await bcGetSaleLogs();
+    const iface = new ethers.Interface(NFT_MARKETPLACE_ABI);
+    const sales = [];
+    for (const log of logs) {
+      try {
+        const parsed = iface.parseLog(log);
+        if (parsed.name === 'NFTSold') {
+          const sender = await bcGetTransactionSender(log.transactionHash);
+          if (sender && sender.toLowerCase() === walletAddress.toLowerCase()) {
+            sales.push({
+              transactionHash: log.transactionHash,
+              blockNumber: log.blockNumber,
+              tokenId: parsed.args.tokenId.toString(),
+              buyer: parsed.args.buyer,
+              price: parsed.args.price.toString(),
+            });
+          }
+        }
+      } catch (err) {
+        continue;
+      }
+    }
+    return sales;
+  } catch (error) {
+    throw new AppError("서비스: 판매 거래 내역 조회 실패 - " + error.message, 500);
   }
 }
 
 export default {
-  getAllTransactionsForContract,
-  syncNewTransactions,
-  getContractTransactionLogs,
-  getTransactionDetails,
+  getWalletTransactionsService,
+  getWalletNFTsService,
+  syncNewTransactionsService,
+  getTransactionDetailsService,
+  getSaleTransactionsService,
 };

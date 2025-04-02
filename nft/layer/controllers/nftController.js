@@ -5,7 +5,7 @@ import AppError from '../../utils/AppError.js';
 export async function mintNftController(req, res) {
     try {
 
-        const { webtoonId, type, userId, typeId, s3Url, originalCreator, registrant } = req.body;
+        const { webtoonId, type, userId, typeId, s3Url, originalCreator, owner } = req.body;
 
         // 필수 파라미터 확인
         if (!webtoonId) {
@@ -16,11 +16,11 @@ export async function mintNftController(req, res) {
             return res.status(400).json({ error: 'typeId는 필수입니다.' });
         } else if (!originalCreator) {
             return res.status(400).json({ error: 'originalCreator는 필수입니다.' });
-        } else if (!registrant) {
-            return res.status(400).json({ error: 'registrant는 필수입니다.' });
+        } else if (!owner) {
+            return res.status(400).json({ error: 'owner 필수입니다.' });
         }
 
-        const result = await mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, registrant });
+        const result = await mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, owner });
         res.status(200).json(result);
     } catch (err) {
         console.error(err);
@@ -101,3 +101,15 @@ export async function confirmSignatureController(req, res, next) {
     }
 }
 
+export async function saleTransactionsController(req, res, next) {
+    try {
+        const {address} = req.params;
+        if(!address){
+            return req.status(400).json({error: '주소값은 필수입니다.'});
+        }
+        const result = await getSaleTransactions({address});
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
