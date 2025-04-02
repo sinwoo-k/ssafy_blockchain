@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { useLocation, useParams } from 'react-router-dom';
 import { authActions } from '../../redux/reducers/authSlice';
 import { userReducerActions } from '../../redux/reducers/userSlice';
 import { verifySsoCode } from '../../api/authApi';
@@ -9,53 +9,50 @@ import { getMyUserInfo } from '../../api/userApi';
 const SsoCallback = () => {
   const dispatch = useDispatch();
   const location = useLocation();
-  const navigate = useNavigate();
   const { provider } = useParams();
 
   useEffect(() => {
     const handleSsoCallback = async () => {
       try {
-        // 1. URL에서 code와 state 추출
         const params = new URLSearchParams(location.search);
         const code = params.get('code');
         const state = params.get('state');
 
-        if (!code) {
-          throw new Error('인가 코드가 없습니다.');
+        if (!code || !provider) {
+          throw new Error('유효하지 않은 SSO 파라미터');
         }
 
-        if (!provider) {
-            throw new Error('잘못된 SSO provider입니다.')
-        }
-
-        // 2. state 파라미터 파싱 (복귀 경로 정보)
+        // 상태 파싱
         const stateParams = new URLSearchParams(state);
         const returnPath = stateParams.get('ssoReturnPath') || '/';
-        const returnQuery = JSON.parse(stateParams.get('ssoReturnQuery') || '{}');
+        const returnQuery = stateParams.get('ssoReturnQuery') || '{}';
 
-        // 3. 백엔드에 인가 코드 전송, 성공 시 JwT 쿠키 설정
+        // 인증 처리
         await verifySsoCode(provider, code);
-        
-        // 4. Redux에 인증 상태 저장
         const userData = await getMyUserInfo();
+        
+        // Redux 상태 업데이트
         dispatch(userReducerActions.setAuthenticated(true));
         dispatch(userReducerActions.setUser(userData));
 
-        // 5. 원래 페이지로 복귀
-        navigate(returnPath, { state: returnQuery });
+        // 새로고침 포함한 리다이렉트
+        const queryString = new URLSearchParams(JSON.parse(returnQuery)).toString();
+        const redirectUrl = `${returnPath}${queryString ? `?${queryString}` : ''}`;
+        
+        // 실제 페이지 리로드 발생
+        window.location.assign(redirectUrl);
 
       } catch (error) {
-        console.error('SSO 콜백 처리 실패:', error);
+        console.error('SSO 처리 실패:', error);
         dispatch(authActions.setErrorMessage(
-          error.response?.data?.message || 
-          'SSO 로그인에 실패했습니다. 다시 시도해주세요.'
+          error.response?.data?.message || 'SSO 로그인 실패'
         ));
-        navigate('/');
+        window.location.assign('/'); // 에러 시 홈으로 리다이렉트
       }
     };
 
     handleSsoCallback();
-  }, [location, dispatch, navigate]);
+  }, [location, dispatch]);
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
