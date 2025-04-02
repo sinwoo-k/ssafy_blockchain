@@ -54,7 +54,7 @@ const MyWebtoon = () => {
           {webtoons.length === 0 ? (
             <div className='flex h-[300px] w-full flex-col items-center justify-center gap-3'>
               <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
-              <p className='text-xl'>등록된 에피소드가 없습니다.</p>
+              <p className='text-xl'>등록된 웹툰이 없습니다.</p>
             </div>
           ) : (
             webtoons.map((webtoon) => (

@@ -5,8 +5,17 @@ import IconButton from '../common/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { Link } from 'react-router-dom'
+import { deleteGoods } from '../../api/goodsAPI'
 
-const GoodsCard = ({ goods }) => {
+const GoodsCard = ({ goods, patchData }) => {
+  const deleteData = async () => {
+    try {
+      const result = await deleteGoods(goods.goodsId)
+      patchData()
+    } catch (error) {
+      console.error('굿즈 삭제 실패: ', error)
+    }
+  }
   return (
     <div className='flex justify-center'>
       <div className='flex flex-col gap-3'>
@@ -22,18 +31,15 @@ const GoodsCard = ({ goods }) => {
             NFT 발행하기
           </button>
           <div className='flex gap-3'>
-            <Link to={`/myworks/webtoon/goods/update/${goods.goodsId}`}>
-              <IconButton
-                Icon={EditIcon}
-                tooltip={'수정하기'}
-                style={{ color: '#2599ff' }}
-              />
+            <Link
+              to={`/myworks/webtoon/goods/update/${goods.goodsId}`}
+              className='text-blue-500'
+            >
+              <IconButton Icon={EditIcon} tooltip={'수정하기'} />
             </Link>
-            <IconButton
-              Icon={DeleteIcon}
-              tooltip={'삭제하기'}
-              style={{ color: '#ff5050' }}
-            />
+            <div className='text-red-500' onClick={deleteData}>
+              <IconButton Icon={DeleteIcon} tooltip={'삭제하기'} />
+            </div>
           </div>
         </div>
         <div>
