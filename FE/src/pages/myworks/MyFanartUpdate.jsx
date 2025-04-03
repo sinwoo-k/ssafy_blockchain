@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
+import { getFanart, patchFanart } from '../../api/fanartAPI'
 
 const MyFanartUpdate = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   const [fanartImage, setFanartImage] = useState(null) // 팬아트 이미지
   const [fanartImageURL, setFanartImageURL] = useState('')
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
+  const [webtoonId, setWebtoonId] = useState(null) // 웹툰id
   const [fanartName, setFanartName] = useState('') // 팬아트명
   const [fanartDescription, setFanartDescription] = useState('') // 팬아트 설명
 
@@ -61,28 +64,52 @@ const MyFanartUpdate = () => {
     setFanartImageURL('')
   }
 
+  const getData = async () => {
+    try {
+      const result = await getFanart(params.fanartId)
+      console.log(result)
+      setWeboonName(result.webtoonName)
+      setFanartImageURL(result.fanartImage)
+      setWebtoonId(result.webtoonId)
+      setFanartName(result.fanartName)
+      setFanartDescription(result.description || '')
+    } catch (error) {
+      console.error('팬아트 상세 조회 실패: ', error)
+    }
+  }
+
   // 팬아트 수정 함수
-  const updateFanart = () => {
-    if (fanartImage === null) {
+  const updateFanart = async () => {
+    if (fanartImage === null && fanartImageURL === '') {
       alert('팬아트를 등록해주세요.')
-    } else if (fanartName.trim() === '') {
+      return
+    }
+    if (fanartName.trim() === '') {
       alert('팬아트명을 작성해주세요.')
-    } else if (fanartDescription.trim() === '') {
+      return
+    }
+    if (fanartDescription.trim() === '') {
       alert('팬아트 설명을 작성해주세요.')
-    } else {
-      const payload = {
-        fanartName: fanartName,
-        fanartDescription: fanartDescription,
-      }
-      console.log(payload)
+      return
+    }
+
+    const payload = {
+      webtoonId: webtoonId,
+      fanartName: fanartName,
+      description: fanartDescription,
+    }
+
+    try {
+      const result = await patchFanart(params.fanartId, payload, fanartImage)
+      navigate('/myworks/fanart')
+    } catch (error) {
+      console.error('팬아트 수정 실패: ', error)
     }
   }
 
   useEffect(() => {
     // mount
-    setWeboonName('테스트')
-    setFanartName('테스트 팬아트')
-    setFanartDescription('테스트 데이터 입니다.')
+    getData()
     // unmount
     return () => {}
   }, [])

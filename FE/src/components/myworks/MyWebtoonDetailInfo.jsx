@@ -72,7 +72,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
             <div className='mb-3 w-[250px]'>
               <img
                 src={webtoon.seroThumbnail}
-                alt={`${webtoon?.title} 대표 이미지`}
+                alt={`${webtoon?.webtoonName} 대표 이미지`}
                 className='h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>

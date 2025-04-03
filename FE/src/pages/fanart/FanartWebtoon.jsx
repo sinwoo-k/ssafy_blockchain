@@ -23,8 +23,8 @@ const FanartWebtoon = () => {
 
   return (
     <div>
-      <FanartWebtoonInfo />
-      <FanartList fanarts={fanarts} />
+      <FanartWebtoonInfo webtoonId={params.webtoonId} />
+      <FanartList webtoonId={params.webtoonId} />
     </div>
   )
 }

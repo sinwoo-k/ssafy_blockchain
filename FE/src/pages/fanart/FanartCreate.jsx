@@ -1,12 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
+import { createFanart } from '../../api/fanartAPI'
+import { getWebtoon } from '../../api/webtoonAPI'
+import { checkImage } from '../../utils/image/limiteSize'
 
 const FanartCreate = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   const [fanartImage, setFanartImage] = useState(null) // 팬아트 이미지
   const [fanartImageURL, setFanartImageURL] = useState('')
@@ -52,8 +56,10 @@ const FanartCreate = () => {
   }
 
   const selectFanartImage = (file) => {
-    setFanartImage(file)
-    setFanartImageURL(URL.createObjectURL(file))
+    if (checkImage(file)) {
+      setFanartImage(file)
+      setFanartImageURL(URL.createObjectURL(file))
+    }
   }
 
   const clearFanartImage = () => {
@@ -61,26 +67,45 @@ const FanartCreate = () => {
     setFanartImageURL('')
   }
 
+  const getData = async () => {
+    try {
+      const result = await getWebtoon(params.webtoonId)
+      setWeboonName(result.webtoonName)
+    } catch (error) {
+      console.error('웹툰 조회 실패: ', error)
+    }
+  }
+
   // 팬아트 등록 함수
-  const createFanart = () => {
+  const createData = async () => {
     if (fanartImage === null) {
       alert('팬아트를 등록해주세요.')
-    } else if (fanartName.trim() === '') {
+      return
+    }
+    if (fanartName.trim() === '') {
       alert('팬아트명을 작성해주세요.')
-    } else if (fanartDescription.trim() === '') {
+      return
+    }
+    if (fanartDescription.trim() === '') {
       alert('팬아트 설명을 작성해주세요.')
-    } else {
-      const payload = {
-        fanartName: fanartName,
-        fanartDescription: fanartDescription,
-      }
-      console.log(payload)
+      return
+    }
+    const payload = {
+      webtoonId: params.webtoonId,
+      fanartName: fanartName,
+      description: fanartDescription,
+    }
+    try {
+      const result = await createFanart(payload, fanartImage)
+      navigate(`/fanart/webtoon/${params.webtoonId}`)
+    } catch (error) {
+      console.error('팬아트 등록 실패: ', error)
     }
   }
 
   useEffect(() => {
     // mount
-    setWeboonName('테스트')
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -135,7 +160,7 @@ const FanartCreate = () => {
             <input
               type='file'
               id='fanart-image'
-              accept='image/*'
+              accept='image/jpg, image/jpeg'
               className='hidden'
               onChange={(event) => selectFanartImage(event.target.files[0])}
             />
@@ -204,7 +229,7 @@ const FanartCreate = () => {
         {/* 등록 버튼 */}
         <button
           className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
-          onClick={createFanart}
+          onClick={createData}
         >
           등록하기
         </button>

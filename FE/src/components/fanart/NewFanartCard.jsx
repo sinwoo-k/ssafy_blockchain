@@ -36,7 +36,7 @@ const NewFanartCard = ({ fanart }) => {
           <img
             src={fanart.fanartImage}
             alt='팬아트 이미지'
-            className='rounded-lg'
+            className='h-[175px] w-[175px] rounded-lg object-cover'
           />
         </div>
       </Link>
