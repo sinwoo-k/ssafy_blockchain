@@ -12,9 +12,11 @@ import java.util.Optional;
 
 @Repository
 public interface BiddingHistoryRepository extends JpaRepository<BiddingHistory, Integer> {
-    Optional<BiddingHistory> findByAuctionItemIdAndUserId(Integer auctionItemId, Integer bidderId);
+    List<BiddingHistory> findByAuctionItemIdAndUserIdAndIsLatestTrue(Integer auctionItemId, Integer userId);
 
     List<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItem);
 
     Page<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItemId, Pageable pageable);
+
+    List<BiddingHistory> findAllByAuctionItemIdAndIsLatestTrueOrderByBiddingPriceDesc(Integer auctionItem);
 }

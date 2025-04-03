@@ -1,5 +1,6 @@
 package com.c109.chaintoon.domain.nft.service;
 
+import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.scheduler.service.SchedulingService;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainSaleRequestDto;
@@ -49,11 +50,16 @@ public class AuctionItemService {
     private final UserRepository userRepository;
 
     // 판매 등록
-    public AuctionCreateResponseDto createAuctionItem(AuctionCreateRequestDto auctionCreateRequestDto) {
+    public AuctionCreateResponseDto createAuctionItem(Integer userId, AuctionCreateRequestDto auctionCreateRequestDto) {
         log.debug("Received AuctionCreateRequestDto: {}", auctionCreateRequestDto);
 
         Nft nft = nftRepository.findById(auctionCreateRequestDto.getNftId())
                 .orElseThrow(() -> new NftNotFoundException(auctionCreateRequestDto.getNftId()));
+
+        // NFT 소유자와 인증된 userId 비교
+        if (!nft.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("권한이 없습니다. NFT 소유자만 경매 등록이 가능합니다.");
+        }
 
         // 엔티티 생성
         AuctionItem auctionItem = AuctionItem.builder()
@@ -93,6 +99,8 @@ public class AuctionItemService {
                 })
                 .subscribe();
 
+        // TODO : 블록체인 상에서 판매 등록에 실패했을 경우 사용자에게 별도 알람 처리
+
         // 저장된 엔티티 정보를 response DTO로 변환
         AuctionCreateResponseDto response = AuctionCreateResponseDto.builder()
                 .auctionItemId(saved.getAuctionItemId())
@@ -113,7 +121,7 @@ public class AuctionItemService {
 
     // 경매 입찰
     @Transactional
-    public AuctionBidResponseDto tenderBid(AuctionBidRequestDto bidRequestDto) {
+    public AuctionBidResponseDto tenderBid(Integer userId, AuctionBidRequestDto bidRequestDto) {
         // 경매 아이템 조회
         AuctionItem auctionItem = auctionItemRepository.findById(bidRequestDto.getAuctionItemId())
                 .orElseThrow(() -> new AuctionItemNotFoundException(bidRequestDto.getAuctionItemId()));
@@ -123,7 +131,7 @@ public class AuctionItemService {
                 .orElseThrow(() -> new NftNotFoundException(auctionItem.getNftId()));
 
         // 자신이 등록한 nft인지 확인
-        if (nft.getUserId().equals(bidRequestDto.getBidderId())) {
+        if (nft.getUserId().equals(userId)) {
             throw new InvalidBidPriceException("자신이 등록한 상품에는 입찰할 수 없습니다.");
         }
 
@@ -151,35 +159,29 @@ public class AuctionItemService {
         AuctionItem savedItem = auctionItemRepository.save(auctionItem);
 
         // 거래내역 업데이트 : 동일 입찰자가 이미 입찰한 내역이 있는지 체크
-        Optional<BiddingHistory> optionalBiddingHistory = biddingHistoryRepository.findByAuctionItemIdAndUserId(savedItem.getAuctionItemId(), bidRequestDto.getBidderId());
-        BiddingHistory biddingHistory;
+        List<BiddingHistory> oldBids = biddingHistoryRepository.findByAuctionItemIdAndUserIdAndIsLatestTrue(savedItem.getAuctionItemId(), userId);
 
-        if(optionalBiddingHistory.isPresent()) {
-            // 기존 기록이 있으면 입찰가와 입찰 시간을 갱신
-            biddingHistory = optionalBiddingHistory.get();
-            biddingHistory.setBiddingPrice(bidRequestDto.getBiddingPrice());
-            biddingHistory.setBidTime(LocalDateTime.now());
-        } else {
-            // 기록이 없으면 새로 생성
-            biddingHistory = BiddingHistory.builder()
-                    .auctionItemId(savedItem.getAuctionItemId())
-                    .userId(bidRequestDto.getBidderId())
-                    .biddingPrice(bidRequestDto.getBiddingPrice())
-                    .bidTime(LocalDateTime.now())
-                    .build();
+        for (BiddingHistory oldBid : oldBids) {
+            oldBid.setIsLatest(false);
+            biddingHistoryRepository.save(oldBid);
         }
-        biddingHistoryRepository.save(biddingHistory);
 
-        // 결과 반환
-        AuctionBidResponseDto response = AuctionBidResponseDto.builder()
+        BiddingHistory newBid = BiddingHistory.builder()
                 .auctionItemId(savedItem.getAuctionItemId())
-                .bidderId(bidRequestDto.getBidderId())
+                .userId(userId)
+                .biddingPrice(bidRequestDto.getBiddingPrice())
+                .bidTime(LocalDateTime.now())
+                .isLatest(true)
+                .build();
+        biddingHistoryRepository.save(newBid);
+
+        return AuctionBidResponseDto.builder()
+                .auctionItemId(savedItem.getAuctionItemId())
+                .bidderId(userId)
                 .biddingPrice(savedItem.getBiddingPrice())
-                .startTime(savedItem.getStartTime())
+                .startTime(savedItem.getEndTime())
                 .endTime(savedItem.getEndTime())
                 .build();
-
-        return response;
     }
 
     // 입찰 목록 조회
@@ -212,7 +214,7 @@ public class AuctionItemService {
 
     // 즉시 구매
     @Transactional
-    public AuctionBuyNowResponseDto buyNow(AuctionBuyNowRequestDto buyNowRequestDto) {
+    public AuctionBuyNowResponseDto buyNow(Integer userId, AuctionBuyNowRequestDto buyNowRequestDto) {
         // 경매 아이템 조회
         AuctionItem auctionItem = auctionItemRepository.findById(buyNowRequestDto.getAuctionItemId())
                 .orElseThrow(() -> new AuctionItemNotFoundException(buyNowRequestDto.getAuctionItemId()));
@@ -233,13 +235,13 @@ public class AuctionItemService {
                 .orElseThrow(() -> new NftNotFoundException(auctionItem.getNftId()));
 
         // 자신이 등록한 nft인지 확인
-        if (nft.getUserId().equals(buyNowRequestDto.getBidderId())) {
+        if (nft.getUserId().equals(userId)) {
             throw new InvalidBidPriceException("자신이 등록한 상품은 즉시 구매할 수 없습니다.");
         }
 
         // 구매자 지갑 잔액 확인
-        WalletBalance walletBalance = blockchainService.getWalletBalance(buyNowRequestDto.getBidderId());
-        log.info("구매자 {}의 잔액: {}", buyNowRequestDto.getBidderId(), walletBalance.getAmount());
+        WalletBalance walletBalance = blockchainService.getWalletBalance(userId);
+        log.info("구매자 {}의 잔액: {}", userId, walletBalance.getAmount());
 
         // 구매자 잔액이 즉시 구매 가격보다 부족하면 구매 불가 처리
         if (walletBalance.getAmount() < buyNowPrice) {
@@ -250,7 +252,7 @@ public class AuctionItemService {
         BlockchainBuyRequestDto buyRequestDto = BlockchainBuyRequestDto.builder()
                 .tokenId(nft.getTokenId())
                         .price(buyNowPrice)
-                                .userId(buyNowRequestDto.getBidderId())
+                                .userId(userId)
                                         .build();
 
         blockchainService.registerBuy(buyRequestDto);
@@ -267,7 +269,7 @@ public class AuctionItemService {
         TradingHistory tradingHistory = TradingHistory.builder()
                 .auctionItemId(savedItem.getAuctionItemId())
                 .nftId(savedItem.getNftId())
-                .buyerId(buyNowRequestDto.getBidderId())
+                .buyerId(userId)
                 .sellerId(nft.getUserId())
                 .tradingValue(buyNowPrice)
                 .build();
@@ -277,7 +279,7 @@ public class AuctionItemService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         // 비동기적으로 구매 후 지갑 잔액 조회해서 로그 출력
-        blockchainService.getWalletBalanceAsync(buyNowRequestDto.getBidderId())
+        blockchainService.getWalletBalanceAsync(userId)
                 .subscribe(remainingBalance -> {
                     log.info("구매 후 남은 잔액: {}", remainingBalance.getAmount());
                 }, error -> {
@@ -288,7 +290,7 @@ public class AuctionItemService {
         AuctionBuyNowResponseDto response = AuctionBuyNowResponseDto.builder()
                 .auctionItemId(savedItem.getAuctionItemId())
                 .buyNowPrice(buyNowPrice)
-                .buyerId(buyNowRequestDto.getBidderId())
+                .buyerId(userId)
                 .startTime(savedItem.getStartTime() != null ? savedItem.getStartTime().format(formatter) : null)
                 .endTime(savedItem.getEndTime().format(formatter))
                 .build();
@@ -305,16 +307,17 @@ public class AuctionItemService {
                 .orElseThrow(() -> new NftNotFoundException(auctionItem.getNftId()));
 
         // 경매 아이템의 입찰 내역을 입찰가 내림차순으로 가져오기
-        List<BiddingHistory> biddingHistories = biddingHistoryRepository.findByAuctionItemIdOrderByBiddingPriceDesc(auctionItemId);
+        List<BiddingHistory> latestBids = biddingHistoryRepository
+                .findAllByAuctionItemIdAndIsLatestTrueOrderByBiddingPriceDesc(auctionItemId);
 
-        log.debug("BiddingHistory count for auctionItemId {}: {}", auctionItemId, biddingHistories.size());
+        log.debug("BiddingHistory count for auctionItemId {}: {}", auctionItemId, latestBids.size());
 
-        for (BiddingHistory history : biddingHistories) {
+        for (BiddingHistory history : latestBids) {
             System.out.println("입찰가 : " + history.getBiddingPrice());
         }
 
         // 입찰 내역이 없을 경우
-        if (biddingHistories.isEmpty()) {
+        if (latestBids.isEmpty()) {
             auctionItem.setEnded("Y");
             auctionItem.setSuccess("N");
             auctionItemRepository.save(auctionItem);
@@ -323,7 +326,7 @@ public class AuctionItemService {
         }
 
         // 입찰자 ID를 키로, 입찰가를 값으로 하는 Map 생성
-        Map<Integer, Double> bidderBidMap = biddingHistories.stream()
+        Map<Integer, Double> bidderBidMap = latestBids.stream()
                 .collect(Collectors.toMap(
                         BiddingHistory::getUserId,
                         BiddingHistory::getBiddingPrice
@@ -470,7 +473,7 @@ public class AuctionItemService {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<AuctionItem> pageResult;
 
-        if(StringUtils.hasText(ended) && !"전체".equalsIgnoreCase(ended)) {
+        if(StringUtils.hasText(ended)) {
             pageResult = auctionItemRepository.findByTypeAndEnded(type, ended, pageable);
         } else {
             pageResult = auctionItemRepository.findByType(type, pageable);
@@ -489,7 +492,6 @@ public class AuctionItemService {
         );
         return dtoPage;
     }
-
 
     private Sort getSort(String orderBy) {
         if("biddingPrice".equalsIgnoreCase(orderBy)) {
