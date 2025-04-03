@@ -91,11 +91,12 @@ public class FanartController {
 
     // 팬아트 삭제
     @DeleteMapping("/{fanartId}")
-    public ResponseEntity<Void> deleteFanart(
-            @PathVariable Integer fanartId,
-            @RequestParam Integer userId) {
+    public ResponseEntity<?> deleteFanart(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer fanartId
+    ) {
         fanartService.deleteFanart(fanartId, userId);
-        return ResponseEntity.noContent().build();
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 팬아트 검색
@@ -112,20 +113,20 @@ public class FanartController {
     // 좋아요 추가
     @PostMapping("/{fanartId}/like")
     public ResponseEntity<?> likeFanart(
-            @PathVariable Integer fanartId,
-            @RequestParam Integer userId
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer fanartId
     ) {
-        fanartService.likeFanart(fanartId, userId);
+        fanartService.likeFanart(userId, fanartId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 좋아요 취소
     @DeleteMapping("/{fanartId}/like")
     public ResponseEntity<?> unlikeFanart(
-            @PathVariable Integer fanartId,
-            @RequestParam Integer userId
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer fanartId
     ) {
-        fanartService.unlikeFanart(fanartId, userId);
+        fanartService.unlikeFanart(userId, fanartId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
