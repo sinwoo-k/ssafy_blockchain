@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.user.dto.response;
 
 import lombok.*;
+import org.springframework.data.redis.connection.convert.StringToRedisClientInfoConverter;
 
 @Getter
 @Setter
@@ -16,5 +17,6 @@ public class MyInfoResponseDto {
     private String backgroundImage;
     private Integer follower;
     private Integer following;
+    private String url;
     private String joinDate;
 }
