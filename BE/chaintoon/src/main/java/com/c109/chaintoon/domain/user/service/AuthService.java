@@ -5,6 +5,7 @@ import com.c109.chaintoon.common.exception.ServerException;
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.common.oauth.AuthCodeGenerator;
 import com.c109.chaintoon.common.redis.service.RedisService;
+import com.c109.chaintoon.domain.nft.service.BlockchainService;
 import com.c109.chaintoon.domain.sso.enums.SsoProvider;
 import com.c109.chaintoon.domain.user.dto.request.SsoUserRequestDto;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -27,7 +28,7 @@ public class AuthService {
     private final RedisService redisService;
     private final EmailService emailService;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final BlockchainService blockchainService;
     // 인증 코드 만료 시간 5분
     private static final long AUTH_CODE_EXPIRE_MINUTES = 5;
 
@@ -104,8 +105,12 @@ public class AuthService {
                 .profileImage("")
                 .ssoType(SsoProvider.CHAINTOON.name())
                 .build();
+        newUser = this.userRepository.save(newUser);
 
-        return userRepository.save(newUser);
+        // 비동기로 지갑 생성 시작
+        blockchainService.createWalletAsync(newUser.getId());
+
+        return newUser;
     }
 
     public Integer saveUserIfAbsent(SsoUserRequestDto userRequest, SsoProvider ssoProvider) {

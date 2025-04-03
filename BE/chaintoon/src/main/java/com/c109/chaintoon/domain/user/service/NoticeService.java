@@ -258,6 +258,44 @@ public class NoticeService {
         socketService.sendNewNotice(webtoon.getUserId());
     }
 
+    public void addWalletCreation(Integer userId, String message) {
+        try {
+
+            Map<String, Object> metadata = Map.of(
+                    "userId" , userId,
+                    "message" , message
+            );
+            String metadataJson = objectMapper.writeValueAsString(metadata);
+            Notice notice = Notice.builder()
+                    .userId(userId)
+                    .type(NoticeType.WALLET_CREATE.getValue())
+                    .metadata(metadataJson)
+                    .build();
+            noticeRepository.save(notice);
+        } catch (JsonProcessingException e) {
+            throw new ServerException("알림 생성이 실패했습니다.");
+        }
+        socketService.sendNewNotice(userId);
+    }
+
+    public void addWalletCreationFail(Integer userId, String message) {
+        try {
+            Map<String, Object> metadata = Map.of(
+                    "UserId" , userId,
+                    "message", message
+            );
+            String metadataJson = objectMapper.writeValueAsString(metadata);
+            Notice notice = Notice.builder()
+                    .userId(userId)
+                    .type(NoticeType.WALLET_FAIL.getValue())
+                    .metadata(metadataJson)
+                    .build();
+            noticeRepository.save(notice);
+        } catch (JsonProcessingException e) {
+            throw new ServerException("알림 생성이 실패했습니다.");
+        }
+        socketService.sendNewNotice(userId);
+    }
     // TODO: 도현 - NFT 발행 기능 구현 후, 2차 창작물일 경우 알림 생성
     public void addSecondaryCreationNftMintNotice() {
 
