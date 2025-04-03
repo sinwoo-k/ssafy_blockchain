@@ -20,7 +20,7 @@ const TodayRecommend = () => {
   // carousel setting
   const setting = {
     dots: false,
-    Infinity: true,
+    Infinite: true,
     speed: 1000,
     slidesToShow: 4,
     slidesToScroll: 1,
@@ -28,7 +28,7 @@ const TodayRecommend = () => {
     autoplay: true,
     autoplaySpeed: 3000,
     beforeChange: (current, next) => {
-      setBackgroundImg(webtoons[next]?.cover || fantasyCover)
+      setBackgroundImg(webtoons[next]?.seroThumbnail)
     },
   }
   useEffect(() => {

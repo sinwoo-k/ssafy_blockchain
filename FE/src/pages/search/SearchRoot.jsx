@@ -6,6 +6,7 @@ import SearchWebtoon from '../../components/search/SearchWebtoon'
 import SearchUser from '../../components/search/SearchUser'
 import SearchFanart from '../../components/search/SearchFanart'
 import SearchGoods from '../../components/search/SearchGoods'
+import { getAllSearch } from '../../api/searchAPI'
 
 const webtoonDummy = Array(5)
   .fill()
@@ -65,6 +66,15 @@ const SearchRoot = () => {
   const [fanartList, setFanartList] = useState([])
   const [goodsList, setGoodsList] = useState([])
 
+  const getData = async () => {
+    try {
+      const result = await getAllSearch(keyword)
+      console.log(result)
+    } catch (error) {
+      console.error('통합 검색 조회 실패: ', error)
+    }
+  }
+
   useEffect(() => {
     // mount
     setKeyword(keywordParam)
@@ -78,6 +88,13 @@ const SearchRoot = () => {
     // unmont
     return () => {}
   }, [keywordParam, searchTypeParam])
+
+  useEffect(() => {
+    // mount
+    getData()
+    // unmount
+    return () => {}
+  }, [])
   return (
     <div className='py-[60px]'>
       <div className='flex flex-col items-center'>
