@@ -1,5 +1,6 @@
-package com.c109.chaintoon.domain.nft.dto.blockchain;
+package com.c109.chaintoon.domain.nft.dto.blockchain.item;
 
+import com.c109.chaintoon.domain.nft.dto.blockchain.NftMetadata;
 import lombok.*;
 
 @Getter

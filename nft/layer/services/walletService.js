@@ -135,6 +135,8 @@ export async function getWalletInfoService({ userId }) {
     const ethBalanceWei = await provider.getBalance(walletAddress);
     const ethBalance = ethers.formatEther(ethBalanceWei);
     
+    const formattedEth = parseFloat(rawEth).toFixed(5);
+
     if (wallet.private_key) {
       return {
         walletId: wallet.wallet_id,
@@ -145,7 +147,7 @@ export async function getWalletInfoService({ userId }) {
         isRegistered: result[0],
         contractPublicKey: result[1],
         balances: {
-          eth: `${ethBalance} ETH`
+          eth: `${formattedEth} ETH`
         }
       };
     }
