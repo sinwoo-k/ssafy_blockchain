@@ -5,9 +5,9 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.c109.chaintoon.common.exception.ServerException;
+import com.c109.chaintoon.common.redis.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,13 +15,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class S3Service {
     private final AmazonS3 amazonS3;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisService redisService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -48,12 +47,16 @@ public class S3Service {
 
     public void deleteFile(String filePath) {
         amazonS3.deleteObject(bucketName, filePath);
-        redisTemplate.delete(filePath);
+        redisService.deleteValue(filePath);
     }
 
     public String getPresignedUrl(String filePath) {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            return "";
+        }
+
         // 1. Redis에서 캐시 조회
-        String cachedUrl = (String) redisTemplate.opsForValue().get(filePath);
+        String cachedUrl = (String) redisService.getValue(filePath);
         if (cachedUrl != null) {
             return cachedUrl;
         }
@@ -67,19 +70,14 @@ public class S3Service {
         String urlString = presignedUrl.toString();
 
         // 3. Redis에 캐싱 (유효 시간 동기화)
-        redisTemplate.opsForValue().set(
-                filePath,
-                urlString,
-                presignedUrlExpiryMinutes,
-                TimeUnit.MINUTES
-        );
+        redisService.setValue(filePath, urlString, presignedUrlExpiryMinutes);
 
         return urlString;
     }
 
     private Date getExpirationDate() {
         Date expiration = new Date();
-        long expTimeMillis = expiration.getTime() + (presignedUrlExpiryMinutes * 60 * 1000);
+        long expTimeMillis = expiration.getTime() + ((long) presignedUrlExpiryMinutes * 60 * 1000);
         expiration.setTime(expTimeMillis);
         return expiration;
     }
