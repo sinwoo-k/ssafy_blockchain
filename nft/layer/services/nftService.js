@@ -131,8 +131,8 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       if (goods == null) {
         throw new AppError("해당하는 굿즈가 없습니다.", 404);
       }
-      if(goods?.user_id == userId){
-        throw new AppError("굿즈의 작성자만 ")
+      if(goods?.user_id != userId){
+        throw new AppError("굿즈의 작성자만 등록 할 수 있습니다.", 403);
       }
       title = goods.goods_name;
     } else if (type === 'episode') {
