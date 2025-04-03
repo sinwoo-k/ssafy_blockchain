@@ -206,8 +206,7 @@ const UserProfile = () => {
       const updateData = {
         nickname: updatedFields.nickname || '',
         introduction: updatedFields.bio || '',
-        // email: updatedFields.email || '',
-        // url: updatedFields.url || ''
+        url: updatedFields.url || ''
       };
 
       console.log('수정 요청 데이터:', updateData);

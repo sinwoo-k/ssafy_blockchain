@@ -77,7 +77,7 @@ const updateUserInfo = async (updateData, imageFile = null) => {
     
     // 이미지 파일이 있는 경우 추가
     if (imageFile) {
-      formData.append("file", imageFile);
+      formData.append("profileImage", imageFile);
     }
     
     // FormData를 multipart/form-data 형식으로 전송

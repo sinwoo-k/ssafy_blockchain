@@ -148,7 +148,7 @@ const ProfileEditModal = ({
         </div>
 
         {/* URL */}
-        {/* <div className="mb-4">
+        <div className="mb-4">
           <label className="block mb-1 text-sm text-gray-300">URL</label>
           <input
             type="text"
@@ -157,19 +157,7 @@ const ProfileEditModal = ({
             onChange={onChange}
             className="w-full rounded bg-white/10 p-2 text-white"
           />
-        </div> */}
-
-        {/* 이메일 */}
-        {/* <div className="mb-6">
-          <label className="block mb-1 text-sm text-gray-300">이메일 주소</label>
-          <input
-            type="email"
-            name="email"
-            value={editFields.email}
-            onChange={onChange}
-            className="w-full rounded bg-white/10 p-2 text-white"
-          />
-        </div> */}
+        </div>
 
         {/* 버튼들 */}
         <div className="flex justify-end space-x-2">
