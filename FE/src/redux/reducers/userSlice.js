@@ -1,4 +1,3 @@
-// userSlice.js (최종 최적화 코드)
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -27,16 +26,16 @@ export const userSlice = createSlice({
       state.walletType = action.payload;
     },
     setUserData: (state, action) => {
-      console.log(action.payload)
+      console.log(action.payload);
       state.userData = action.payload;
     },
-    setUser:(state,action) =>{
+    setUser: (state, action) => {
       state.userData = action.payload;
+      state.isAuthenticated = true;
     },
     logout: () => initialState,
   },
 });
 
 export const userReducerActions = userSlice.actions;
-
 export default userSlice.reducer;
