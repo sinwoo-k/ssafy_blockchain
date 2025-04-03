@@ -60,18 +60,33 @@ public class FanartService {
                 .build();
     }
 
-    private FanartResponseDto toFanartResponseDto(Fanart fanart, User user, Webtoon webtoon) {
+    private FanartResponseDto toFanartResponseDto(Fanart fanart, User fanartWriter, Webtoon webtoon) {
+        return toFanartResponseDto(fanart, fanartWriter, webtoon, null);
+    }
+
+    private FanartResponseDto toFanartResponseDto(Fanart fanart, User fanartWriter, Webtoon webtoon, Integer userId) {
+        String hasLiked = "N";
+        if (userId != null) {
+            FanartPreference fanartPreference = fanartPreferenceRepository
+                    .findByFanartIdAndUserId(fanart.getFanartId(), userId)
+                    .orElse(null);
+            if (fanartPreference != null && "Y".equals(fanartPreference.getLiked())) {
+                hasLiked = "Y";
+            }
+        }
+
         return FanartResponseDto.builder()
                 .fanartId(fanart.getFanartId())
                 .userId(fanart.getUserId())
-                .nickname(user.getNickname())
-                .profileImage(s3Service.getPresignedUrl(user.getProfileImage()))
+                .nickname(fanartWriter.getNickname())
+                .profileImage(s3Service.getPresignedUrl(fanartWriter.getProfileImage()))
                 .webtoonId(webtoon.getWebtoonId())
                 .webtoonName(webtoon.getWebtoonName())
                 .fanartName(fanart.getFanartName())
-                .fanartImage(fanart.getFanartImage())
+                .fanartImage(s3Service.getPresignedUrl(fanart.getFanartImage()))
                 .commentCount(fanart.getComment())
                 .likeCount(fanart.getLikeCount())
+                .hasLiked(hasLiked)
                 .build();
     }
 
@@ -143,11 +158,11 @@ public class FanartService {
         // 팬아트 생성 알림
         noticeService.addSecondaryCreateNotice(webtoon, fanart, user);
 
-        return toFanartResponseDto(fanart, user, webtoon);
+        return toFanartResponseDto(fanart, user, webtoon, userId);
     }
 
     // 팬아트 상세 조회
-    public FanartResponseDto getFanartDetail(Integer fanartId) {
+    public FanartResponseDto getFanartDetail(Integer userId, Integer fanartId) {
         // 팬아트 조회
         Fanart fanart = fanartRepository.findById(fanartId)
                 .orElseThrow(() -> new FanartNotFoundException(fanartId));
@@ -161,7 +176,7 @@ public class FanartService {
                 .orElseThrow(() -> new UserIdNotFoundException(fanart.getUserId()));
 
         // 팬아트 dto 반환
-        return toFanartResponseDto(fanart, user, webtoon);
+        return toFanartResponseDto(fanart, user, webtoon, userId);
     }
 
     // 내 팬아트 목록 조회
@@ -209,7 +224,7 @@ public class FanartService {
                 .orElseThrow(() -> new UserIdNotFoundException(savedFanart.getUserId()));
 
         // 응답 DTO 생성
-        return toFanartResponseDto(savedFanart, user, webtoon);
+        return toFanartResponseDto(savedFanart, user, webtoon, userId);
     }
 
     // 팬아트 삭제

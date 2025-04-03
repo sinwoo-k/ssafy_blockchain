@@ -4,13 +4,14 @@ import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.Optional;
 
-public interface WebtoonRepository extends JpaRepository<Webtoon, Integer> {
+public interface WebtoonRepository extends JpaRepository<Webtoon, Integer>, JpaSpecificationExecutor<Webtoon> {
 
     @Query("SELECT w FROM Webtoon w " +
             "LEFT JOIN User u ON w.userId = u.id " +
@@ -21,10 +22,6 @@ public interface WebtoonRepository extends JpaRepository<Webtoon, Integer> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
-
-    Page<Webtoon> findByGenreAndDeleted(String genre, String deleted, Pageable pageable);
-
-    Page<Webtoon> findByDeleted(String deleted, Pageable pageable);
 
     Page<Webtoon> findByWebtoonIdInAndDeleted(Collection<Integer> webtoonIds, String deleted, Pageable pageable);
 

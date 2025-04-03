@@ -19,4 +19,5 @@ public class FanartResponseDto {
     private String fanartImage;
     private Integer commentCount;
     private Integer likeCount;
+    private String hasLiked;
 }
