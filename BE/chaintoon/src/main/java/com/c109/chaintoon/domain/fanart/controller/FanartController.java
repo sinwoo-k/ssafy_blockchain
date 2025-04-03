@@ -60,8 +60,10 @@ public class FanartController {
     // 팬아트 상세 조회
     @GetMapping("/{fanartId}")
     public ResponseEntity<FanartResponseDto> getFanartDetail(
-            @PathVariable Integer fanartId) {
-        FanartResponseDto response = fanartService.getFanartDetail(fanartId);
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer fanartId
+    ) {
+        FanartResponseDto response = fanartService.getFanartDetail(userId, fanartId);
         return ResponseEntity.ok(response);
     }
 

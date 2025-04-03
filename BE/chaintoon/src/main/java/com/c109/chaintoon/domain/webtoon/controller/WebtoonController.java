@@ -6,6 +6,7 @@ import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.WebtoonService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +28,10 @@ public class WebtoonController {
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "latest") String orderBy,
-            @RequestParam(required = false) String genre
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) @Pattern (regexp = "[YN]", message = "2차 창작 여부는 Y/N으로 입력하세요.") String adaptable
     ) {
-
-        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre);
+        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre, adaptable);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
 
