@@ -2,6 +2,8 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.fanart.entity.Fanart;
+import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
 import com.c109.chaintoon.domain.search.code.SearchType;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -16,10 +18,8 @@ import com.c109.chaintoon.domain.webtoon.repository.FavoriteWebtoonRepository;
 import com.c109.chaintoon.domain.webtoon.repository.TagRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +36,7 @@ public class WebtoonService {
     private final FavoriteWebtoonRepository favoriteWebtoonRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final FanartRepository fanartRepository;
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
@@ -141,15 +142,25 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre) {
+    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Webtoon> webtoonPage;
 
+        // 삭제되지 않은 웹툰만 조회하는 기본 조건
+        Specification<Webtoon> spec = (root, query, cb) -> cb.equal(root.get("deleted"), "N");
+
+        // genre 조건 추가 (값이 존재하는 경우만 필터링)
         if (genre != null && !genre.isEmpty()) {
-            webtoonPage = webtoonRepository.findByGenreAndDeleted(genre, "N", pageable);
-        } else {
-            webtoonPage = webtoonRepository.findByDeleted("N", pageable);
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("genre"), genre));
         }
+
+        // adaptable 조건 추가 (값이 "Y"인 경우만 필터링)
+        if (adaptable != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("adaptable"), adaptable));
+        }
+
+        // Specification을 사용하여 동적 쿼리 실행
+        webtoonPage = webtoonRepository.findAll(spec, pageable);
 
         return toDtoList(webtoonPage);
     }
@@ -293,6 +304,14 @@ public class WebtoonService {
         // 삭제 권한 없음
         if (!webtoon.getUserId().equals(userId)) {
             throw new UnauthorizedAccessException("웹툰 삭제 권한이 없습니다.");
+        }
+
+        // 2차 창작 시 삭제 불가
+        Fanart fanart = fanartRepository
+                .findByWebtoonId(webtoonId, Limit.of(1))
+                .orElse(null);
+        if (fanart != null) {
+            throw new IllegalArgumentException("팬아트가 등록된 웹툰은 삭제할 수 없습니다.");
         }
 
         // S3 이미지 삭제

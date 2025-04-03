@@ -13,5 +13,6 @@ public class FanartListResponseDto implements SearchResult {
     private Integer fanartId;
     private Integer webtoonId;
     private String fanartName;
+    private String description;
     private String fanartImage;
 }
