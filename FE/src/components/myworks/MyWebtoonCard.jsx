@@ -9,19 +9,19 @@ const MyWebtoonCard = ({ webtoon }) => {
       {/* 썸네일 이미지 */}
       <div>
         <img
-          src={webtoon?.cover}
+          src={webtoon?.garoThumbnail}
           alt=''
-          className=' h-[80px] w-[150px] rounded-lg'
+          className=' h-[80px] w-[150px] rounded-lg object-cover'
         />
       </div>
       {/* 회차 정보 */}
       <div className='flex h-[80px] flex-col justify-evenly'>
-        <p className=''>{webtoon?.title}</p>
+        <p className=''>{webtoon?.webtoonName}</p>
         <div className='flex items-center gap-5'>
           <span className='flex items-center gap-1'>
             <StarIcon sx={{ color: '#ffff19' }} />
             <span className='inline-block w-[45px] translate-y-[1px] transform'>
-              4.56
+              {(webtoon?.rating / 2).toFixed(2)}
             </span>
           </span>
           <span className='text-text/50'>{webtoon?.episodeCount} 화</span>

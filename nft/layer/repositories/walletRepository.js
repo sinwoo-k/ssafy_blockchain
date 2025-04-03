@@ -1,5 +1,6 @@
 import { pool } from '../../db/db.js';
 
+
 export async function createWallet(walletData) {
   const {  userId, walletAddress, privateKey, publicKey, recoveryPhrase } = walletData;
   const [result] = await pool.execute(
@@ -44,3 +45,4 @@ export async function getWalletByAddress(walletAddress) {
   const [result] = await pool.execute(query, [walletAddress]);
   return result[0];
 }
+

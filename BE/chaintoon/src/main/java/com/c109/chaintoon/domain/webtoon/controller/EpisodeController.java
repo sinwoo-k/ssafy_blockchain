@@ -34,29 +34,39 @@ public class EpisodeController {
 
     @PostMapping
     public ResponseEntity<?> addEpisode(
+            @AuthenticationPrincipal Integer userId,
             @Valid @RequestPart(name = "episode") EpisodeRequestDto episodeRequest,
             @RequestPart(name = "thumbnail") MultipartFile thumbnail,
             @RequestPart(name = "images") List<MultipartFile> images
     ) {
-        EpisodeResponseDto episode = episodeService.addEpisode(episodeRequest, thumbnail, images);
+        EpisodeResponseDto episode = episodeService.addEpisode(userId, episodeRequest, thumbnail, images);
         return new ResponseEntity<>(episode, HttpStatus.CREATED);
     }
 
     @GetMapping("/{episodeId}")
-    public ResponseEntity<?> getEpisode(@PathVariable Integer episodeId) {
-        EpisodeResponseDto episode = episodeService.getEpisode(episodeId);
+    public ResponseEntity<?> getEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable Integer episodeId
+    ) {
+        EpisodeResponseDto episode = episodeService.getEpisode(episodeId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/first")
-    public ResponseEntity<?> getFirstEpisode(@RequestParam Integer webtoonId) {
-        EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId);
+    public ResponseEntity<?> getFirstEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam Integer webtoonId
+    ) {
+        EpisodeResponseDto episode = episodeService.getFirstEpisode(webtoonId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 
     @GetMapping("/latest")
-    public ResponseEntity<?> getLatestEpisode(@RequestParam Integer webtoonId) {
-        EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId);
+    public ResponseEntity<?> getLatestEpisode(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam Integer webtoonId
+    ) {
+        EpisodeResponseDto episode = episodeService.getLatestEpisode(webtoonId, userId);
         return new ResponseEntity<>(episode, HttpStatus.OK);
     }
 

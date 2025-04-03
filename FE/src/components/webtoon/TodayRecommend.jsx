@@ -33,11 +33,36 @@ const TodayRecommend = () => {
   }
   useEffect(() => {
     setWebtoons([
-      { id: 0, title: '판타지', genre: 'fantasy', cover: fantasyCover },
-      { id: 1, title: '액션', genre: 'action', cover: actionCover },
-      { id: 2, title: '로맨스', genre: 'romance', cover: romanceCover },
-      { id: 3, title: '드라마', genre: 'drama', cover: dramaCover },
-      { id: 4, title: '무협/사극', genre: 'history', cover: historyCover },
+      {
+        webtoonId: 0,
+        webtoonName: '판타지',
+        genre: 'fantasy',
+        seroThumbnail: fantasyCover,
+      },
+      {
+        webtoonId: 1,
+        webtoonName: '액션',
+        genre: 'action',
+        seroThumbnail: actionCover,
+      },
+      {
+        webtoonId: 2,
+        webtoonName: '로맨스',
+        genre: 'romance',
+        seroThumbnail: romanceCover,
+      },
+      {
+        webtoonId: 3,
+        webtoonName: '드라마',
+        genre: 'drama',
+        seroThumbnail: dramaCover,
+      },
+      {
+        webtoonId: 4,
+        webtoonName: '무협/사극',
+        genre: 'history',
+        seroThumbnail: historyCover,
+      },
     ])
   }, [])
   return (
@@ -54,7 +79,7 @@ const TodayRecommend = () => {
         <div>
           <Slider {...setting}>
             {webtoons.map((webtoon) => (
-              <WebtoonCard key={webtoon.id} webtoon={webtoon} />
+              <WebtoonCard key={webtoon.webtoonId} webtoon={webtoon} />
             ))}
           </Slider>
         </div>

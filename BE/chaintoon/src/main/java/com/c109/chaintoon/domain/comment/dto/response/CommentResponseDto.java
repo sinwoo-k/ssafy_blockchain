@@ -16,8 +16,10 @@ public class CommentResponseDto {
     private String type;
     private Integer parentId;
     private String content;
-    private String updateDate; // 2025-03-17
-    private String updateTime; // 10:09:05
+    private String hasLiked;
+    private String hasHated;
+    private String createDate; // 2025-03-17
+    private String createTime; // 10:09:05
     private Long replyCount;
     private Long likeCount;
     private Long hateCount;

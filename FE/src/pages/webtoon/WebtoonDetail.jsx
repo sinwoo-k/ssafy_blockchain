@@ -1,12 +1,33 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import WebtoonDetailInfo from '../../components/webtoon/WebtoonDetailInfo'
 import WebtoonDetailEpisodeList from '../../components/webtoon/WebtoonDetailEpisodeList'
+import { getWebtoon } from '../../api/webtoonAPI'
 
 const WebtoonDetail = () => {
+  const params = useParams()
+
+  const [webtoon, setWebtoon] = useState({})
+
+  const getData = async () => {
+    try {
+      const result = await getWebtoon(params.webtoonId)
+      setWebtoon(result)
+    } catch (error) {
+      console.error('웹툰 불러오기 실패: ', error)
+    }
+  }
+
+  useEffect(() => {
+    // mount
+    getData()
+    // unmount
+    return () => {}
+  }, [])
   return (
     <div>
-      <WebtoonDetailInfo />
-      <WebtoonDetailEpisodeList />
+      <WebtoonDetailInfo webtoon={webtoon} patchData={getData} />
+      <WebtoonDetailEpisodeList webtoonId={webtoon.webtoonId} />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { createWalletService, getWalletInfoService, connectWalletService, sendTransactionService } from '../services/walletService.js';
+import AppError from '../../utils/AppError.js';
 
 export async function createWallet(req, res) {
   try {

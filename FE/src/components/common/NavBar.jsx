@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
-import { logoutAction } from '../../redux/actions/authActions';
+import { logoutAction } from '../../redux/actions/authActions'
 // 컴포넌트
 import LoginModal from '../Auth/LoginModal'
 
@@ -44,14 +44,14 @@ const NavBar = () => {
   }
 
   const handleLogout = () => {
-    dispatch(logoutAction());
+    dispatch(logoutAction())
   }
 
   return (
     <>
       <div
         className={`border-text text-text ${scroll && 'bg-black'} 
-      fixed top-0 z-10 flex h-[60px] w-full justify-between border-b`}
+      fixed top-0 z-20 flex h-[60px] w-full justify-between border-b`}
       >
         <div className='flex'>
           {/* 로고 */}
@@ -62,7 +62,9 @@ const NavBar = () => {
           </div>
           {/* 페이지 내비게이션*/}
           <div className='flex h-full w-[100px] items-center justify-center'>
-            <Link className='text-lg'>웹툰</Link>
+            <Link to={'/'} className='text-lg'>
+              웹툰
+            </Link>
           </div>
           <div className='flex h-full w-[100px] items-center justify-center'>
             <Link to='/store' className='text-lg'>
@@ -80,7 +82,7 @@ const NavBar = () => {
           {isAuthenticated && (
             <div className='flex h-full w-[100px] items-center justify-center gap-5'>
               <IconLink
-                path={'/'}
+                path={'/webtoon/myfavorite'}
                 Icon={CollectionsBookmarkIcon}
                 tooltip={'관심 웹툰'}
               />

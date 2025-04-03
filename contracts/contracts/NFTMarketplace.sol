@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTMarketplace is ERC721URIStorage, Ownable {
+contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // NFT 민팅 관련 변수
     uint256 private _tokenIds;
 
     // 판매 목록 구조체 정의
     struct Listing {
         address seller;
-        uint256 price;
+        uint256 price; // 원래 가격
+        uint256 amount; // 판매 금액 (여기서 기록)
         bool isListed;
     }
     // 토큰 ID -> Listing (판매 정보)
@@ -20,9 +22,18 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
     // 로열티 관련 구조체 정의 (원작자, 등록자, 관리자 지갑)
     struct RoyaltyInfo {
         address originalCreator;
-        address registrant;
+        address ownerShare;
         address adminWallet;
     }
+    // Purchase 정보를 저장할 구조체 정의
+    struct PurchaseRecord {
+        address buyer;
+        uint256 price;
+        uint256 purchaseTime;
+    }
+
+    // tokenId별 구매 기록 저장 매핑
+    mapping(uint256 => PurchaseRecord) public purchaseRecords;
     // 토큰 ID -> RoyaltyInfo (분배 주소 보관)
     mapping(uint256 => RoyaltyInfo) public royaltyInfoByToken;
 
@@ -36,39 +47,38 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
     /**
      * @dev NFT를 민팅하는 함수 (소유자만 호출 가능).
      * @param to 민팅된 NFT의 소유자 주소
-     * @param tokenURI NFT 메타데이터 URI
+     * @param _tokenURI NFT 메타데이터 URI
      * @param originalCreator 원작자 지갑 주소
-     * @param registrant 등록자 지갑 주소
+     * @param ownerShare 소유자자 지갑 주소
      * @param adminWallet 관리자 지갑 주소
      * @return newTokenId 발행된 NFT의 tokenId
      */
     function mint(
         address to,
-        string memory tokenURI,
+        string memory _tokenURI,
         address originalCreator,
-        address registrant,
+        address ownerShare,
         address adminWallet
     ) public returns (uint256) {
-        require(bytes(tokenURI).length > 0, "Token URI cannot be empty");
+        require(bytes(_tokenURI).length > 0, "Token URI cannot be empty");
 
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
 
-        // 1) 실제 NFT 민팅
+        // 실제 NFT 민팅
         _mint(to, newTokenId);
-        _setTokenURI(newTokenId, tokenURI);
+        _setTokenURI(newTokenId, _tokenURI);
 
-        // 2) 로열티 정보를 on-chain에 저장
+        // 로열티 정보 저장
         royaltyInfoByToken[newTokenId] = RoyaltyInfo({
             originalCreator: originalCreator,
-            registrant: registrant,
+            ownerShare: ownerShare,
             adminWallet: adminWallet
         });
 
-        emit NFTMinted(to, newTokenId, tokenURI);
+        emit NFTMinted(to, newTokenId, _tokenURI);
         return newTokenId;
     }
-
     /**
      * @dev NFT를 판매 목록에 등록하는 함수.
      * @param tokenId 판매할 토큰 ID
@@ -79,8 +89,12 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         // NFT의 소유자만 판매할 수 있도록 체크
         require(ownerOf(tokenId) == msg.sender, "Only owner can list NFT");
 
-        listings[tokenId] = Listing(msg.sender, price, true);
-
+        listings[tokenId] = Listing({
+            seller: msg.sender,
+            price: price,
+            amount: price, // 판매 금액을 amount에 기록
+            isListed: true
+        });
         emit NFTListed(tokenId, msg.sender, price);
     }
 
@@ -103,23 +117,72 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         require(msg.value >= listing.price, "Insufficient funds");
 
         // (1) 이 NFT의 로열티 정보 가져오기
-        RoyaltyInfo memory info = royaltyInfoByToken[tokenId];
+        RoyaltyInfo storage info = royaltyInfoByToken[tokenId];
 
         // (2) 예: 4% / 95% / 1% 분배 계산
         uint256 originalCreatorShare = (listing.price * 4) / 100;
-        uint256 registrantShare = (listing.price * 95) / 100;
+        uint256 ownerShare = (listing.price * 95) / 100;
         uint256 adminShare = (listing.price * 1) / 100;
 
         // (3) 각각 분배
         payable(info.originalCreator).transfer(originalCreatorShare);
-        payable(info.registrant).transfer(registrantShare);
+        payable(info.ownerShare).transfer(ownerShare);
         payable(info.adminWallet).transfer(adminShare);
 
         // (4) NFT 소유권 이전
         _transfer(listing.seller, msg.sender, tokenId);
         listings[tokenId].isListed = false;
 
+        // 구매 후 ownerShare 주소를 구매자의 주소로 업데이트
+        info.ownerShare = msg.sender;
+
+        purchaseRecords[tokenId] = PurchaseRecord({
+            buyer: msg.sender,
+            price: listing.price,
+            purchaseTime: block.timestamp
+        });
         // (5) 이벤트 발생
         emit NFTSold(tokenId, msg.sender, listing.price);
+    }
+
+    // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(ERC721, ERC721Enumerable, ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _burn(
+        uint256 tokenId
+    ) internal virtual override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    )
+        public
+        view
+        virtual
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
     }
 }

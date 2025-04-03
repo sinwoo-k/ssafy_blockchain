@@ -11,67 +11,8 @@ const getUserInfo = async (userId) => {
 // 내 정보 조회 API
 export const getMyUserInfo = async () => {
   try {
-    const res = await API.get('/users/my-info');
-    return res.data;
-  } catch (error) {
-    console.error("내 정보 조회 실패:", error);
-    throw error;
-  }
-};
-
-// 회원 정보 수정
-const updateUserInfo = async (userId, userData) => {
-  try {
-    console.log('회원정보 수정 요청:'.{userId, userData})
-
-    const res = await API.patch(`/users`, userData);
-    return res.data;
-  } catch (error) {
-    console.error("회원 정보 수정 실패:", error);
-    if (error.response){
-      console.error('응답데이터:', error.response.data);
-    }
-    throw error;
-  }
-};
-
-// 닉네임 중복 체크
-const checkNicknameExists = async (nickname) => {
-  try {
-    const res = await API.get(`/users/is-exist/${nickname}`);
-    return res.data;
-  } catch (error) {
-    console.error("닉네임 중복 체크 실패:", error);
-    throw error;
-  }
-};
-
-// 프로필 이미지 제거
-const deleteProfileImage = async () => {
-  try {
-    const res = await API.delete('/users/delete-profile');
-    return res.data;
-  } catch (error) {
-    console.error("프로필 이미지 제거 실패:", error);
-    throw error;
-  }
-};
-
-// 배경 이미지 제거
-const deleteBackgroundImage = async () => {
-  try {
-    const res = await API.delete('/users/delete-background');
-    return res.data;
-  } catch (error) {
-    console.error("배경 이미지 제거 실패:", error);
-    throw error;
-  }
-};
-
-// 팔로우하기
-const followUser = async (userId) => {
-  try {
-    const res = await API.put(`/users/following/${userId}`);
+    const res = await API.get('/users/self/information');
+    console.log(res)
     return res.data;
   } catch (error) {
     console.error("팔로우 실패:", error);

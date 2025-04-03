@@ -33,14 +33,11 @@ public class SecurityConfig {
             config.setAllowedOrigins(List.of(
                     "http://localhost:5173",
                     "https://localhost:5173",
-                    "http://i12c209.p.ssafy.io",
-                    "http://i12c209.p.ssafy.io:5000",
-                    "https://i12c209.p.ssafy.io",
-                    "https://i12c209.p.ssafy.io:5000",
+                    "https://j12c109.p.ssafy.io",
                     "https://min9805.github.io"
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-            config.setAllowedHeaders(List.of("Authorization", "Refresh-Token", "Content-Type"));
+            config.setAllowedHeaders(List.of("Content-Type"));
             config.setAllowCredentials(true); // 쿠키 허용 여부
             config.setExposedHeaders(List.of("Set-Cookie", "X-XSRF-TOKEN")); // 쿠키 관련 헤더
             config.setMaxAge(3600L); // Pre-flight 캐싱 시간
@@ -73,7 +70,8 @@ public class SecurityConfig {
                         "/api/users/search",
                         "/api/search",
                         "/api/redis/test",
-                        "/api/sso/**"
+                        "/api/sso/**",
+                        "/api/metrics"
                 ).permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()

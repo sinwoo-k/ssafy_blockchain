@@ -1,37 +1,24 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import MyEpisodeCard from './MyEpisodeCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
+import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 
-const generateDummyEpisodes = (count, startId = 0) => {
-  return Array.from({ length: count }, (_, i) => ({
-    episodeId: startId + i,
-    title: `${i + 1}화`,
-    thumbnail: `https://placehold.co/200x100?text=Episode+${i + 1}`,
-    viewCount: 12345,
-    uploadDate: '2025-03-10',
-  }))
-}
-
-const MyWebtoonDetailEpisodeList = () => {
-  const [dummyData, setDummyData] = useState(
-    generateDummyEpisodes(51).sort((a, b) => b.episodeId - a.episodeId),
-  )
-
+const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
   // 에피소드 리스트
   const [episodes, setEpisodes] = useState([])
+  const [episodeData, setEpisodeData] = useState([])
 
   // 정렬 버튼
   const sortEpisode = (keyword) => {
     let tempData
     if (keyword === 'first') {
-      tempData = dummyData.sort((a, b) => a.episodeId - b.episodeId)
-      setDummyData(tempData)
+      tempData = episodeData.sort((a, b) => a.episodeId - b.episodeId)
+      setEpisodeData(tempData)
     } else {
-      tempData = dummyData.sort((a, b) => b.episodeId - a.episodeId)
-      setDummyData(tempData)
+      tempData = episodeData.sort((a, b) => b.episodeId - a.episodeId)
+      setEpisodeData(tempData)
     }
     setEpisodes(tempData.slice(0, 10))
   }
@@ -40,13 +27,33 @@ const MyWebtoonDetailEpisodeList = () => {
   const handleAddEpisode = () => {
     setEpisodes([
       ...episodes,
-      ...dummyData.slice(episodes.length, episodes.length + 10),
+      ...episodeData.slice(episodes.length, episodes.length + 10),
     ])
+  }
+
+  const getData = async () => {
+    try {
+      const result = await getEpisodeList(webtoonId)
+      setEpisodeData(result)
+      setEpisodes(result.slice(0, 10))
+    } catch (error) {
+      console.error('에피소드 목록 불러오기 실패: ', error)
+    }
+  }
+
+  const deleteData = async (episodeId) => {
+    try {
+      const result = await deleteEpisode(episodeId)
+      setEpisodeData((prev) => prev.filter((v) => v.episodeId !== episodeId))
+      setEpisodes((prev) => prev.filter((v) => v.episodeId !== episodeId))
+    } catch (error) {
+      console.error('회차 정보 삭제 실패: ', error)
+    }
   }
 
   useEffect(() => {
     // mount
-    setEpisodes(dummyData.slice(0, 10))
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -55,7 +62,7 @@ const MyWebtoonDetailEpisodeList = () => {
       <div className='w-[1000px]'>
         {/* 정렬 버튼 */}
         <div className='mb-1 flex justify-between gap-5'>
-          <p>총 {dummyData.length}화</p>
+          <p>총 {episodeData.length}화</p>
           <div className='flex gap-5'>
             <button
               className='cursor-pointer'
@@ -80,9 +87,13 @@ const MyWebtoonDetailEpisodeList = () => {
           ) : (
             <>
               {episodes.map((episode) => (
-                <MyEpisodeCard key={episode.episodeId} episode={episode} />
+                <MyEpisodeCard
+                  key={episode.episodeId}
+                  episode={episode}
+                  deleteData={deleteData}
+                />
               ))}
-              {episodes.length !== dummyData.length && (
+              {episodes.length !== episodeData.length && (
                 <div className='flex h-[80px] items-center justify-center'>
                   <button
                     className='cursor-pointer text-lg'

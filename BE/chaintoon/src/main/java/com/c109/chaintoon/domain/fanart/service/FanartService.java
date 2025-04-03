@@ -10,6 +10,8 @@ import com.c109.chaintoon.domain.fanart.entity.FanartPreference;
 import com.c109.chaintoon.domain.fanart.exception.FanartPreferenceNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartPreferenceRepository;
 import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
@@ -32,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -109,9 +110,19 @@ public class FanartService {
         Webtoon webtoon = webtoonRepository.findById(fanartRequestDto.getWebtoonId())
                 .orElseThrow(() -> new WebtoonNotFoundException(fanartRequestDto.getWebtoonId()));
 
+        // 2차 창작 비허용
+        if ("N".equals(webtoon.getAdaptable())) {
+            throw new IllegalArgumentException("팬아트 작성이 불가능한 웹툰입니다.");
+        }
+
         // 등록한 사용자 조회 (닉네임 가져오기)
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        // 원작자는 팬아트 등록 불가
+        if (user.getId().equals(webtoon.getUserId())) {
+            throw new IllegalArgumentException("웹툰 원작자는 팬아트 등록이 불가능합니다.");
+        }
 
         // 팬아트 엔티티 생성
         Fanart fanart = Fanart.builder()
@@ -223,7 +234,7 @@ public class FanartService {
     }
 
     // 팬아트 검색
-    public List<FanartResponseDto> searchFanarts(int page, int pageSize, String keyword) {
+    public SearchResponseDto<FanartListResponseDto> searchFanarts(int page, int pageSize, String keyword) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
         // 키워드에 대해 제목이나 설명이 포함되는 조건을 specification으로 구성
@@ -234,18 +245,13 @@ public class FanartService {
         // 검색 결과를 페이징 처리하여 조회하고 결과 리스트 반환
         Page<Fanart> resultPage = fanartRepository.findAll(spec, pageable);
 
-        // 결과 엔티티를 FanartResponseDto로 매핑
-        return resultPage.getContent().stream().map(fanart -> {
-            // 웹툰 조회
-            Webtoon webtoon = webtoonRepository.findById(fanart.getWebtoonId())
-                    .orElseThrow(() -> new WebtoonNotFoundException(fanart.getWebtoonId()));
-
-            // 사용자 조회
-            User user = userRepository.findById(fanart.getUserId())
-                    .orElseThrow(() -> new UserIdNotFoundException(fanart.getUserId()));
-
-            return toFanartResponseDto(fanart, user, webtoon);
-        }).collect(Collectors.toList());
+        return SearchResponseDto.<FanartListResponseDto>builder()
+                .type(SearchType.FANART.getValue())
+                .totalCount(resultPage.getTotalElements())
+                .searchResult(resultPage.getContent().stream()
+                        .map(this::toFanartListResponseDto)
+                        .toList())
+                .build();
     }
 
     // 좋아요 증가

@@ -20,6 +20,7 @@ public class EpisodeResponseDto {
     private Long commentCount;
     private Long ratingSum;
     private Long ratingCount;
+    private String hasRated;
     private Integer previousEpisodeId;
     private Integer nextEpisodeId;
     private List<ImageResponseDto> images;

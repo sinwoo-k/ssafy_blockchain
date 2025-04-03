@@ -13,12 +13,19 @@ const MyWebtoonEpisodePreview = ({ images, setShowModal }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className='m-3 flex w-[500px] grow flex-col justify-between overflow-y-scroll'>
-            {images.map((img) => (
-              <img
-                src={URL.createObjectURL(img.file)}
-                alt='미리보기'
-                key={img.name}
-              />
+            {images.map((img, index) => (
+              <div key={`episode-image-${index}`}>
+                {img.type === 'new' && (
+                  <img
+                    src={URL.createObjectURL(img.file)}
+                    alt='미리보기'
+                    key={img.name}
+                  />
+                )}
+                {img.type === 'old' && (
+                  <img src={img.file.imageUrl} alt='미리보기' key={img.name} />
+                )}
+              </div>
             ))}
           </div>
           <div className='mt-2 flex justify-center gap-5'>

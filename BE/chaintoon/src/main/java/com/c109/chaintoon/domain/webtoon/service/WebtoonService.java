@@ -2,6 +2,9 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
+import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
@@ -69,17 +72,22 @@ public class WebtoonService {
                             .writer(writer)
                             .webtoonName(webtoon.getWebtoonName())
                             .genre(webtoon.getGenre())
-                            .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
-                            .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                             .episodeCount(webtoon.getEpisodeCount())
                             .viewCount(webtoon.getViewCount())
                             .rating(rating)
+                            .lastUploadDate(webtoon.getLastUploadDate())
+                            .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                            .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
     private WebtoonResponseDto toWebtoonDto(Webtoon webtoon) {
+        return toWebtoonDto(webtoon, null);
+    }
+
+    private WebtoonResponseDto toWebtoonDto(Webtoon webtoon, Integer userId) {
         // 평점 계산
         double rating = calculateRating(webtoon);
 
@@ -90,19 +98,36 @@ public class WebtoonService {
                 .map(tag -> tag.getTagId().getTag())
                 .toList();
 
+        // 작성자 조회
+        User writer = userRepository.findById(webtoon.getUserId())
+                .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()));
+
+        // 즐겨찾기 여부 조회
+        String hasFavorited = "N";
+        if (userId != null) {
+            FavoriteWebtoonId favoriteWebtoonId = new FavoriteWebtoonId(userId, webtoon.getWebtoonId());
+            FavoriteWebtoon favoriteWebtoon = favoriteWebtoonRepository
+                    .findById(favoriteWebtoonId)
+                    .orElse(null);
+            hasFavorited = (favoriteWebtoon == null) ? "N" : "Y";
+        }
+
         // 응답 dto 생성
         return WebtoonResponseDto.builder()
                 .webtoonId(webtoon.getWebtoonId())
                 .userId(webtoon.getUserId())
+                .writer(writer.getNickname())
                 .webtoonName(webtoon.getWebtoonName())
                 .genre(webtoon.getGenre())
                 .summary(webtoon.getSummary())
                 .adaptable(webtoon.getAdaptable())
+                .hasFavorited(hasFavorited)
                 .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
                 .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
                 .episodeCount(webtoon.getEpisodeCount())
                 .viewCount(webtoon.getViewCount())
                 .rating(rating)
+                .favoriteCount(webtoon.getFavoriteCount())
                 .tags(tags)
                 .build();
     }
@@ -157,7 +182,7 @@ public class WebtoonService {
         webtoonRepository.save(savedWebtoon);
 
         // 응답 DTO 생성
-        return toWebtoonDto(savedWebtoon);
+        return toWebtoonDto(savedWebtoon, userId);
     }
 
     public List<WebtoonListResponseDto> getMyWebtoonList(Integer userId, int page, int pageSize) {
@@ -173,7 +198,7 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
+    public SearchResponseDto<WebtoonListResponseDto> searchWebtoon(int page, int pageSize, String keyword) {
         // 페이지네이션 및 정렬 설정 (최신 업데이트 순)
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
 
@@ -181,7 +206,11 @@ public class WebtoonService {
         Page<Webtoon> webtoonPage = webtoonRepository.findByWebtoonNameContainingOrWriterNicknameContainingIgnoreCase(keyword, pageable);
 
         // 검색 결과 DTO 변환
-        return toDtoList(webtoonPage);
+        return SearchResponseDto.<WebtoonListResponseDto>builder()
+                .type(SearchType.WEBTOON.getValue())
+                .totalCount(webtoonPage.getTotalElements())
+                .searchResult(toDtoList(webtoonPage))
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -200,13 +229,13 @@ public class WebtoonService {
     }
 
 
-    public WebtoonResponseDto getWebtoon(Integer webtoonId) {
+    public WebtoonResponseDto getWebtoon(Integer userId, Integer webtoonId) {
         // 웹툰 엔티티 조회
         Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
                 .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
 
         // DTO 변환
-        return toWebtoonDto(webtoon);
+        return toWebtoonDto(webtoon, userId);
     }
 
     public WebtoonResponseDto updateWebtoon(Integer webtoonId, Integer userId, WebtoonRequestDto webtoonRequest, MultipartFile garoImage, MultipartFile seroImage) {
@@ -253,7 +282,7 @@ public class WebtoonService {
         Webtoon updatedWebtoon = webtoonRepository.save(webtoon);
 
         // 응답 DTO 생성
-        return toWebtoonDto(updatedWebtoon);
+        return toWebtoonDto(updatedWebtoon, userId);
     }
 
     public void deleteWebtoon(Integer webtoonId, Integer userId) {
@@ -291,6 +320,10 @@ public class WebtoonService {
 
         // 데이터베이스에 저장
         favoriteWebtoonRepository.save(favoriteWebtoon);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() + 1);
+        webtoonRepository.save(webtoon);
     }
 
     @Transactional
@@ -305,5 +338,9 @@ public class WebtoonService {
 
         // 데이터베이스에서 삭제
         favoriteWebtoonRepository.deleteById(id);
+        Webtoon webtoon = webtoonRepository.findByWebtoonIdAndDeleted(webtoonId, "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+        webtoon.setFavoriteCount(webtoon.getFavoriteCount() - 1);
+        webtoonRepository.save(webtoon);
     }
 }
