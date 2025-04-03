@@ -1,23 +1,10 @@
 import API from '../api/API.js'
 
-// // 요청 인터셉터 - 토큰 추가
-// nftApi.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
 
 // 내 NFT 목록 조회
 const getMyNFTs = async () => {
   try {
-    const response = await API.get('/blockchain/nft/:userId');
+    const response = await API.get('blockchain/nft-list');
     return response.data;
   } catch (error) {
     throw error;

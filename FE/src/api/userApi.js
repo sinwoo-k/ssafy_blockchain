@@ -127,17 +127,6 @@ const deleteProfileImage = async () => {
   }
 };
 
-// const uploadProfileImage = async (formData) => {
-//   try {
-//     const res = await API.post('/users/upload-profile', formData, {
-//       headers: { 'Content-Type': 'multipart/form-data' }
-//     });
-//     return res.data;
-//   } catch (error) {
-//     console.error('프로필 이미지 업로드 에러:', error);
-//     throw error;
-//   }
-// };
 
 const uploadBackgroundImage = async (formData) => {
   try {

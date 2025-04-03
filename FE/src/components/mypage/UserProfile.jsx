@@ -206,6 +206,7 @@ const UserProfile = () => {
       const updateData = {
         nickname: updatedFields.nickname || '',
         introduction: updatedFields.bio || '',
+        // email: updatedFields.email || '',
         url: updatedFields.url || ''
       };
 
