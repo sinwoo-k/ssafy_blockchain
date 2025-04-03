@@ -12,11 +12,11 @@ import java.util.Optional;
 
 @Repository
 public interface BiddingHistoryRepository extends JpaRepository<BiddingHistory, Integer> {
-    List<BiddingHistory> findByAuctionItemIdAndUserIdAndIsLatestTrue(Integer auctionItemId, Integer userId);
+    List<BiddingHistory> findByAuctionItemIdAndUserIdAndLatestTrue(Integer auctionItemId, Integer userId);
 
     List<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItem);
 
     Page<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItemId, Pageable pageable);
 
-    List<BiddingHistory> findAllByAuctionItemIdAndIsLatestTrueOrderByBiddingPriceDesc(Integer auctionItem);
+    List<BiddingHistory> findAllByAuctionItemIdAndLatestTrueOrderByBiddingPriceDesc(Integer auctionItem);
 }

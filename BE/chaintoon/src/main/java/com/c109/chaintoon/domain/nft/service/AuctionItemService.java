@@ -159,10 +159,10 @@ public class AuctionItemService {
         AuctionItem savedItem = auctionItemRepository.save(auctionItem);
 
         // 거래내역 업데이트 : 동일 입찰자가 이미 입찰한 내역이 있는지 체크
-        List<BiddingHistory> oldBids = biddingHistoryRepository.findByAuctionItemIdAndUserIdAndIsLatestTrue(savedItem.getAuctionItemId(), userId);
+        List<BiddingHistory> oldBids = biddingHistoryRepository.findByAuctionItemIdAndUserIdAndLatestTrue(savedItem.getAuctionItemId(), userId);
 
         for (BiddingHistory oldBid : oldBids) {
-            oldBid.setIsLatest(false);
+            oldBid.setLatest(false);
             biddingHistoryRepository.save(oldBid);
         }
 
@@ -171,7 +171,7 @@ public class AuctionItemService {
                 .userId(userId)
                 .biddingPrice(bidRequestDto.getBiddingPrice())
                 .bidTime(LocalDateTime.now())
-                .isLatest(true)
+                .latest(true)
                 .build();
         biddingHistoryRepository.save(newBid);
 
@@ -308,7 +308,7 @@ public class AuctionItemService {
 
         // 경매 아이템의 입찰 내역을 입찰가 내림차순으로 가져오기
         List<BiddingHistory> latestBids = biddingHistoryRepository
-                .findAllByAuctionItemIdAndIsLatestTrueOrderByBiddingPriceDesc(auctionItemId);
+                .findAllByAuctionItemIdAndLatestTrueOrderByBiddingPriceDesc(auctionItemId);
 
         log.debug("BiddingHistory count for auctionItemId {}: {}", auctionItemId, latestBids.size());
 

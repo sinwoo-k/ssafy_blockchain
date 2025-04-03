@@ -31,6 +31,6 @@ public class BiddingHistory {
     @Column(name = "bid_time")
     private LocalDateTime bidTime;
 
-    @Column(name = "is_latest")
-    private Boolean isLatest;
+    @Column(name = "latest")
+    private Boolean latest;
 }
