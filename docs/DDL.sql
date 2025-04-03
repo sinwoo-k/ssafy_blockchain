@@ -198,6 +198,7 @@ CREATE TABLE `user` (
   `background_image` varchar(255) DEFAULT NULL,
   `follower` int DEFAULT NULL,
   `following` int DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
   `join_date` varchar(10) DEFAULT NULL,
   `deleted` char(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,

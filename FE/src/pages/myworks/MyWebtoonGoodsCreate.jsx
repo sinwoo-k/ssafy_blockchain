@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
+import { createGoods } from '../../api/goodsAPI'
+import { getWebtoon } from '../../api/webtoonAPI'
 
 const MyWebtoonGoodsCreate = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   const [goodsImage, setGoodsImage] = useState(null) // 굿즈 이미지
   const [goodsImageURL, setGoodsImageURL] = useState('')
@@ -62,26 +65,46 @@ const MyWebtoonGoodsCreate = () => {
     setGoodsImageURL('')
   }
 
+  // 웹툰 정보 불러오기
+  const getData = async () => {
+    try {
+      const result = await getWebtoon(params.webtoonId)
+      setWeboonName(result.webtoonName)
+    } catch (error) {
+      console.error('웹툰 상세 조회 실패: ', error)
+    }
+  }
+
   // 굿즈 등록 함수
-  const createGoods = () => {
+  const createData = async () => {
     if (goodsImage === null) {
       alert('굿즈를 등록해주세요.')
-    } else if (goodsName.trim() === '') {
+      return
+    }
+    if (goodsName.trim() === '') {
       alert('굿즈명을 작성해주세요.')
-    } else if (goodsDescription.trim() === '') {
+      return
+    }
+    if (goodsDescription.trim() === '') {
       alert('굿즈 설명을 작성해주세요.')
-    } else {
-      const payload = {
-        goodsName: goodsName,
-        goodsDescription: goodsDescription,
-      }
-      console.log(payload)
+      return
+    }
+    const payload = {
+      webtoonId: params.webtoonId,
+      goodsName: goodsName,
+      description: goodsDescription,
+    }
+    try {
+      const result = await createGoods(payload, goodsImage)
+      navigate(`/myworks/webtoon/${params.webtoonId}/goods`)
+    } catch (error) {
+      console.error('굿즈 등록 실패: ', error)
     }
   }
 
   useEffect(() => {
     // mount
-    setWeboonName('테스트')
+    getData()
     // unmount
     return () => {}
   }, [])
@@ -136,7 +159,7 @@ const MyWebtoonGoodsCreate = () => {
             <input
               type='file'
               id='goods-image'
-              accept='image/*'
+              accept='image/jpeg, image/jpg'
               className='hidden'
               onChange={(event) => selectGoodsImage(event.target.files[0])}
             />
@@ -205,7 +228,7 @@ const MyWebtoonGoodsCreate = () => {
         {/* 등록 버튼 */}
         <button
           className='bg-chaintoon h-[45px] w-full cursor-pointer rounded-lg text-black'
-          onClick={createGoods}
+          onClick={createData}
         >
           등록하기
         </button>

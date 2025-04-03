@@ -12,6 +12,19 @@ export const getWebtoonList = async (
   return response.data
 }
 
+/** 2차 창작 허용 웹툰 조회 */
+export const getAdaptableWebtoonList = async (
+  page = 1,
+  pageSize = 50,
+  orederBy = 'latest',
+  adaptable = 'Y',
+) => {
+  const response = await API.get(
+    `/webtoons?page=${page}&pageSize=${pageSize}&orderBy=${orederBy}&adaptable=${adaptable}`,
+  )
+  return response.data
+}
+
 /** 웹툰 상세 조회 */
 export const getWebtoon = async (webtoonId) => {
   const response = await API.get(`/webtoons/${webtoonId}`)

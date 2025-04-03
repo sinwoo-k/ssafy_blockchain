@@ -31,3 +31,13 @@ export const checkWidthSize = (width, file) => {
     }
   })
 }
+
+/** 이미지 파일 크기 제한 */
+export const checkImage = (file) => {
+  const maxFileSize = 50 * 1024 * 1024
+  if (file.size > maxFileSize) {
+    alert('파일 크기가 50MB를 초과합니다. 다른 파일을 선택해주세요.')
+    return false
+  }
+  return true
+}

@@ -6,7 +6,7 @@ import CommentCard from './CommentCard'
 import { createComment, getComments } from '../../api/commentAPI'
 import { addComma } from '../../utils/formatting'
 
-const CommentList = ({ usageId, type, commentCount }) => {
+const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
 
   const [page, setPage] = useState(1)
@@ -31,6 +31,9 @@ const CommentList = ({ usageId, type, commentCount }) => {
   }
 
   const createData = async () => {
+    if (!isAuthenticated) {
+      return
+    }
     const payload = {
       usageId: usageId,
       type: type,
@@ -41,6 +44,7 @@ const CommentList = ({ usageId, type, commentCount }) => {
       const result = await createComment(payload)
       setComments((prev) => [...prev, result])
       setContent('')
+      setCommentCount((prev) => prev + 1)
     } catch (error) {
       console.error('댓글 등록 실패: ', error)
     }
@@ -100,6 +104,7 @@ const CommentList = ({ usageId, type, commentCount }) => {
                   key={comment.commentId}
                   comment={comment}
                   patchData={getData}
+                  setCommentCount={setCommentCount}
                 />
               ))}
             </div>

@@ -1,52 +1,74 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
 import { Link } from 'react-router-dom'
 import BarLoader from 'react-spinners/BarLoader'
+import { getWebtoonFanarts } from '../../api/fanartAPI'
 
-const FanartList = ({ fanarts }) => {
+// 아이콘
+import ErrorIcon from '@mui/icons-material/Error'
+
+const FanartList = ({ webtoonId }) => {
   const [isLoading, setIsLoding] = useState(true)
+
+  const [fanarts, setFanarts] = useState([])
+
+  const getData = async () => {
+    try {
+      const result = await getWebtoonFanarts(webtoonId)
+      console.log(result)
+      setFanarts(result)
+    } catch (error) {
+      console.error('팬아트 조회 실패: ', error)
+    }
+  }
+
+  useEffect(() => {
+    getData()
+  }, [])
+
   return (
     <div className='flex justify-center'>
       <div className='w-[1000px]'>
         <div className='mb-3 flex justify-between'>
           <p>총 {fanarts?.length}개</p>
-          <div className='flex gap-2'>
-            <button className='hover:text-chaintoon cursor-pointer'>
-              최신순
-            </button>
-            <button className='hover:text-chaintoon cursor-pointer'>
-              오래된 순
-            </button>
-          </div>
         </div>
-        <MasonryInfiniteGrid
-          align='center'
-          gap={10}
-          column={5}
-          onRenderComplete={() => setIsLoding(false)}
-        >
-          {fanarts.map((fanart) => (
-            <div className='item' key={fanart.fanartId}>
-              <Link to={`/fanart/${fanart.fanartId}`}>
-                <img
-                  src={fanart.fanartImage}
-                  alt='팬아트 이미지'
-                  className='w-[190px] rounded-lg'
-                />
-              </Link>
-              <p className='px-2 py-1'>{fanart.fanartName}</p>
-            </div>
-          ))}
-        </MasonryInfiniteGrid>
-        {isLoading && (
-          <div className='flex justify-center py-10'>
-            <BarLoader
-              color='#3cc3ec'
-              width={500}
-              height={5}
-              speedMultiplier={0.5}
-            />
+        {fanarts.length === 0 ? (
+          <div className='flex h-[200px] w-full flex-col items-center justify-center gap-3'>
+            <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
+            <p className='text-xl'>등록된 팬아트가 없습니다.</p>
           </div>
+        ) : (
+          <>
+            <MasonryInfiniteGrid
+              align='center'
+              gap={10}
+              column={5}
+              onRenderComplete={() => setIsLoding(false)}
+            >
+              {fanarts.map((fanart) => (
+                <div className='item' key={fanart.fanartId}>
+                  <Link to={`/fanart/${fanart.fanartId}`}>
+                    <img
+                      src={fanart.fanartImage}
+                      alt='팬아트 이미지'
+                      className='w-[190px] rounded-lg'
+                    />
+                  </Link>
+                  <p className='px-2 py-1'>{fanart.fanartName}</p>
+                </div>
+              ))}
+            </MasonryInfiniteGrid>
+            {isLoading && (
+              <div className='flex justify-center py-10'>
+                <BarLoader
+                  color='#3cc3ec'
+                  width={500}
+                  height={5}
+                  speedMultiplier={0.5}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

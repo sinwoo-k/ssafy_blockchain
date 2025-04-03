@@ -94,14 +94,6 @@ public class AuthService {
         User newUser = User.builder()
                 .email(email)
                 .nickname(nickname)
-                .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .following(0)
-                .follower(0)
-                .introduction("")
-                .deleted("N")
-                .status("Y")
-                .backgroundImage("")
-                .profileImage("")
                 .ssoType(SsoProvider.CHAINTOON.name())
                 .build();
 
@@ -136,14 +128,6 @@ public class AuthService {
             User newUser = User.builder()
                     .email(userRequest.getLoginId())
                     .nickname(nickname)
-                    .joinDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                    .following(0)
-                    .follower(0)
-                    .introduction("")
-                    .deleted("N")
-                    .status("Y")
-                    .backgroundImage("")
-                    .profileImage("")
                     .ssoType(ssoProvider.name())
                     .build();
 

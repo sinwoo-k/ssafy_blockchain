@@ -24,6 +24,7 @@ const MyWebtoonCreate = () => {
   ]
   const [genre, setGenre] = useState('') // 장르
   const [tags, setTags] = useState([]) // 태그
+  const [tagInput, setTagInput] = useState('')
   const [summary, setSummary] = useState('') // 줄거리
   const [garoImage, setGaroImage] = useState(null) // 가로형 이미지
   const garoImageRef = useRef(null)
@@ -39,12 +40,13 @@ const MyWebtoonCreate = () => {
 
   // 태그 등록 함수
   const handleTags = (event) => {
-    event.preventDefault()
-    if (event.key === 'Enter' || event.target.value.length >= 10) {
-      setTags([...tags, event.target.value])
-      event.target.value = ''
+    if (event.key === 'Enter' || tagInput.length >= 10) {
+      if (tagInput.trim() !== '') {
+        setTags([...tags, tagInput])
+        setTagInput('')
+      }
     }
-    if (event.target.value === '' && event.key === 'Backspace') {
+    if (event.key === 'Backspace' && tagInput === '') {
       setTags(tags.slice(0, tags.length - 1))
     }
   }
@@ -205,7 +207,9 @@ const MyWebtoonCreate = () => {
                       ? '엔터키를 입력하시면 태그가 등록됩니다.'
                       : ''
                   }
-                  onKeyUp={handleTags}
+                  value={tagInput}
+                  onChange={(event) => setTagInput(event.target.value)}
+                  onKeyDown={handleTags}
                 />
                 <span className='w-[55px] flex-none text-end'>
                   {tags.length} / 10

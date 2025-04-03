@@ -144,7 +144,7 @@ const WebtoonDetailInfo = ({ webtoon, patchData }) => {
             </button>
           </Link>
           {webtoon.adaptable === 'Y' && (
-            <Link>
+            <Link to={`/fanart/webtoon/${webtoon.webtoonId}`}>
               <button
                 className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded'

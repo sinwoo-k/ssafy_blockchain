@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import MyEpisodeCard from './MyEpisodeCard'
+import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 
 const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
   // 에피소드 리스트

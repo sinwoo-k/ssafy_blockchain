@@ -9,5 +9,4 @@ import lombok.*;
 @Builder
 public class AuctionBuyNowRequestDto {
     private Integer auctionItemId;
-    private Integer bidderId;
 }

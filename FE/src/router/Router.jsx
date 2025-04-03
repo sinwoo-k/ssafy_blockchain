@@ -168,7 +168,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: 'webtoon/:webtoodId/goods/create',
+            path: 'webtoon/:webtoonId/goods/create',
             element: (
               <Suspense fallback={<Loader />}>
                 <MyWebtoonGoodsCreate />

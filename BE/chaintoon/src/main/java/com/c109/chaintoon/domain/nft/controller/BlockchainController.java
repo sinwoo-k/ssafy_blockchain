@@ -1,20 +1,23 @@
 package com.c109.chaintoon.domain.nft.controller;
 
 import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
+import com.c109.chaintoon.domain.nft.dto.blockchain.request.NftMintRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataItemResponseDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataResponseDto;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMintResponseDto;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.TransactionItemResponseDto;
 import com.c109.chaintoon.domain.nft.service.BlockchainService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/blockchain")
@@ -29,11 +32,24 @@ public class BlockchainController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/nft/{userId}")
-    public ResponseEntity<List<NftMetadataItemResponseDto>> getNftMetadata(@PathVariable Integer userId) {
+    @GetMapping("/nft-list")
+    public ResponseEntity<List<NftMetadataItemResponseDto>> getNftMetadata(@AuthenticationPrincipal Integer userId) {
         List<NftMetadataItemResponseDto> dto = blockchainService.getNFTMetadataList(userId)
                 .collectList() // Flux를 List로 변환
                 .block();      // 블록킹 호출로 결과를 가져옴
         return ResponseEntity.ok(dto);
+    }
+    @GetMapping("/transactions")
+    public ResponseEntity<List<TransactionItemResponseDto>> getTransactions(@AuthenticationPrincipal Integer userId) {
+        List<TransactionItemResponseDto> transactions = blockchainService.getTransactionList(userId)
+                .collectList()
+                .block();
+        return ResponseEntity.ok(transactions);
+    }
+    @PostMapping("/mint")
+    public ResponseEntity<NftMintResponseDto> mintNft(@AuthenticationPrincipal Integer userId,@RequestBody NftMintRequestDto request) {
+        NftMintResponseDto response = blockchainService.mintNft(request, userId).block();
+        log.info("mintNft: {}", request);
+        return ResponseEntity.ok(response);
     }
 }

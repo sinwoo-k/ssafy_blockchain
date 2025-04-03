@@ -27,24 +27,30 @@ const FanartWebtoonCard = ({ webtoon }) => {
   }
 
   return (
-    <div className=''>
-      {/* 웹툰 대표이미지 */}
-      <div
-        className='border-chaintoon mb-3 w-[200px] rounded-xl border'
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-      >
-        <Link to={`/fanart/webtoon/${webtoon.webtoonId}`} onClick={handleClick}>
-          <img
-            src={webtoon.seroThumbnail}
-            alt={`${webtoon.webtoonName} 대표 이미지`}
-            className='h-[250px] w-[200px] rounded-xl'
-          />
-        </Link>
-      </div>
-      {/* 웹툰 정보 */}
-      <div className='px-2'>
-        <h2 className='text-lg'>{webtoon.webtoonName}</h2>
+    <div className='flex justify-center'>
+      <div>
+        {/* 웹툰 대표이미지 */}
+        <div
+          className='border-chaintoon mb-3 w-[200px] rounded-xl border'
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+        >
+          <Link
+            to={`/fanart/webtoon/${webtoon.webtoonId}`}
+            onClick={handleClick}
+          >
+            <img
+              src={webtoon.seroThumbnail}
+              alt={`${webtoon.webtoonName} 대표 이미지`}
+              className='h-[250px] w-[200px] rounded-xl object-cover'
+            />
+          </Link>
+        </div>
+        {/* 웹툰 정보 */}
+        <div className='px-2'>
+          <h2 className='text-lg'>{webtoon.webtoonName}</h2>
+          <p className='text-text/75 truncate'>{webtoon.writer}</p>
+        </div>
       </div>
     </div>
   )

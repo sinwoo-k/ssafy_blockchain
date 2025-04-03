@@ -26,7 +26,7 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
             <span className='flex items-center gap-1'>
               <StarIcon sx={{ color: '#ffff19' }} />
               <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                4.56
+                {(episode.rating / 2).toFixed(2)}
               </span>
             </span>
             <span className='text-text/50 inline-block translate-y-[1px] transform'>

@@ -70,6 +70,7 @@ public class UserService {
                 .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
                 .follower(user.getFollower())
                 .following(user.getFollowing())
+                .url(user.getUrl())
                 .joinDate(user.getJoinDate())
                 .build();
     }
@@ -85,6 +86,7 @@ public class UserService {
                 .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
                 .follower(user.getFollower())
                 .following(user.getFollowing())
+                .url(user.getUrl())
                 .joinDate(user.getJoinDate())
                 .build();
     }
@@ -122,6 +124,7 @@ public class UserService {
         // 회원 정보 업데이트
         user.setNickname(userRequestDto.getNickname());
         user.setIntroduction(userRequestDto.getIntroduction());
+        user.setUrl(userRequestDto.getUrl());
 
         userRepository.save(user);
 
