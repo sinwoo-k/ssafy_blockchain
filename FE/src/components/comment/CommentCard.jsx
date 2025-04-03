@@ -25,7 +25,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 
 const CommentCard = ({ comment, patchData }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
-  const userData = useSelector((state) => state.user.userData.id)
+  const userData = useSelector((state) => state.user.userData)
 
   const [replies, setReplies] = useState([])
   const [randomColor, setRandomColor] = useState(getRandomColor())
@@ -60,6 +60,9 @@ const CommentCard = ({ comment, patchData }) => {
   }
 
   const createReply = async () => {
+    if (!isAuthenticated) {
+      return
+    }
     const payload = {
       usageId: comment.usageId,
       type: 'COMMENT_EPISODE',
@@ -197,7 +200,7 @@ const CommentCard = ({ comment, patchData }) => {
           <p>{comment.nickname}</p>
         </div>
         {/* 댓글 수정 & 삭제 */}
-        {userData === comment.userId && (
+        {userData && userData?.id === comment.userId && (
           <div className='flex gap-3'>
             <div className='text-blue-500' onClick={toggleEdit}>
               <IconButton Icon={EditIcon} tooltip={'댓글 수정'} />
