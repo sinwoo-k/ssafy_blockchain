@@ -22,7 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 
 const ReplyCard = ({ reply, patchData }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
-  const userData = useSelector((state) => state.user.userData.id)
+  const userData = useSelector((state) => state.user.userData)
   const [randomColor, setRandomColor] = useState(getRandomColor())
 
   const [replyContent, setReplyContent] = useState('')
@@ -156,7 +156,7 @@ const ReplyCard = ({ reply, patchData }) => {
             <p>{reply.nickname}</p>
           </div>
           {/* 댓글 수정 & 삭제 */}
-          {userData === reply.userId && (
+          {userData && userData?.id === reply.userId && (
             <div className='flex gap-3'>
               <div className='text-blue-500' onClick={toggleEdit}>
                 <IconButton Icon={EditIcon} tooltip={'댓글 수정'} />

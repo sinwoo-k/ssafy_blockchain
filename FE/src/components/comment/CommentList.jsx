@@ -31,6 +31,9 @@ const CommentList = ({ usageId, type, commentCount }) => {
   }
 
   const createData = async () => {
+    if (!isAuthenticated) {
+      return
+    }
     const payload = {
       usageId: usageId,
       type: type,
