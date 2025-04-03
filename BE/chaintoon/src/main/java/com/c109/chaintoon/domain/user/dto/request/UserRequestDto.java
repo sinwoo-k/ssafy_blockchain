@@ -11,7 +11,8 @@ public class UserRequestDto {
     @NotBlank
     private String nickname;
 
-    private String introduction;
+    private String introduction = "";
 
-    private String url;
+    private String url = "";
+
 }
