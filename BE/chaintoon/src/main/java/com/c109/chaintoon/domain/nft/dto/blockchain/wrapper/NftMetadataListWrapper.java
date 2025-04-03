@@ -1,5 +1,6 @@
-package com.c109.chaintoon.domain.nft.dto.blockchain;
+package com.c109.chaintoon.domain.nft.dto.blockchain.wrapper;
 
+import com.c109.chaintoon.domain.nft.dto.blockchain.item.NftMetadataItem;
 import lombok.*;
 import java.util.List;
 
