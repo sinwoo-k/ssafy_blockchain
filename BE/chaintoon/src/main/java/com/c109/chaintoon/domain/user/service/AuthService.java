@@ -103,6 +103,7 @@ public class AuthService {
                 .backgroundImage("")
                 .profileImage("")
                 .ssoType(SsoProvider.CHAINTOON.name())
+                .url("")
                 .build();
 
         return userRepository.save(newUser);

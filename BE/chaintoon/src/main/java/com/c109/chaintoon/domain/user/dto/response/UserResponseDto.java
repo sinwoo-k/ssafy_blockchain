@@ -16,5 +16,6 @@ public class UserResponseDto {
     private String backgroundImage;
     private Integer follower;
     private Integer following;
+    private String url;
     private String joinDate;
 }

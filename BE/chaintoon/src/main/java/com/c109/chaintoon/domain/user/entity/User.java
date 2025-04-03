@@ -35,6 +35,9 @@ public class User {
     @Column(name = "background_image", length = 255)
     private String backgroundImage;
 
+    @Column(name = "url", length = 255)
+    private String url;
+
     @Column(name = "follower")
     private Integer follower = 0;
 
