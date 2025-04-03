@@ -16,6 +16,7 @@ public class FanartResponseDto {
     private Integer webtoonId;
     private String webtoonName;
     private String fanartName;
+    private String description;
     private String fanartImage;
     private Integer commentCount;
     private Integer likeCount;

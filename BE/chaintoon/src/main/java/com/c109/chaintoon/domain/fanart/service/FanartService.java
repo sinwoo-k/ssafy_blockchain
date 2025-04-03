@@ -56,6 +56,7 @@ public class FanartService {
                 .fanartId(fanart.getFanartId())
                 .webtoonId(fanart.getWebtoonId())
                 .fanartName(fanart.getFanartName())
+                .description(fanart.getDescription())
                 .fanartImage(s3Service.getPresignedUrl(fanart.getFanartImage()))
                 .build();
     }
@@ -83,6 +84,7 @@ public class FanartService {
                 .webtoonId(webtoon.getWebtoonId())
                 .webtoonName(webtoon.getWebtoonName())
                 .fanartName(fanart.getFanartName())
+                .description(fanart.getDescription())
                 .fanartImage(s3Service.getPresignedUrl(fanart.getFanartImage()))
                 .commentCount(fanart.getComment())
                 .likeCount(fanart.getLikeCount())
