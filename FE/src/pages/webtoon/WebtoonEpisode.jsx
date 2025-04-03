@@ -13,6 +13,7 @@ const WebtoonEpisode = () => {
   // 에피소드 데이터
   const [episode, setEpisode] = useState([])
   const [webtoonName, setWebtoonName] = useState()
+  const [commentCount, setCommentCount] = useState(0)
 
   // 뷰어 내비게이션 show
   const [navbarShow, setNavbarShow] = useState(true)
@@ -46,8 +47,8 @@ const WebtoonEpisode = () => {
   const getData = async () => {
     try {
       const result = await getEpisode(params.episodeId)
-      console.log(result)
       setEpisode(result)
+      setCommentCount(result.commentCount)
       const webtoonNameResult = await getWebtoon(result.webtoonId)
       setWebtoonName(webtoonNameResult.webtoonName)
     } catch (error) {
@@ -96,7 +97,8 @@ const WebtoonEpisode = () => {
       <CommentList
         usageId={params.episodeId}
         type={'COMMENT_EPISODE'}
-        commentCount={episode.commentCount}
+        commentCount={commentCount}
+        setCommentCount={setCommentCount}
       />
     </div>
   )
