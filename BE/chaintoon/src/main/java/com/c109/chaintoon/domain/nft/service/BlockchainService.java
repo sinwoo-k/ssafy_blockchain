@@ -23,6 +23,7 @@ import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.entity.EpisodeImage;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeImageRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -309,6 +310,7 @@ public class BlockchainService {
 
     public Mono<String> getNonce(String walletAddress) {
         String url = "/nft/nonce?walletAddress=" + walletAddress;
+        ObjectMapper mapper = new ObjectMapper();
 
         return webClient.get()
                 .uri(url)
@@ -319,7 +321,18 @@ public class BlockchainService {
                 )
                 .bodyToMono(String.class)
                 .map(String::trim)
-                .onErrorResume(e -> Mono.error(new ServerException("논스값 조회중 오류가 발생했습니다: " + e.getMessage())));
+                .map(response -> {
+                    // response가 이미 JSON 문자열이라면, 파싱하여 내부 nonce 값 추출
+                    try {
+                        Map<String, String> map = mapper.readValue(response, Map.class);
+                        return map.get("nonce");
+                    } catch (Exception e) {
+                        throw new ServerException("nonce 응답 파싱 실패");
+                    }
+                })
+                .onErrorResume(e ->
+                        Mono.error(new ServerException("논스값 조회중 오류가 발생했습니다: " + e.getMessage()))
+                );
     }
     @Async
     public CompletableFuture<Void> createWalletAsync(Integer userId) {
@@ -341,6 +354,30 @@ public class BlockchainService {
                 .then()
                 .toFuture();
     }
+
+    public Mono<MetamaskWalletResponseDto> connectWallet(MetamaskWallet request) {
+        if (request == null || request.getSignature() == null || request.getMessage() == null) {
+            throw new IllegalArgumentException("서명과 논스값이 누락되었습니다.");
+        }
+        String url = "/nft/connect-wallet"; // Express API 경로
+
+        return webClient.post()
+                .uri(url)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
+                )
+                .bodyToMono(MetamaskWalletResponseDto.class)
+                .doOnNext(response -> {
+                    System.out.println("Received Wallet Response: " + response);
+                })
+                .onErrorResume(e ->
+                        Mono.error(new ServerException("Metamask 지갑연동중 오류가 발생했습니다: " + e.getMessage()))
+                );
+    }
+
 
     private TransactionItemResponseDto toTransactionItemResponseDto(TransactionItem item) {
         // 숫자값들을 BigInteger를 사용해 십진수 문자열로 변환하고, 단위 붙이기

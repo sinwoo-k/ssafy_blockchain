@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -54,7 +56,10 @@ public class BlockchainController {
         return ResponseEntity.ok(blockchainService.getWalletBalanceAsync(userId).block());
     }
     @GetMapping("/nonce/{walletAddress}")
-    public ResponseEntity<String> getNonce(@PathVariable String walletAddress) {
-        return ResponseEntity.ok(blockchainService.getNonce(walletAddress).block());
+    public ResponseEntity<Map<String, String>> getNonce(@PathVariable String walletAddress) {
+        String nonce = blockchainService.getNonce(walletAddress).block();
+        Map<String, String> response = new HashMap<>();
+        response.put("nonce", nonce);
+        return ResponseEntity.ok(response);
     }
 }
