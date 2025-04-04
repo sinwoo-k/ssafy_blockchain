@@ -50,18 +50,21 @@ export async function createUser(userData) {
     background_image = "",
     follower = 0,
     following = 0,
-    url = "", // 빈칸
-    join_date = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
-                  .toISOString()
-                  .split('T')[0],    sso_type = "METAMASK", // sso_type은 Metamask
+    url = "",
+    sso_type = "METAMASK",
     deleted = "N",
     status = "Y"
   } = userData;
   
+  const now = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+  const join_date = now.toISOString().split('T')[0];
+  const created_at = now.toISOString().slice(0, 19).replace('T', ' ');
+  
   const [result] = await pool.execute(
-    `INSERT INTO user (email, nickname, introduction, profile_image, background_image, follower, following, url, join_date, sso_type, deleted, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [email, nickname, introduction, profile_image, background_image, follower, following, url, join_date, sso_type, deleted, status]
+    `INSERT INTO user 
+      (email, nickname, introduction, profile_image, background_image, follower, following, url, join_date, sso_type, deleted, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [email, nickname, introduction, profile_image, background_image, follower, following, url, join_date, sso_type, deleted, status, created_at]
   );
   return result.insertId;
 }
