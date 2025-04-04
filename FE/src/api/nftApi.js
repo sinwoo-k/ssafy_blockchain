@@ -38,7 +38,7 @@ const getNFTTradingHistory = async (nftId) => {
 // NFT 판매 등록
 const sellNFT = async (nftData) => {
   try {
-    const response = await API.post('/nft/sell-nft', nftData);
+    const response = await API.post('/blockchain/mint', nftData);
     return response.data;
   } catch (error) {
     throw error;

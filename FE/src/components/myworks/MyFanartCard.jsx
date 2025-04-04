@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
+import {nftService} from '../../api/nftApi'
+import MintNFT from '../common/MintNFT'
 
 // 아이콘
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import NFTCreateModal from '../common/NFTCreateModal'
 import { useSelector } from 'react-redux'
 import { deleteFanart } from '../../api/fanartAPI'
 
@@ -35,12 +36,11 @@ const MyFanartCard = ({ fanart, patchData }) => {
           </Link>
         </div>
         <div className='flex justify-between'>
-          <button
-            className='hover:text-chaintoon cursor-pointer'
-            onClick={() => setShowModal(true)}
-          >
-            NFT 발행하기
-          </button>
+          <MintNFT
+            item={fanart}
+            type="fanart"
+            afterMint={patchData}
+          />
           <div className='flex gap-3'>
             <Link
               to={`/myworks/fanart/${fanart.fanartId}/update`}
@@ -59,7 +59,7 @@ const MyFanartCard = ({ fanart, patchData }) => {
         </div>
       </div>
       {showModal && (
-        <NFTCreateModal
+        <MintNFT
           item={fanart}
           type={'fanart'}
           setShowModal={setShowModal}

@@ -1,5 +1,6 @@
 import React from 'react'
 import IconButton from '../common/IconButton'
+import MintNFT from '../common/MintNFT'
 
 // 아이콘
 import EditIcon from '@mui/icons-material/Edit'
@@ -27,9 +28,11 @@ const GoodsCard = ({ goods, patchData }) => {
           />
         </div>
         <div className='flex justify-between'>
-          <button className='hover:text-chaintoon cursor-pointer'>
-            NFT 발행하기
-          </button>
+          <MintNFT
+            item={goods}
+            type="goods"
+            afterMint={patchData}
+          />
           <div className='flex gap-3'>
             <Link
               to={`/myworks/webtoon/goods/update/${goods.goodsId}`}

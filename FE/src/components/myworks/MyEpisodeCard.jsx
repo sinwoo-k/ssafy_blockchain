@@ -1,6 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
+import MintNFT from '../common/MintNFT'
+
 
 // 아이콘
 import StarIcon from '@mui/icons-material/Star'
@@ -34,7 +36,10 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
             </span>
           </div>
           <div className='flex items-center gap-3'>
-            <button className='text-chaintoon cursor-pointer'>NFT 발행</button>
+            <MintNFT
+              item={episode}
+              type="webtoon"
+            />
             <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
               <IconButton
                 Icon={EditIcon}
