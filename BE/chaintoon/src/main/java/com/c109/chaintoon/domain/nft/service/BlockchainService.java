@@ -331,12 +331,12 @@ public class BlockchainService {
                 .map(String::trim)
                 .doOnSuccess(walletAddress -> {
                     log.info("User {} 지갑 생성 완료 : {}", userId, walletAddress);
-                    noticeService.addWalletCreation(userId, "지갑 생성 성공");
+                    noticeService.addBlockchainNetworkSuccessNotice(userId, "지갑 생성 성공");
 
                 })
                 .doOnError(e -> {
                     log.error("User {} 지갑 생성 중 오류 발생: {}", userId, e.getMessage());
-                    noticeService.addWalletCreationFail(userId, "지갑 생성 실패");
+                    noticeService.addBlockchainNetworkFailNotice(userId, "지갑 생성 실패");
                 })
                 .then()
                 .toFuture();

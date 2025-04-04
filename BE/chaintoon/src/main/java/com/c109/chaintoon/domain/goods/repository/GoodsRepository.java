@@ -7,12 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface GoodsRepository extends JpaRepository<Goods, Integer>, JpaSpecificationExecutor<Goods> {
 
-    // 웹툰 id별 굿즈 총개수 조회
-    int countByWebtoonId(Integer webtoonId);
-
     // 특정 웹툰 ID에 해당하는 굿즈 목록을 페이징 처리하여 조회
     Page<Goods> findAllByWebtoonIdAndDeleted(Integer webtoonId, String deleted, Pageable pageable);
+
+    Optional<Goods> findByGoodsIdAndDeleted(Integer goodsId, String deleted);
 }
