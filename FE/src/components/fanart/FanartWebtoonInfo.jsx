@@ -69,7 +69,7 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
               <img
                 src={webtoon.seroThumbnail}
                 alt={`${webtoon?.webtoonName} 대표 이미지`}
-                className='h-[300px] w-[250px] rounded-xl'
+                className='min-h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}

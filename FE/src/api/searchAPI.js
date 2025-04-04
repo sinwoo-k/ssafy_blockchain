@@ -10,10 +10,10 @@ export const getAllSearch = async (keyword, pageSize = 10) => {
 
 /** 도메인별 검색 */
 export const getDomainSearch = async (
-  page = 1,
-  pageSize = 20,
   keyword,
   type,
+  page = 1,
+  pageSize = 10,
 ) => {
   const response = await API.get(
     `/search?type=${type}&keyword=${keyword}&page=${page}&pageSize=${pageSize}`,
