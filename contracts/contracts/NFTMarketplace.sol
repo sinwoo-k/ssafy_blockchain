@@ -124,6 +124,17 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint256 ownerShare = (listing.price * 95) / 100;
         uint256 adminShare = (listing.price * 1) / 100;
 
+        // 분배 총액과 나머지 계산 (정수 나눗셈으로 인해 소수점 이하가 버려진 잔여 금액)
+        uint256 totalDistributed = originalCreatorShare +
+            ownerShare +
+            adminShare;
+        uint256 remainder = listing.price - totalDistributed;
+
+        // 잔여 금액을 관리자에게 추가 송금
+        if (remainder > 0) {
+            adminShare += remainder;
+        }
+
         // (3) 각각 분배
         payable(info.originalCreator).transfer(originalCreatorShare);
         payable(info.ownerShare).transfer(ownerShare);
@@ -144,7 +155,6 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // (5) 이벤트 발생
         emit NFTSold(tokenId, msg.sender, listing.price);
     }
-
     // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
 
     function _beforeTokenTransfer(
