@@ -38,7 +38,7 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
           <div className='flex items-center gap-3'>
             <MintNFT
               item={episode}
-              type="webtoon"
+              type="episode"
             />
             <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
               <IconButton

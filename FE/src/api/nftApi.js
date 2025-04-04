@@ -38,9 +38,19 @@ const getNFTTradingHistory = async (nftId) => {
 // NFT 판매 등록
 const sellNFT = async (nftData) => {
   try {
-    const response = await API.post('/blockchain/mint', nftData);
+    const response = await API.post('/auctions', nftData);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+// NFT 등록
+const mintNFT = async(payload) => {
+  try{
+    const response = await API.post(`/blockchain/mint`, payload);
+    return response.data;
+  } catch(error){
     throw error;
   }
 };
@@ -71,7 +81,8 @@ export const nftService = {
   getNFTTradingHistory,
   sellNFT,
   getMyTradingHistory,
-  getWalletInfo
+  getWalletInfo,
+  mintNFT
 };
 
 export default nftService;

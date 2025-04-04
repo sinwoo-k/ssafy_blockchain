@@ -11,10 +11,10 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
       const payload = {
         webtoonId: item.webtoonId || item.webtoon?.webtoonId, // 웹툰 ID
         type: type, // 'fanart' | 'goods' | 'webtoon'
-        typeId: item.fanartId || item.goodsId || item.webtoonId // 실제 아이템 ID
+        typeId: item.fanartId || item.goodsId || item.episodeId // 실제 아이템 ID
       }
 
-      await nftService.sellNFT(payload)
+      await nftService.mintNFT(payload)
       alert('NFT 발행 완료')
       setShowModal(false)
     } catch (err) {

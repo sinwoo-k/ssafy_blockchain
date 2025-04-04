@@ -33,10 +33,10 @@ const MyNFTList = () => {
 
   // NFT 판매 버튼 클릭 핸들러
   const handleSellClick = (nft) => {
-    setSelectedNft(nft);
+    setSelectedNft(nft); // ✅ 전체 객체 전달
     setShowSellModal(true);
   };
-  
+
   // 판매 모달 닫기 핸들러
   const handleCloseSellModal = () => {
     setShowSellModal(false);
@@ -46,29 +46,30 @@ const MyNFTList = () => {
   // NFT 판매 처리 핸들러
   const handleSellNft = async (sellInfo) => {
     try {
-      // API 호출하여 NFT 판매 등록
       await nftService.sellNFT({
-        tokenId: sellInfo.nftId,
-        startPrice: sellInfo.startPrice,
-        endPrice: sellInfo.endPrice,
-        category: sellInfo.category,
-        endTime: sellInfo.auctionEndDate
+        nftId : sellInfo.nftId,
+        minimumBidPrice: sellInfo.minimumBidPrice,
+        buyNowPrice: sellInfo.buyNowPrice,
+        endTime: sellInfo.endTime
       });
-      
-      // 판매 중인 상태로 UI 업데이트
-      setTransactions(prev => 
-        prev.map(item => 
+  
+      // ✅ 사용자에게 알림 표시
+      alert('NFT가 판매 등록되었습니다.');
+  
+      // ✅ 상태 업데이트 (판매중 표시)
+      setTransactions(prev =>
+        prev.map(item =>
           item.id === sellInfo.nftId
             ? { ...item, isOnSale: true, sellInfo }
             : item
         )
       );
-      
-      // 모달 닫기
+  
+      // ✅ 모달 닫기
       handleCloseSellModal();
     } catch (err) {
       console.error('NFT 판매 등록 오류:', err);
-      // 에러 처리 로직 추가
+      alert('NFT 판매 등록에 실패했습니다.');
     }
   };
 
@@ -179,6 +180,7 @@ const MyNFTList = () => {
         nft={selectedNft}
         onSell={handleSellNft}
       />
+      
     </div>
   );
 };
