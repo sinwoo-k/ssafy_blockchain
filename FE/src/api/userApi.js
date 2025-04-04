@@ -130,7 +130,7 @@ const deleteProfileImage = async () => {
 
 const uploadBackgroundImage = async (formData) => {
   try {
-    const res = await API.post('/users/upload-background', formData, {
+    const res = await API.patch('/users/background-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return res.data;

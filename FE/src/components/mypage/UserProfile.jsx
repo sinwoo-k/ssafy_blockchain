@@ -117,25 +117,20 @@ const UserProfile = () => {
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
+        const formData = new FormData();
+        formData.append('backgroundImage', file); // API의 요구에 맞춰 이름 명시
         try {
-          const formData = new FormData();
-          formData.append('image', file);
-          // 백엔드에서 /users/upload-background 로 받고 있다고 가정
           const response = await userService.uploadBackgroundImage(formData);
-          setUser(prev => ({
-            ...prev,
+          const updatedUser = {
+            ...user,
             backgroundImage: response.backgroundImage
-          }));
-          if (userData) {
-            dispatch(userReducerActions.setUser({
-              ...userData,
-              backgroundImage: response.backgroundImage
-            }));
-          }
+          };
+          setUser(updatedUser);
+          dispatch(userReducerActions.setUser(updatedUser));
           showNotification('배경 이미지가 업데이트되었습니다.');
-        } catch (err) {
-          console.error('배경 이미지 업로드 오류:', err);
-          showNotification('배경 이미지 업로드에 실패했습니다.', 'error');
+        } catch (error) {
+          console.error('업로드 에러:', error);
+          showNotification('배경 이미지 업로드 실패', 'error');
         }
       }
     };
@@ -325,31 +320,36 @@ const UserProfile = () => {
   return (
     <>
       {/* 배경 이미지 */}
-      <div className="relative w-full h-48 bg-gray-800 overflow-hidden">
-        {user.backgroundImage ? (
-          <img
-            src={user.backgroundImage}
-            alt="배경"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
-        )}
+      <div className="relative w-full h-48 bg-gray-800 overflow-hidden group">
+          {user.backgroundImage ? (
+            <img
+              src={user.backgroundImage}
+              alt="배경"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
+          )}
 
-        {/* 배경 이미지 메뉴 */}
-        <div className="absolute bottom-2 right-2">
-          <button
-            className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
-            onClick={() => setShowBackgroundImageMenu(!showBackgroundImageMenu)}
+          {/* Hover 시 업로드 및 삭제 아이콘 */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition duration-200"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="currentColor" viewBox="0 0 20 20"
+            {/* 업로드 */}
+            <button
+              onClick={handleBackgroundImageChange}
+              className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
+              title="배경 이미지 업로드"
             >
-              <path
-                fillRule="evenodd"
-                d="M4 5a2 2 0 00-2 2v8a2 2 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 5a2 2 0 00-2 2v8a2 2 
                   0 002 2h12a2 2 0 002-2V7a2 2 
                   0 00-2-2h-1.586a1 1 0 
                   01-.707-.293l-1.121-1.121A2 2 
@@ -357,31 +357,22 @@ const UserProfile = () => {
                   00-1.414.586L6.293 4.707A1 1 
                   0 015.586 5H4zm6 9a3 3 0 100-6 
                   3 3 0 000 6z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
 
-          {showBackgroundImageMenu && (
-            <div className="absolute bottom-full right-0 mb-2 bg-gray-800 rounded shadow-lg overflow-hidden">
+            {/* 삭제 (이미지가 있을 때만 표시) */}
+            {user.backgroundImage && (
               <button
-                className="block w-full px-4 py-2 text-left text-white hover:bg-gray-700"
-                onClick={handleBackgroundImageChange}
-              >
-                이미지 업로드
-              </button>
-              <button
-                className="block w-full px-4 py-2 text-left text-white hover:bg-gray-700"
                 onClick={handleDeleteBackgroundImage}
-                disabled={!user.backgroundImage}
+                className="opacity-0 group-hover:opacity-100 text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition"
               >
-                이미지 제거
+                이미지 삭제
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-
       {/* 프로필/정보 */}
       <div className="border-b border-gray-800 py-3 relative">
         <div className="flex items-start mb-5">

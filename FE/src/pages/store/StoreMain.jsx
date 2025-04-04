@@ -3,30 +3,78 @@ import React, { useState, useEffect } from 'react'
 import StoreFilter from '../../components/store/StoreFilter'
 import ProductList from '../../components/store/ProductList'
 import Loader from '../../components/common/Loader'
-import { dummyProducts } from './storeData'
+import { getWebtoonList } from '../../api/webtoonAPI'
+import { getGoodsList } from '../../api/goodsAPI'
+import { getLatestFanarts } from '../../api/fanartAPI'
 
 const StoreMain = () => {
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [activeFilters, setActiveFilters] = useState({})
   const [isLoading, setIsLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState('') // 기본값은 빈 문자열로 설정 (선택 없음)
+  const [activeCategory, setActiveCategory] = useState('')
 
-  // 더미 데이터 불러오기
   useEffect(() => {
-    // API 호출 지연 시뮬레이션
-    setTimeout(() => {
-      setProducts(dummyProducts)
-      
-      // 초기에는 모든 상품을 최신순으로 표시
-      const sortedProducts = [...dummyProducts].sort((a, b) => b.id - a.id)
-      setFilteredProducts(sortedProducts)
-      
-      // 초기 필터는 빈 상태로 설정
-      setActiveFilters({})
-      
-      setIsLoading(false)
-    }, 800)
+    const fetchAllProducts = async () => {
+      try {
+        setIsLoading(true)
+
+        const [webtoons, fanarts] = await Promise.all([
+          getWebtoonList(),
+          getLatestFanarts()
+        ])
+
+        const goodsArray = await Promise.all(
+          webtoons.map(w => getGoodsList(w.webtoonId))
+        )
+        const goods = goodsArray.flat()
+
+        const webtoonProducts = webtoons.map(w => ({
+          id: w.webtoonId,
+          title: w.webtoonName,
+          image: w.garoThumbnail,
+          price: 0,
+          category: '웹툰',
+          genre: w.genre || '',
+          status: w.episodeCount > 0 ? 'sell' : 'notsell',
+          rating: w.rating,
+          writer: w.writer
+        }))
+
+        const fanartProducts = fanarts.map(f => ({
+          id: f.fanartId,
+          title: f.title,
+          image: f.thumbnailUrl,
+          price: f.price || 0,
+          category: '팬아트',
+          genre: f.genre || '',
+          status: f.status || ''
+        }))
+
+        const goodsProducts = goods.map(g => ({
+          id: g.goodsId,
+          title: g.name,
+          image: g.thumbnailUrl,
+          price: g.price,
+          category: '굿즈',
+          genre: '',
+          status: '',
+          collectionId: g.webtoonId
+        }))
+
+        const merged = [...webtoonProducts, ...fanartProducts, ...goodsProducts]
+        setProducts(merged)
+        const sorted = [...merged].sort((a, b) => b.id - a.id)
+        setFilteredProducts(sorted)
+        setActiveFilters({})
+      } catch (err) {
+        console.error('스토어 상품 API 에러:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAllProducts()
   }, [])
 
   // 카테고리 선택 핸들러
