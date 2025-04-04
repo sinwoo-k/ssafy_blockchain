@@ -12,12 +12,12 @@ export const verifyEmailCode = async (email, code) => {
 };
 
 export const requestMetaMaskNonce = async (address) => {
-  const res = await API.get(`/nft/nonce?walletAddress=${address}`);
+  const res = await API.get(`/blockchain/nonce/${address}`);
   return res.data.nonce;
 };
 
 export const verifyMetaMaskSignature = async (address, signature, nonce) => {
-  const res = await API.post('/nft/connect-wallet', {
+  const res = await API.post('/auth/metamask-login', {
     walletAddress: address,
     signature,
     message: nonce,

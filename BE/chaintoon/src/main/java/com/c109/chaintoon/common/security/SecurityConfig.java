@@ -64,6 +64,7 @@ public class SecurityConfig {
                         "/api/nfts",
                         "/api/nfts/{nftId}",
                         "/api/auctions"
+                        "/api/blockchain/nonce/{walletAddress}"
                 ).permitAll()
                 .requestMatchers(
                         "/api/auth/**",
