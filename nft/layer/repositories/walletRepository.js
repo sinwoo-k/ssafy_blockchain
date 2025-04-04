@@ -17,11 +17,12 @@ export async function createWallet(walletData) {
     publicKey = "",
     recoveryPhrase = ""
   } = walletData;
-  
+  const now = new Date(new Date().getTime());
+
   const [result] = await pool.execute(
-    `INSERT INTO wallet (user_id, wallet_address, private_key, public_key, recovery_phrase)
+    `INSERT INTO wallet (user_id, wallet_address, private_key, public_key, recovery_phrase, created_at)
      VALUES (?, ?, ?, ?, ?)`,
-    [userId, walletAddress, privateKey, publicKey, recoveryPhrase]
+    [userId, walletAddress, privateKey, publicKey, recoveryPhrase, now]
   );
   return result.insertId;
 }
@@ -56,7 +57,7 @@ export async function createUser(userData) {
     status = "Y"
   } = userData;
   
-  const now = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+  const now = new Date(new Date().getTime());
   const join_date = now.toISOString().split('T')[0];
   const created_at = now.toISOString().slice(0, 19).replace('T', ' ');
   
