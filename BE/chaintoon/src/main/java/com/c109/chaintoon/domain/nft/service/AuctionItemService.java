@@ -22,6 +22,9 @@ import com.c109.chaintoon.domain.nft.repository.BiddingHistoryRepository;
 import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.repository.TradingHistoryRepository;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.user.service.NoticeService;
+import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
+import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +51,8 @@ public class AuctionItemService {
     private final BlockchainService blockchainService;
     private final SchedulingService schedulingService;
     private final UserRepository userRepository;
+    private final NoticeService noticeService;
+    private final WebtoonRepository webtoonRepository;
 
     // 판매 등록
     public AuctionCreateResponseDto createAuctionItem(Integer userId, AuctionCreateRequestDto auctionCreateRequestDto) {
@@ -91,15 +96,15 @@ public class AuctionItemService {
 
                     saved.setBlockchainStatus("SUCCESS");
                     auctionItemRepository.save(saved);
+                    noticeService.addBlockchainNetworkSuccessNotice(nft.getUserId(), "NFT 판매 등록이 성공적으로 처리되었습니다");
                 })
                 .doOnError(e -> {
                     log.error("블록체인 판매 등록 요청 실패: {}", e.getMessage());
                     saved.setBlockchainStatus("FAILED");
                     auctionItemRepository.save(saved);
+                    noticeService.addBlockchainNetworkFailNotice(nft.getUserId(), "NFT 판매 등록에 실패했습니다.");
                 })
                 .subscribe();
-
-        // TODO : 블록체인 상에서 판매 등록에 실패했을 경우 사용자에게 별도 알람 처리
 
         // 저장된 엔티티 정보를 response DTO로 변환
         AuctionCreateResponseDto response = AuctionCreateResponseDto.builder()
@@ -125,6 +130,11 @@ public class AuctionItemService {
         // 경매 아이템 조회
         AuctionItem auctionItem = auctionItemRepository.findById(bidRequestDto.getAuctionItemId())
                 .orElseThrow(() -> new AuctionItemNotFoundException(bidRequestDto.getAuctionItemId()));
+
+        // blockchain_status가 FAILED이면 입찰 진행 차단
+        if ("FAILED".equals(auctionItem.getBlockchainStatus())) {
+            throw new AuctionRegistrationFailedException("경매 등록이 실패하여 입찰할 수 없습니다.");
+        }
 
         // 판매 등록자 확인을 위한 nft 조회
         Nft nft = nftRepository.findById(auctionItem.getNftId())
@@ -158,6 +168,13 @@ public class AuctionItemService {
 
         AuctionItem savedItem = auctionItemRepository.save(auctionItem);
 
+        Optional<BiddingHistory> previousHighestBidOpt = biddingHistoryRepository.findTopByAuctionItemIdAndLatestTrueOrderByBiddingPriceDesc(savedItem.getAuctionItemId());
+        if(previousHighestBidOpt.isPresent()) {
+            BiddingHistory previousHighestBid = previousHighestBidOpt.get();
+            if (bidRequestDto.getBiddingPrice() > previousHighestBid.getBiddingPrice()) {
+                noticeService.addOverbidNotice(savedItem, previousHighestBid.getUserId());
+            }
+        }
         // 거래내역 업데이트 : 동일 입찰자가 이미 입찰한 내역이 있는지 체크
         List<BiddingHistory> oldBids = biddingHistoryRepository.findByAuctionItemIdAndUserIdAndLatestTrue(savedItem.getAuctionItemId(), userId);
 
@@ -179,7 +196,7 @@ public class AuctionItemService {
                 .auctionItemId(savedItem.getAuctionItemId())
                 .bidderId(userId)
                 .biddingPrice(savedItem.getBiddingPrice())
-                .startTime(savedItem.getEndTime())
+                .startTime(savedItem.getStartTime())
                 .endTime(savedItem.getEndTime())
                 .build();
     }
@@ -275,6 +292,13 @@ public class AuctionItemService {
                 .build();
 
         tradingHistoryRepository.save(tradingHistory);
+
+        Webtoon webtoon = null;
+        if (nft.getWebtoonId() != null) {
+            webtoon = webtoonRepository.findById(nft.getWebtoonId()).orElse(null);
+        }
+
+        noticeService.addAuctionCompleteNotice(tradingHistory, webtoon);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -415,6 +439,13 @@ public class AuctionItemService {
                     .build();
             blockchainService.registerBuy(buyRequestDto);
             log.info("블록체인 구매 등록 요청 보내짐 for 낙찰자: {}", winner);
+
+            Webtoon webtoon = null;
+            if (nft.getWebtoonId() != null) {
+                webtoon = webtoonRepository.findById(nft.getNftId()).orElse(null);
+            }
+
+            noticeService.addAuctionCompleteNotice(tradingHistory,webtoon);
         }
     }
 
