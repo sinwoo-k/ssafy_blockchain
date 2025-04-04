@@ -1,6 +1,9 @@
 package com.c109.chaintoon.domain.user.controller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
+import com.c109.chaintoon.domain.nft.dto.blockchain.MetamaskWallet;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.MetamaskWalletResponseDto;
+import com.c109.chaintoon.domain.nft.service.BlockchainService;
 import com.c109.chaintoon.domain.user.dto.request.LoginRequestDto;
 import com.c109.chaintoon.domain.user.dto.request.VerifyAuthRequestDto;
 import com.c109.chaintoon.domain.user.service.AuthService;
@@ -20,7 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final BlockchainService blockchainService;
 
     // 이메일로 로그인 (인증코드 전송)
     @PostMapping("/email-login")
@@ -43,7 +46,6 @@ public class AuthController {
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
                 .sameSite("None") // CSRF 보호
-//                .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -61,11 +63,36 @@ public class AuthController {
                 .path("/")
                 .maxAge(0) // 즉시 삭제
                 .sameSite("None") // CSRF 보호
-//            .domain("j12c109.p.ssafy.io") // 실제 도메인으로 변경
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok("로그아웃 성공");
+    }
+
+    @PostMapping("/metamask-login")
+    public ResponseEntity<?> metamask(@Valid @RequestBody MetamaskWallet metamaskWallet,
+                                      HttpServletResponse response) {
+        // BlockchainService에서 Node API와 통신하여 지갑 연결을 검증합니다.
+        MetamaskWalletResponseDto walletResponse = blockchainService.connectWallet(metamaskWallet).block();
+        if (walletResponse == null || walletResponse.getUserId() == null) {
+            return ResponseEntity.status(401).body("메타마스크 인증 실패");
+        }
+        System.out.println("wallet : "+walletResponse.getUserId());
+        // JWT 토큰 생성 (예: userId와 역할을 인자로 사용)
+        String token = jwtTokenProvider.createAccessToken(walletResponse.getUserId(), "USER");
+
+        // HttpOnly, Secure 쿠키 설정
+        ResponseCookie cookie = ResponseCookie.from("jwt", token)
+                .httpOnly(true)
+                .secure(false) // HTTPS 환경에서만 사용
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7일 유효기간
+                .sameSite("Lax") // CSRF 보호
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok("메타마스크 로그인 성공");
     }
 }

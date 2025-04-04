@@ -146,7 +146,7 @@ public class NoticeService {
     }
 
     // 계약 체결 시 호출
-    public void addActionCompleteNotice(TradingHistory tradingHistory, Webtoon webtoon) {
+    public void addAuctionCompleteNotice(TradingHistory tradingHistory, Webtoon webtoon) {
         addNftPurchaseNotice(tradingHistory);
         addNftSoldNotice(tradingHistory);
         addSecondaryCreationNftSoldNotice(tradingHistory, webtoon);

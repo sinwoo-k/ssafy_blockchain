@@ -55,15 +55,16 @@ public class SecurityConfig {
                         "/api/users/followers/{userId}",
                         "/api/users/following/{userId}",
                         "/api/webtoons",
-                        "/api/webtoons/search"
-                        ,"/api/webtoons/{webtoonId}"
-                        ,"/api/episodes/**",
+                        "/api/webtoons/search",
+                        "/api/webtoons/{webtoonId}",
+                        "/api/episodes/**",
                         "/api/comments/**",
                         "/api/goods/**",
                         "/api/fanarts/**",
                         "/api/nfts",
                         "/api/nfts/{nftId}",
-                        "/api/actions"
+                        "/api/auctions",
+                        "/api/blockchain/nonce/{walletAddress}"
                 ).permitAll()
                 .requestMatchers(
                         "/api/auth/**",

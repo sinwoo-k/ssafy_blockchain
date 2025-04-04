@@ -73,9 +73,13 @@ export const metaMaskLoginAction = () => async (dispatch) => {
     const { address, signature, nonce } = await loginWithMetaMask(authService.requestMetaMaskNonce);
     const response = await authService.verifyMetaMaskSignature(address, signature, nonce);
 
+    const userData = await getMyUserInfo();
+
     // localStorage에 JWT 저장하는 코드 삭제
     dispatch(userReducerActions.setAuthenticated(true));
-    dispatch(userReducerActions.setUser(response.user));
+    dispatch(userReducerActions.setUser(userData));
+
+    // window.location.reload(); // 페이지 새로고침
 
   } catch (error) {
     dispatch(authActions.setErrorMessage(error.message || '메타마스크 로그인 실패'));

@@ -39,10 +39,15 @@ public class GoodsService {
     private final S3Service s3Service;
 
     private GoodsResponseDto toGoodsResponseDto(Goods goods) {
+        Webtoon webtoon = webtoonRepository
+                .findByWebtoonIdAndDeleted(goods.getWebtoonId(), "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(goods.getWebtoonId()));
+
         return GoodsResponseDto.builder()
                 .goodsId(goods.getGoodsId())
                 .userId(goods.getUserId())
                 .webtoonId(goods.getWebtoonId())
+                .webtoonName(webtoon.getWebtoonName())
                 .goodsName(goods.getGoodsName())
                 .description(goods.getDescription())
                 .goodsImage(s3Service.getPresignedUrl(goods.getGoodsImage()))

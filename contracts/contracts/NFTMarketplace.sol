@@ -116,20 +116,31 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(listing.isListed, "NFT is not listed for sale");
         require(msg.value >= listing.price, "Insufficient funds");
 
-        // 구매자가 보낸 실제 금액을 기준으로 분배
-        uint256 purchaseAmount = msg.value;
-        uint256 originalCreatorShare = (purchaseAmount * 4) / 100;
-        uint256 ownerShare = (purchaseAmount * 95) / 100;
-        uint256 adminShare = (purchaseAmount * 1) / 100;
-
+        // (1) 이 NFT의 로열티 정보 가져오기
         RoyaltyInfo storage info = royaltyInfoByToken[tokenId];
 
-        // 분배 진행
+        // (2) 예: 4% / 95% / 1% 분배 계산
+        uint256 originalCreatorShare = (listing.price * 4) / 100;
+        uint256 ownerShare = (listing.price * 95) / 100;
+        uint256 adminShare = (listing.price * 1) / 100;
+
+        // 분배 총액과 나머지 계산 (정수 나눗셈으로 인해 소수점 이하가 버려진 잔여 금액)
+        uint256 totalDistributed = originalCreatorShare +
+            ownerShare +
+            adminShare;
+        uint256 remainder = listing.price - totalDistributed;
+
+        // 잔여 금액을 관리자에게 추가 송금
+        if (remainder > 0) {
+            adminShare += remainder;
+        }
+
+        // (3) 각각 분배
         payable(info.originalCreator).transfer(originalCreatorShare);
         payable(info.ownerShare).transfer(ownerShare);
         payable(info.adminWallet).transfer(adminShare);
 
-        // NFT 소유권 이전
+        // (4) NFT 소유권 이전
         _transfer(listing.seller, msg.sender, tokenId);
         listings[tokenId].isListed = false;
 
@@ -138,13 +149,12 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         purchaseRecords[tokenId] = PurchaseRecord({
             buyer: msg.sender,
-            price: purchaseAmount,
+            price: listing.price,
             purchaseTime: block.timestamp
         });
-
-        emit NFTSold(tokenId, msg.sender, purchaseAmount);
+        // (5) 이벤트 발생
+        emit NFTSold(tokenId, msg.sender, listing.price);
     }
-
     // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
 
     function _beforeTokenTransfer(
