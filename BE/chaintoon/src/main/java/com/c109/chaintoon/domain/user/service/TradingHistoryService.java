@@ -74,7 +74,7 @@ public class TradingHistoryService {
     // 현재 거래중(판매중, 입찰중)인 목록 조회
     public Page<ActiveTradingResponseDto> getActiveTrades(Integer userId, int page, int pageSize, String orderBy) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<AuctionItem> activePage = auctionItemRepository.findByEndedAndUserId("N", userId, pageable);
+        Page<AuctionItem> activePage = auctionItemRepository.findActiveTradesByBidder("N", userId, pageable);
 
         Page<ActiveTradingResponseDto> dtoPage = activePage.map(item -> {
             Nft nft = nftRepository.findById(item.getNftId())
@@ -105,8 +105,8 @@ public class TradingHistoryService {
 private Sort getSort(String orderBy) {
     if ("tradingValue".equalsIgnoreCase(orderBy)) {
         return Sort.by(Sort.Direction.DESC, "tradingValue");
-    } else if ("tradingDate".equalsIgnoreCase(orderBy)) {
-        return Sort.by(Sort.Direction.DESC, "tradingDate");
+    } else if ("createdAt".equalsIgnoreCase(orderBy)) {
+        return Sort.by(Sort.Direction.DESC, "createdAt");
     } else {
         // 기본 정렬 기준: tradingDate 내림차순
         return Sort.by(Sort.Direction.DESC, "tradingDate");
