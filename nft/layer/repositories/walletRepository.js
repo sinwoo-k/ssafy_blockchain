@@ -53,7 +53,7 @@ export async function createUser(userData) {
     url = "", // 빈칸
     join_date = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
                   .toISOString()
-                  .split('T')[0],    sso_type = "Metamask", // sso_type은 Metamask
+                  .split('T')[0],    sso_type = "METAMASK", // sso_type은 Metamask
     deleted = "N",
     status = "Y"
   } = userData;
