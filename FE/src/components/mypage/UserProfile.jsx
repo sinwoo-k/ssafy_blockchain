@@ -1,85 +1,92 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ProfileEditModal from './ProfileEdit';
 import FollowModal from './FollowModal';
 import userService from '../../api/userApi';
-import nftService from '../../api/nftApi';
+import { userReducerActions } from '../../redux/reducers/userSlice';
 
 const UserProfile = () => {
-  // 로그인한 사용자 정보 가져오기
-  const { user: authUser } = useSelector(state => state.user);
-  const userId = authUser?.id;
+  const dispatch = useDispatch();
+  const { userData, isAuthenticated } = useSelector(state => state.user);
 
-  // 상태 관리
+  // 로컬 상태
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 지갑, NFT 등 부가 상태 (필요 없으면 제거 가능)
   const [walletInfo, setWalletInfo] = useState(null);
   const [nftCount, setNftCount] = useState(0);
-  
+
+  // 프로필 수정 모달
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFields, setEditFields] = useState({
     username: '',
     bio: '',
     url: '',
-    email: ''
+    email: '',
+    nickname: ''
   });
-  
-  // 팔로우 모달 관련 상태
+
+  // 배경 이미지 메뉴
+  const [showBackgroundImageMenu, setShowBackgroundImageMenu] = useState(false);
+
+  // 팔로워/팔로잉 모달 상태
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
   const [followersLoading, setFollowersLoading] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(false);
-  
-  // 복사 알림 상태
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
-  
-  // 사용자 정보 로드
+
+  // 알림
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+
+  // 사용자 정보 로딩
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) return;
-      
       try {
         setLoading(true);
-        const userData = await userService.getUserInfo(userId);
-        setUser(userData);
-        
-        // 편집 필드 초기화
-        setEditFields({
-          username: userData.username || '',
-          bio: userData.bio || '',
-          url: userData.url || '',
-          email: userData.email || ''
-        });
-        
-        // 지갑 정보 가져오기
-        const wallet = await nftService.getWalletInfo();
-        setWalletInfo(wallet);
-        
-        // NFT 개수 가져오기
-        const myNfts = await nftService.getMyNFTs();
-        setNftCount(myNfts.length || 0);
-        
+        let myUserInfo = userData;
+        if (!myUserInfo) {
+          myUserInfo = await userService.getMyUserInfo();
+          dispatch(userReducerActions.setUser(myUserInfo));
+        }
+
+        if (myUserInfo?.id) {
+          const userDetails = await userService.getUserInfo(myUserInfo.id);
+          setUser(userDetails);
+        } else {
+          setError('사용자 정보를 찾을 수 없습니다.');
+        }
         setLoading(false);
       } catch (err) {
-        console.error('사용자 정보 로드 오류:', err);
+        console.error('사용자 정보 로딩 오류:', err);
         setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
         setLoading(false);
       }
     };
-    
     fetchUserData();
-  }, [userId]);
-  
-  // 팔로워 목록 가져오기
+  }, [dispatch, userData]);
+
+  // 알림 함수
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
+  // 팔로워 목록
   const fetchFollowers = async () => {
-    if (!userId) return;
-    
+    if (!user?.id) return;
     try {
       setFollowersLoading(true);
-      const followersData = await userService.getFollowers(userId);
+      const followersData = await userService.getFollowers(user.id);
       setFollowers(followersData.list || []);
       setFollowersLoading(false);
     } catch (err) {
@@ -87,14 +94,13 @@ const UserProfile = () => {
       setFollowersLoading(false);
     }
   };
-  
-  // 팔로잉 목록 가져오기
+
+  // 팔로잉 목록
   const fetchFollowing = async () => {
-    if (!userId) return;
-    
+    if (!user?.id) return;
     try {
       setFollowingLoading(true);
-      const followingData = await userService.getFollowing(userId);
+      const followingData = await userService.getFollowing(user.id);
       setFollowing(followingData.list || []);
       setFollowingLoading(false);
     } catch (err) {
@@ -102,146 +108,194 @@ const UserProfile = () => {
       setFollowingLoading(false);
     }
   };
-  
-  // 프로필 이미지 변경
-  const handleProfileImageChange = () => {
-    // 이미지 선택 로직 구현 필요
-    console.log('프로필 이미지 변경');
-    
-    // 파일 입력 요소 생성 및 클릭
+
+  // 배경 이미지 업로드
+  const handleBackgroundImageChange = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
-    fileInput.onchange = (e) => {
+    fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        // 이미지 업로드 로직 구현 필요
-        console.log('선택된 파일:', file);
-        
-        // FormData로 파일 전송 구현
         const formData = new FormData();
-        formData.append('image', file);
-        
-        // API 호출 구현 필요
+        formData.append('backgroundImage', file); // API의 요구에 맞춰 이름 명시
+        try {
+          const response = await userService.uploadBackgroundImage(formData);
+          const updatedUser = {
+            ...user,
+            backgroundImage: response.backgroundImage
+          };
+          setUser(updatedUser);
+          dispatch(userReducerActions.setUser(updatedUser));
+          showNotification('배경 이미지가 업데이트되었습니다.');
+        } catch (error) {
+          console.error('업로드 에러:', error);
+          showNotification('배경 이미지 업로드 실패', 'error');
+        }
       }
     };
     fileInput.click();
   };
 
-  // URL로 이동하는 함수
-  const handleGoToUrl = () => {
-    if (user?.url && user.url.trim() !== '') {
-      let url = user.url;
-      // URL에 프로토콜이 없는 경우 https:// 추가
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
+  // 배경 이미지 제거
+  const handleDeleteBackgroundImage = async () => {
+    try {
+      await userService.deleteBackgroundImage();
+      setUser(prev => ({ ...prev, backgroundImage: null }));
+      if (userData) {
+        dispatch(userReducerActions.setUser({ ...userData, backgroundImage: null }));
       }
-      window.open(url, '_blank');
+      showNotification('배경 이미지가 제거되었습니다.');
+    } catch (err) {
+      console.error('배경 이미지 제거 오류:', err);
+      showNotification('배경 이미지 제거에 실패했습니다.', 'error');
     }
   };
 
-  // 주소 복사 함수
+  // URL 새 탭 이동
+  const handleGoToUrl = () => {
+    if (user?.url && user.url.trim() !== '') {
+      let targetUrl = user.url;
+      if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        targetUrl = 'https://' + targetUrl;
+      }
+      window.open(targetUrl, '_blank');
+    }
+  };
+
+  // 페이지 주소 복사
   const handleCopyPageAddress = () => {
     const currentUrl = window.location.href;
     navigator.clipboard.writeText(currentUrl)
-      .then(() => {
-        setShowCopyNotification(true);
-        setTimeout(() => {
-          setShowCopyNotification(false);
-        }, 2000);
-      })
+      .then(() => showNotification('페이지 주소가 복사되었습니다.'))
       .catch(err => {
         console.error('주소 복사 실패:', err);
+        showNotification('주소 복사에 실패했습니다.', 'error');
       });
   };
-  
-  // 정보 수정 모달 열기
+
+  // 프로필 수정 모달 열기
   const handleOpenEditModal = () => {
     if (!user) return;
-    
     setEditFields({
       username: user.username || '',
-      bio: user.bio || '',
+      bio: user.bio || user.introduction || '',
       url: user.url || '',
-      email: user.email || ''
+      email: user.email || '',
+      nickname: user.nickname || ''
     });
     setShowEditModal(true);
   };
-  
-  // 정보 수정 모달 필드 변경 처리
+
+  // 모달 입력값 변경
   const handleEditFieldChange = (e) => {
     const { name, value } = e.target;
-    setEditFields(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEditFields(prev => ({ ...prev, [name]: value }));
   };
-  
-  // 정보 수정 저장
-  const handleSaveEdit = async () => {
-    if (!userId) return;
-    
+
+  // 정보 수정 저장 (모달에서 Save)
+  const handleSaveEdit = async (updatedFields, newProfileImage) => {
+    // 모달에서 넘어온 정보를 받아 updateUserInfo 호출
+    if (!user) return;
     try {
-      // API 호출하여 사용자 정보 업데이트
-      await userService.updateUserInfo(userId, editFields);
-      
-      // 업데이트된 정보로 상태 갱신
-      setUser(prev => ({
-        ...prev,
-        ...editFields
-      }));
-      
+      const updateData = {
+        nickname: updatedFields.nickname || '',
+        introduction: updatedFields.bio || '',
+        // email: updatedFields.email || '',
+        url: updatedFields.url || ''
+      };
+
+      console.log('수정 요청 데이터:', updateData);
+      console.log('이미지 파일:', newProfileImage);
+
+      // API 호출하여 사용자 정보 + 이미지 파일 함께 업데이트
+      await userService.updateUserInfo(updateData, newProfileImage);
+
+      // 업데이트 후 새로운 사용자 정보를 다시 불러옴
+      const refreshedUserInfo = await userService.getMyUserInfo();
+      console.log('업데이트 후 새로 가져온 정보:', refreshedUserInfo);
+
+      setUser(refreshedUserInfo);
+      dispatch(userReducerActions.setUser(refreshedUserInfo));
+
       setShowEditModal(false);
+      showNotification('회원 정보가 업데이트되었습니다.');
     } catch (err) {
       console.error('사용자 정보 업데이트 오류:', err);
-      // 에러 처리 로직 추가
+      let errorMessage = '회원 정보 업데이트에 실패했습니다.';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      showNotification(errorMessage, 'error');
     }
   };
-  
-  // 팔로워/팔로잉 관련 함수
+
+  // 팔로워/팔로잉 모달 열고 닫기
   const handleFollowersClick = () => {
     fetchFollowers();
     setShowFollowersModal(true);
   };
-  
   const handleFollowingClick = () => {
     fetchFollowing();
     setShowFollowingModal(true);
   };
-  
-  const handleFollow = async (userId) => {
+
+  // 팔로우
+  const handleFollow = async (targetUserId) => {
     try {
-      await userService.followUser(userId);
-      // 팔로잉 목록 업데이트
+      await userService.followUser(targetUserId);
       fetchFollowing();
+      if (user?.id) {
+        const updatedUser = await userService.getUserInfo(user.id);
+        setUser(updatedUser);
+      }
+      showNotification('팔로우했습니다.');
     } catch (err) {
       console.error('팔로우 오류:', err);
-    }
-  };
-  
-  const handleUnfollow = async (userId) => {
-    try {
-      await userService.unfollowUser(userId);
-      // 팔로잉 목록 업데이트
-      const updatedFollowing = following.filter(user => user.id !== userId);
-      setFollowing(updatedFollowing);
-    } catch (err) {
-      console.error('언팔로우 오류:', err);
+      showNotification('팔로우에 실패했습니다.', 'error');
     }
   };
 
-  // 로딩 중 표시
-  if (loading) {
+  // 언팔로우
+  const handleUnfollow = async (targetUserId) => {
+    try {
+      await userService.unfollowUser(targetUserId);
+      const updatedFollowing = following.filter(x => x.id !== targetUserId);
+      setFollowing(updatedFollowing);
+      if (user?.id) {
+        const updatedUser = await userService.getUserInfo(user.id);
+        setUser(updatedUser);
+      }
+      showNotification('언팔로우했습니다.');
+    } catch (err) {
+      console.error('언팔로우 오류:', err);
+      showNotification('언팔로우에 실패했습니다.', 'error');
+    }
+  };
+
+  // 인증 안됨
+  if (!isAuthenticated) {
     return (
       <div className="border-b border-gray-800 py-3 mt-10">
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#3cc3ec]"></div>
+        <div className="flex justify-center items-center h-40 text-gray-500">
+          로그인이 필요합니다.
         </div>
       </div>
     );
   }
 
-  // 에러 표시
+  // 로딩
+  if (loading) {
+    return (
+      <div className="border-b border-gray-800 py-3 mt-10">
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#3cc3ec]" />
+        </div>
+      </div>
+    );
+  }
+
+  // 에러
   if (error) {
     return (
       <div className="border-b border-gray-800 py-3 mt-10">
@@ -252,7 +306,7 @@ const UserProfile = () => {
     );
   }
 
-  // 사용자 정보가 없을 때
+  // 사용자 정보 없음
   if (!user) {
     return (
       <div className="border-b border-gray-800 py-3 mt-10">
@@ -265,82 +319,184 @@ const UserProfile = () => {
 
   return (
     <>
-      <div className="border-b border-gray-800 py-3 mt-10">
+      {/* 배경 이미지 */}
+      <div className="relative w-full h-48 bg-gray-800 overflow-hidden group">
+          {user.backgroundImage ? (
+            <img
+              src={user.backgroundImage}
+              alt="배경"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
+          )}
+
+          {/* Hover 시 업로드 및 삭제 아이콘 */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition duration-200"
+          >
+            {/* 업로드 */}
+            <button
+              onClick={handleBackgroundImageChange}
+              className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
+              title="배경 이미지 업로드"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 5a2 2 0 00-2 2v8a2 2 
+                  0 002 2h12a2 2 0 002-2V7a2 2 
+                  0 00-2-2h-1.586a1 1 0 
+                  01-.707-.293l-1.121-1.121A2 2 
+                  0 0011.172 3H8.828a2 2 0 
+                  00-1.414.586L6.293 4.707A1 1 
+                  0 015.586 5H4zm6 9a3 3 0 100-6 
+                  3 3 0 000 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {/* 삭제 (이미지가 있을 때만 표시) */}
+            {user.backgroundImage && (
+              <button
+                onClick={handleDeleteBackgroundImage}
+                className="opacity-0 group-hover:opacity-100 text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition"
+              >
+                이미지 삭제
+              </button>
+            )}
+          </div>
+        </div>
+      {/* 프로필/정보 */}
+      <div className="border-b border-gray-800 py-3 relative">
         <div className="flex items-start mb-5">
-          {/* 프로필 이미지 */}
+          {/* 프로필 이미지 (이제 모달에서만 수정하므로 클릭 기능 제거) */}
           <div className="relative mr-4 group mt-1">
             <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-700">
               {user.profileImage ? (
-                <img src={user.profileImage} alt="프로필" className="h-full w-full object-cover" />
+                <img
+                  src={user.profileImage}
+                  alt="프로필"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-700">
-                  <span className="text-white text-lg">{user.username?.charAt(0).toUpperCase()}</span>
+                  <span className="text-white text-lg">
+                    {user.nickname?.charAt(0).toUpperCase() ||
+                      user.username?.charAt(0).toUpperCase()}
+                  </span>
                 </div>
               )}
             </div>
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                 onClick={handleProfileImageChange}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
           </div>
-          
+
           {/* 사용자 정보 */}
           <div className="flex-grow">
             <div className="flex items-center space-x-2 mb-1">
-              <h1 className="text-lg font-bold">{user.username}</h1>
-              
+              <h1 className="text-lg font-bold">
+                {user.nickname || user.username || '사용자'}
+              </h1>
+
               <div className="flex items-center space-x-3 ml-2">
-                {/* 정보 수정 아이콘 */}
-                <button 
+                {/* 정보 수정 아이콘 (모달 열기) */}
+                <button
                   className="text-gray-400 hover:text-white"
                   onClick={handleOpenEditModal}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 
+                        3.536m-2.036-5.036a2.5 2.5 
+                        0 113.536 3.536L6.5 21.036H3v-3.572L16.732 
+                        3.732z"
+                    />
                   </svg>
                 </button>
-                
+
                 {/* URL 링크 아이콘 */}
-                <button 
-                  className={`text-gray-400 hover:text-white ${!user.url ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                <button
+                  className={`text-gray-400 hover:text-white ${!user.url ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title={user.url ? `${user.url}로 이동` : '설정된 URL이 없습니다'}
                   onClick={handleGoToUrl}
                   disabled={!user.url}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 
+                        00-2 2v10a2 2 0 
+                        002 2h10a2 2 0 
+                        002-2v-4M14 4h6m0 
+                        0v6m0-6L10 14"
+                    />
                   </svg>
                 </button>
-                
-                {/* 페이지 주소 복사 아이콘 */}
-                <div className="relative">
-                  <button 
-                    className="text-gray-400 hover:text-white" 
-                    onClick={handleCopyPageAddress}
-                    title="현재 페이지 주소 복사"
+
+                {/* 페이지 주소 복사 */}
+                <button
+                  className="text-gray-400 hover:text-white"
+                  onClick={handleCopyPageAddress}
+                  title="현재 페이지 주소 복사"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-5 relative top-0.5"
+                    fill="none" viewBox="0 0 24 21"
+                    stroke="currentColor"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-5 relative top-0.5" fill="none" viewBox="0 0 24 21" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                  </button>
-                  
-                  {/* 복사 알림 */}
-                  {showCopyNotification && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-1 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-10">
-                      페이지 주소가 복사되었습니다
-                    </div>
-                  )}
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 5H6a2 2 0 
+                        00-2 2v12a2 2 0 
+                        002 2h10a2 2 0 
+                        002-2v-1M8
+                        5a2 2 0 002 2h2a2 
+                        2 0 002-2M8
+                        5a2 2 0 012-2h2a2 
+                        2 0 012 2m0
+                        0h2a2 2 0 012 2v3m2 4H10m0
+                        0l3-3m-3 3l3 3"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-            
-            <p className="text-gray-400 text-sm mb-1">{user.bio || '안녕하세요'}</p>
+
+            {/* 소개/이메일 */}
+            <p className="text-gray-400 text-sm mb-1">
+              {user.bio || user.introduction || '안녕하세요'}
+            </p>
+            {user.email && (
+              <p className="text-gray-400 text-xs mb-1">
+                {user.email}
+              </p>
+            )}
           </div>
-          
-          {/* 잔액 정보 */}
+
+          {/* (예시) 지갑 잔액/금액 */}
           <div className="text-right text-sm mt-3">
             <div className="mb-3">
               <span className="text-xs text-gray-400 mr-2">순자산</span>
@@ -352,40 +508,71 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
-        
-        {/* 팔로워/팔로잉 버튼 */}
+
+        {/* 팔로워/팔로잉 */}
         <div className="flex space-x-3 mb-1 ml-3">
-          <button 
+          <button
             className="text-[#3cc3ec] hover:underline flex items-center"
             onClick={handleFollowersClick}
           >
-            <span>팔로워 {user.followersCount || 0}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <span>팔로워 {user.follower || 0}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3 w-3 ml-1"
+              fill="none" viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <span className="text-gray-400">|</span>
-          <button 
+          <button
             className="text-[#3cc3ec] hover:underline flex items-center"
             onClick={handleFollowingClick}
           >
-            <span>팔로잉 {user.followingCount || 0}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <span>팔로잉 {user.following || 0}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3 w-3 ml-1"
+              fill="none" viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
         </div>
-        
-        {/* 가입일 */}
+
+        {/* 가입일 + NFT 개수 */}
         <div className="flex items-center text-xs text-gray-400 mt-4 ml-3">
-          <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+          <span>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : ''}</span>
           <span className="mx-2">|</span>
           <span>NFT {nftCount}개</span>
         </div>
       </div>
-      
+
+      {/* 알림 메시지 */}
+      {notification.show && (
+        <div
+          className={`fixed top-4 right-4 p-4 rounded shadow-lg z-50 ${
+            notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          } text-white`}
+        >
+          {notification.message}
+        </div>
+      )}
+
       {/* 프로필 수정 모달 */}
-      <ProfileEditModal 
+      <ProfileEditModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         editFields={editFields}
@@ -393,9 +580,9 @@ const UserProfile = () => {
         onSave={handleSaveEdit}
         user={user}
       />
-      
+
       {/* 팔로워 모달 */}
-      <FollowModal 
+      <FollowModal
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}
         title="팔로워"
@@ -405,9 +592,9 @@ const UserProfile = () => {
         isFollowingList={false}
         isLoading={followersLoading}
       />
-      
+
       {/* 팔로잉 모달 */}
-      <FollowModal 
+      <FollowModal
         isOpen={showFollowingModal}
         onClose={() => setShowFollowingModal(false)}
         title="팔로잉"
