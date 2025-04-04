@@ -52,6 +52,7 @@ const MyNFTList = () => {
         buyNowPrice: sellInfo.buyNowPrice,
         endTime: sellInfo.endTime
       });
+      // 푸시좀 되게 해라
   
       // ✅ 사용자에게 알림 표시
       alert('NFT가 판매 등록되었습니다.');
