@@ -40,7 +40,15 @@ export async function connectWalletService({ walletAddress, signature, message }
     
     await deleteNonce(walletAddress);
 
-    // 임의의 닉네임 생성
+    // 데이터베이스에 해당 지갑 주소가 이미 존재하는지 확인
+    const existingWallet = await getWalletByAddress(walletAddress);
+    if (existingWallet) {
+      // 이미 연결된 지갑이면, 그대로 반환
+      const userId = existingWallet.user_id;
+      return { walletAddress, userId };
+    }
+
+    // 지갑이 없는 경우 새로운 유저와 지갑 생성
     const randomNumber = Math.floor(Math.random() * 1000000);
     const nickname = `Metamask${randomNumber}`;
     const joinDate = new Date().toISOString().split('T')[0];
@@ -55,16 +63,15 @@ export async function connectWalletService({ walletAddress, signature, message }
     if (!userId) {
       throw new AppError('User not found', 404);
     }
-    await createMetamaskWallet(walletAddress, userId);
+    const wallet = await createMetamaskWallet(walletAddress, userId);
 
-    return { walletAddress, message: 'Wallet connected successfully.' };
+    return { walletAddress, wallet };
   } catch (error) {
     console.error(`connectWalletService Error: ${error.stack}`);
     if (error instanceof AppError) throw error;
     throw new AppError('지갑 연결 중 오류가 발생했습니다: ' + error.message, 500);
   }
 }
-
 /**
  * 새 지갑 생성 서비스 함수
  */
