@@ -20,4 +20,10 @@ public interface AuctionItemRepository extends JpaRepository<AuctionItem, Intege
     Page<AuctionItem> findByEndedAndUserId(@Param("ended") String ended,
                                            @Param("userId") Integer userId,
                                            Pageable pageable);
+
+    @Query("select distinct a from AuctionItem a join BiddingHistory b on a.auctionItemId = b.auctionItemId " +
+            "where a.ended = :ended and b.userId = :userId")
+    Page<AuctionItem> findActiveTradesByBidder(@Param("ended") String ended,
+                                               @Param("userId") Integer userId,
+                                               Pageable pageable);
 }

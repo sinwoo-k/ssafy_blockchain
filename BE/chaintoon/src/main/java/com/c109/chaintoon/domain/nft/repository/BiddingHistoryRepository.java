@@ -19,4 +19,6 @@ public interface BiddingHistoryRepository extends JpaRepository<BiddingHistory, 
     Page<BiddingHistory> findByAuctionItemIdOrderByBiddingPriceDesc(Integer auctionItemId, Pageable pageable);
 
     List<BiddingHistory> findAllByAuctionItemIdAndLatestTrueOrderByBiddingPriceDesc(Integer auctionItem);
+
+    Optional<BiddingHistory> findTopByAuctionItemIdAndLatestTrueOrderByBiddingPriceDesc(Integer auctionItem);
 }
