@@ -20,6 +20,7 @@ import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'
 import LoginIcon from '@mui/icons-material/Login'
 import LogoutIcon from '@mui/icons-material/Logout'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
+import MyNotice from './MyNotice'
 
 const NavBar = () => {
   // 로그인 확인
@@ -129,6 +130,9 @@ const NavBar = () => {
                   tooltip={'내 작품 목록'}
                   style={{ fontSize: 28 }}
                 />
+              </div>
+              <div>
+                <MyNotice />
               </div>
               <div className='hover:text-chaintoon'>
                 <IconLink

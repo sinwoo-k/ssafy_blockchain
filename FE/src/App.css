@@ -5,3 +5,12 @@
   --color-text: #f5f5f5;
   --color-chaintoon: #3cc3ec;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}

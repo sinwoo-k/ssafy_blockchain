@@ -19,12 +19,12 @@ const GlobalSearchBar = () => {
 
   return (
     <div
-      className='bg-text/30 border-chaintoon flex h-[35px]
+      className='bg-text/30 flex h-[35px]
     w-[250px] items-center rounded-full border ps-4 pe-2'
     >
       <input
         type='text'
-        className='grow  focus:outline-none'
+        className='grow focus:outline-none'
         onKeyDown={(event) => {
           if (event.key === 'Enter') goSearchResult()
         }}
@@ -33,10 +33,7 @@ const GlobalSearchBar = () => {
         maxLength={20}
         onChange={(event) => setKeyword(event.target.value)}
       />
-      <button
-        className='text-chaintoon cursor-pointer'
-        onClick={goSearchResult}
-      >
+      <button className='cursor-pointer' onClick={goSearchResult}>
         <SearchIcon />
       </button>
     </div>
