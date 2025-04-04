@@ -31,7 +31,7 @@ public class GoodsController {
         return new ResponseEntity<>(responseDto,HttpStatus.CREATED);
     }
 
-    // 굿즈 목록 조회
+    // 특정 웹툰 굿즈 목록 조회
     @GetMapping("/webtoons/{webtoonId}")
     public ResponseEntity<?> getGoodsListByWebtoon(
             @PathVariable Integer webtoonId,
@@ -40,6 +40,14 @@ public class GoodsController {
             @RequestParam(required = false, defaultValue = "latest") String orderBy) {
         WebtoonGoodsResponseDto response = goodsService.getGoodsByWebtoon(webtoonId, page, pageSize, orderBy);
         return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
+    @GetMapping("/{goodsId}")
+    public ResponseEntity<?> getGoods(
+            @PathVariable Integer goodsId
+    ) {
+        GoodsResponseDto goods = goodsService.getGoods(goodsId);
+        return new ResponseEntity<>(goods, HttpStatus.OK);
     }
 
     // 굿즈 수정

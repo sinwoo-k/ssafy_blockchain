@@ -121,6 +121,13 @@ public class GoodsService {
                 .build();
     }
 
+    public GoodsResponseDto getGoods(Integer goodsId) {
+        Goods goods = goodsRepository.findByGoodsIdAndDeleted(goodsId, "N")
+                .orElseThrow(() -> new GoodsNotFoundException(goodsId));
+
+        return toGoodsResponseDto(goods);
+    }
+
     // 굿즈 수정
     public GoodsResponseDto updateGoods(Integer userId, Integer goodsId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
         // 수정할 굿즈 조회
