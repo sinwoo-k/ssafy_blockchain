@@ -17,4 +17,6 @@ public interface NftRepository extends JpaRepository<Nft, Integer> {
     // tokenId에 해당하는 로컬 NFT 테이블의 기본키(nft_id) 조회
     @Query("SELECT n.nftId FROM Nft n WHERE n.tokenId = :tokenId")
     Optional<Integer> findNftIdByTokenId(@Param("tokenId") Integer tokenId);
+
+    boolean existsByWebtoonId(Integer webtoonId);
 }
