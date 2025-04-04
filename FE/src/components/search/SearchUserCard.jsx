@@ -6,10 +6,11 @@ import { Link } from 'react-router-dom'
 import { getRandomColor } from '../../utils/randomColor'
 
 const SearchUserCard = ({ user }) => {
+  console.log(user)
   const [randomColor, setRandomColor] = useState(getRandomColor())
 
   return (
-    <Link to={`/user/${user.userId}`}>
+    <Link to={`/user/${user.id}`}>
       <div className='flex w-[150px] flex-col items-center gap-3'>
         {/* 프로필 이미지 */}
         {user.profileImage !== '' ? (

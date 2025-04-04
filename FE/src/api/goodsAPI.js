@@ -8,7 +8,7 @@ export const getGoodsList = async (webtoonId) => {
 
 /** 굿즈 상세 조회 */
 export const getGoods = async (goodsId) => {
-  const response = await API.get()
+  const response = await API.get(`/goods/${goodsId}`)
   return response.data
 }
 
@@ -23,6 +23,7 @@ export const createGoods = async (goods, goodsImage) => {
   const response = await API.post(`/goods`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
+  return response.data
 }
 
 /** 굿즈 수정 */
@@ -35,7 +36,8 @@ export const patchGoods = async (goodsId, goods, goodsImage) => {
   if (goodsImage) {
     formData.append('goodsImage', goodsImage)
   }
-  const response = await API.post(`/goods`, formData, {
+  console.log(goods)
+  const response = await API.patch(`/goods/${goodsId}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
   return response.data
