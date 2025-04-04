@@ -64,7 +64,7 @@ const FanartDetailInfo = ({ fanartId, setCommentCount }) => {
     getData()
     // unmount
     return () => {}
-  }, [])
+  }, [fanartId])
 
   return (
     <div className='flex justify-center'>
@@ -102,7 +102,9 @@ const FanartDetailInfo = ({ fanartId, setCommentCount }) => {
             ) : (
               <AccountCircleIcon sx={{ fontSize: 32, color: randomColor }} />
             )}
-            <p className='text-lg'>{fanart.nickname || '작가미상'}</p>
+            <Link to={`/user/${fanart.userId}`}>
+              <p className='text-lg'>{fanart.nickname}</p>
+            </Link>
           </div>
           {/* 팬아트 설명 + 좋아요 */}
           <div className='flex grow flex-col justify-between'>

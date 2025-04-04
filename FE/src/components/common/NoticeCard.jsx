@@ -1,24 +1,30 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { deleteNotcie, patchNotice } from '../../api/noticeAPI'
 
-const NoticeCard = ({ notice, onDelete, onUpdate }) => {
+// 아이콘
+import CloseIcon from '@mui/icons-material/Close'
+import IconButton from './IconButton'
+
+const NoticeCard = ({ notice, patchData }) => {
   // type에 따라 제목을 반환하는 헬퍼 함수
   const getNoticeTitle = (notice) => {
     switch (notice.type) {
-      case 'SECONDARY_CREATE':
+      case 'NTC_SECONDARY_CREATION':
         return '2차 창작 등록'
-      case 'OVERBID':
-        return '입찰 초과'
-      case 'NFT_PURCHASE':
+      case 'NTC_OVERBID':
+        return '상위 입찰 갱신'
+      case 'NTC_NFT_PURCHASE':
         return 'NFT 구매'
-      case 'NFT_SOLD':
+      case 'NTC_NFT_SOLD':
         return 'NFT 판매'
-      case 'SECONDARY_CREATION_NFT_SOLD':
+      case 'NTC_SECONDARY_CREATION_NFT_SOLD':
         return '2차 창작 NFT 판매'
-      case 'BLOCKCHAIN_NETWORK_SUCCESS':
-        return '블록체인 네트워크 성공'
-      case 'BLOCKCHAIN_NETWORK_FAIL':
-        return '블록체인 네트워크 실패'
-      case 'SECONDARY_CREATION_NFT_MINT':
+      case 'NTC_BLOCKCHAIN_NETWORK_SUCCESS':
+        return 'NFT 발행 성공'
+      case 'NTC_BLOCKCHAIN_NETWORK_FAIL':
+        return 'NFT 발행 실패'
+      case 'NTC_SECONDARY_CREATION_NFT_MINT':
         return '2차 창작 NFT 발행'
       default:
         return '알림'
@@ -27,37 +33,83 @@ const NoticeCard = ({ notice, onDelete, onUpdate }) => {
 
   // type과 metadata에 따라 상세 메시지를 반환하는 헬퍼 함수
   const getNoticeMessage = (notice) => {
-    switch (notice.type) {
-      case 'SECONDARY_CREATE':
-        return `웹툰 ${notice.metadata.webtoonId}의 2차 창작 등록이 완료되었습니다. 팬아트 ID: ${notice.metadata.fanartId}, 작가 ID: ${notice.metadata.secondWriterId}`
-      case 'OVERBID':
-        return `NFT ${notice.metadata.nftId}의 입찰가가 ${notice.metadata.previousBiddingPrice} 이상으로 갱신되었습니다.`
-      case 'NFT_PURCHASE':
-        return `NFT ${notice.metadata.nftId} 구매가 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}`
-      case 'NFT_SOLD':
-        return `NFT ${notice.metadata.nftId}가 판매 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}, 수익: ${notice.metadata.revenue}`
-      case 'SECONDARY_CREATION_NFT_SOLD':
-        return `2차 창작 NFT ${notice.metadata.nftId}가 판매 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}, 저작권료: ${notice.metadata.copyrightFee}`
-      case 'BLOCKCHAIN_NETWORK_SUCCESS':
+    switch (notice?.type) {
+      case 'NTC_SECONDARY_CREATION':
+        return `웹툰의 팬아트가 등록되었습니다.`
+      case 'NTC_OVERBID':
+        return `NFT의 입찰가가 갱신되었습니다.`
+      case 'NTC_NFT_PURCHASE':
+        return `NFT 구매가 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}`
+      case 'NTC_NFT_SOLD':
+        return `NFT 판매가 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}, 수익: ${notice.metadata.revenue}`
+      case 'NTC_SECONDARY_CREATION_NFT_SOLD':
+        return `2차 창작 NFT 판매가 완료되었습니다. 거래가격: ${notice.metadata.tradingValue}, 저작권료: ${notice.metadata.copyrightFee}`
+      case 'NTC_BLOCKCHAIN_NETWORK_SUCCESS':
         return notice.metadata.message
-      case 'BLOCKCHAIN_NETWORK_FAIL':
+      case 'NTC_BLOCKCHAIN_NETWORK_FAIL':
         return notice.metadata.message
-      case 'SECONDARY_CREATION_NFT_MINT':
-        return `2차 창작 NFT 발행이 진행되었습니다. 팬아트 ID: ${notice.metadata.fanartId}`
+      case 'NTC_SECONDARY_CREATION_NFT_MINT':
+        return `2차 창작 NFT 발행이 진행되었습니다.`
       default:
         return '알림 내용이 없습니다.'
     }
   }
 
+  const getNoticeURL = (notice) => {
+    switch (notice?.type) {
+      case 'NTC_SECONDARY_CREATION':
+        return `/fanart/${notice.metadata.fanartId}`
+      case 'NTC_OVERBID':
+        return ``
+      case 'NTC_NFT_PURCHASE':
+        return ``
+      case 'NTC_NFT_SOLD':
+        return ``
+      case 'NTC_SECONDARY_CREATION_NFT_SOLD':
+        return ``
+      case 'NTC_BLOCKCHAIN_NETWORK_SUCCESS':
+        return `/mypage`
+      case 'NTC_BLOCKCHAIN_NETWORK_FAIL':
+        return `/mypage`
+      case 'NTC_SECONDARY_CREATION_NFT_MINT':
+        return `/fanart/${notice.metadata.fanartId}`
+      default:
+        return '알림 내용이 없습니다.'
+    }
+  }
+  const readData = async () => {
+    try {
+      const result = await patchNotice(notice.noticeId)
+      patchData()
+    } catch (error) {
+      console.error('알림 읽음 처리 실패: ', error)
+    }
+  }
+
+  const deleteData = async (event) => {
+    event.preventDefault()
+    try {
+      const result = await deleteNotcie(notice.noticeId)
+      patchData()
+    } catch (error) {
+      console.error('알림 삭제 실패: ', error)
+    }
+  }
+
   return (
-    <div
-      className={`mb-4 rounded-lg bg-black p-4 shadow ${notice.checked === 'N' ? 'border-chaintoon border-l-4' : ''}`}
-    >
-      <div className='flex items-center justify-between'>
-        <h3 className='text-lg font-bold'>{getNoticeTitle(notice)}</h3>
+    <Link to={getNoticeURL(notice)} onClick={readData}>
+      <div
+        className={`mb-4 rounded-lg bg-black p-4 shadow ${notice.checked === 'N' ? 'border-chaintoon border-l-4' : ''}`}
+      >
+        <div className='flex items-center justify-between'>
+          <h3 className='text-lg font-bold'>{getNoticeTitle(notice)}</h3>
+          <div className='hover:text-red-500' onClick={deleteData}>
+            <IconButton Icon={CloseIcon} tooltip={'알림 삭제'} />
+          </div>
+        </div>
+        <p className='mt-2'>{getNoticeMessage(notice)}</p>
       </div>
-      <p className='mt-2'>{getNoticeMessage(notice)}</p>
-    </div>
+    </Link>
   )
 }
 

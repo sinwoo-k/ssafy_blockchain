@@ -4,7 +4,7 @@ import NoticeCard from './NoticeCard'
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
 
-const NoticeModal = ({ onClose, notices = [] }) => {
+const NoticeModal = ({ onClose, notices = [], patchData }) => {
   const [animate, setAnimate] = useState(false)
 
   // 모달 마운트 시 애니메이션 시작
@@ -52,7 +52,11 @@ const NoticeModal = ({ onClose, notices = [] }) => {
         <div className='no-scrollbar flex-1 overflow-y-auto p-4'>
           {notices.length > 0 ? (
             notices.map((notice) => (
-              <NoticeCard key={notice.noticeId} notice={notice} />
+              <NoticeCard
+                key={notice.noticeId}
+                notice={notice}
+                patchData={patchData}
+              />
             ))
           ) : (
             <p>알림이 없습니다.</p>

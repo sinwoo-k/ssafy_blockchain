@@ -57,7 +57,7 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
         className='absolute inset-0 bg-cover bg-center'
         style={{
           backgroundImage: `url(${backgroundImg})`,
-          filter: 'blur(35px) brightness(0.5)',
+          filter: 'blur(15px) brightness(0.5)',
         }}
       ></div>
       <div className='relative w-[1000px]'>
@@ -98,7 +98,9 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
               <p className='text-2xl'>{webtoon.webtoonName}</p>
-              <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+              <Link to={`/user/${webtoon.userId}`}>
+                <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+              </Link>
               <p className='text-lg text-[#b9b9b9]'>{webtoon.genre}</p>
               <div className=''>
                 {webtoon.summary?.split('\n').map((line, index) => (

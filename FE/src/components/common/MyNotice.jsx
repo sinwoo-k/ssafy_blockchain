@@ -1,12 +1,28 @@
-import React, { useState } from 'react'
-import { useSelector } from 'react-redux'
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import NoticeModal from './NoticeModal'
+import { noticeReducerActions } from '../../redux/reducers/noticeSlice'
+import { getNotice } from '../../api/noticeAPI'
+
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 
 const MyNotice = () => {
+  const dispatch = useDispatch()
   const [showModal, setShowModal] = useState(false)
   // redux 스토어에서 notice 데이터를 읽음
   const notice = useSelector((state) => state.notice)
+
+  const getData = async () => {
+    try {
+      const result = await getNotice()
+      dispatch(noticeReducerActions.setNotice(result))
+    } catch (error) {
+      console.error('알림 조회 실패: ', error)
+    }
+  }
+  useEffect(() => {
+    getData()
+  }, [])
 
   return (
     <div className='relative'>
@@ -26,6 +42,7 @@ const MyNotice = () => {
         <NoticeModal
           onClose={() => setShowModal(false)}
           notices={notice.noticeList || []}
+          patchData={getData}
         />
       )}
     </div>

@@ -15,6 +15,7 @@ import {
 import { userReducerActions } from './redux/reducers/userSlice'
 import { noticeReducerActions } from './redux/reducers/noticeSlice'
 import { connect } from './utils/socket/stompClient'
+import { getNotice } from './api/noticeAPI'
 
 const { logout } = userReducerActions
 
@@ -52,10 +53,15 @@ function App() {
         }
 
         // 소켓 연결
-        connect(data.id, (message) => {
+        connect(data.id, async (message) => {
           // TODO: 새로운 알림 도착 시 알림 목록 조회 로직 추가
           console.log(message)
-          dispatch(noticeReducerActions.setNotice(message))
+          try {
+            const result = await getNotice()
+            dispatch(noticeReducerActions.setNotice(result))
+          } catch (error) {
+            console.error('알림 조회 실패: ', error)
+          }
         })
       })
       .catch((err) => {

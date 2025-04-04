@@ -50,7 +50,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
         className='absolute inset-0 bg-cover bg-center'
         style={{
           backgroundImage: `url(${backgroundImg})`,
-          filter: 'blur(35px) brightness(0.5)',
+          filter: 'blur(15px) brightness(0.5)',
         }}
       ></div>
       <div className='relative w-[1000px]'>

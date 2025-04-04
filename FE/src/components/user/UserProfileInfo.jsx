@@ -33,7 +33,7 @@ const UserProfileInfo = ({ user, setUser }) => {
               ) : (
                 <div className='flex h-full w-full items-center justify-center bg-gray-700'>
                   <span className='text-lg text-white'>
-                    {user?.username?.charAt(0).toUpperCase()}
+                    {user?.nickname?.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
@@ -43,19 +43,19 @@ const UserProfileInfo = ({ user, setUser }) => {
           {/* 사용자 정보 */}
           <div className='flex-grow'>
             <div className='mb-1 flex items-center space-x-2'>
-              <h1 className='text-lg font-bold'>{user?.username}</h1>
+              <h1 className='text-lg font-bold'>{user?.nickname}</h1>
             </div>
 
-            <p className='mb-1 text-sm text-gray-400'>
-              {user?.bio || '안녕하세요'}
+            <p className='mb-1 text-gray-400'>
+              {user?.introduction || '안녕하세요'}
             </p>
           </div>
         </div>
         {/* 팔로워/팔로잉 버튼 */}
         <div className='mb-1 ml-3 flex items-center gap-3'>
-          <span>팔로워 {user?.followersCount || 0}</span>
+          <span>팔로워 {user?.follower || 0}</span>
           <span className='text-gray-400'>|</span>
-          <span>팔로잉 {user?.followingCount || 0}</span>
+          <span>팔로잉 {user?.following || 0}</span>
           {user?.follow === 'Y' ? (
             <button className={`cursor-pointer`} onClick={handleUnfollow}>
               <IconButton
@@ -76,8 +76,8 @@ const UserProfileInfo = ({ user, setUser }) => {
         </div>
 
         {/* 가입일 */}
-        <div className='mt-4 ml-3 flex items-center text-xs text-gray-400'>
-          <span>{new Date(user?.createdAt).toLocaleDateString()}</span>
+        <div className='mt-4 ml-3 flex items-center text-gray-400'>
+          <span>{user?.joinDate}</span>
         </div>
       </div>
     </div>
