@@ -111,46 +111,45 @@ const UserProfile = () => {
 
   // 배경 이미지 업로드
   const handleBackgroundImageChange = () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = async (e) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
         const formData = new FormData();
-        formData.append('backgroundImage', file); // API의 요구에 맞춰 이름 명시
+        formData.append('backgroundImage', file);
         try {
-          const response = await userService.uploadBackgroundImage(formData);
-          const updatedUser = {
-            ...user,
-            backgroundImage: response.backgroundImage
-          };
+          await userService.uploadBackgroundImage(formData);
+          const updatedUser = await userService.getMyUserInfo();
           setUser(updatedUser);
           dispatch(userReducerActions.setUser(updatedUser));
-          showNotification('배경 이미지가 업데이트되었습니다.');
-        } catch (error) {
-          console.error('업로드 에러:', error);
+          showNotification('배경 이미지가 업로드되었습니다.');
+        } catch (err) {
+          console.error('업로드 에러:', err);
           showNotification('배경 이미지 업로드 실패', 'error');
         }
       }
     };
-    fileInput.click();
+    input.click();
   };
+  
+  
 
   // 배경 이미지 제거
   const handleDeleteBackgroundImage = async () => {
     try {
       await userService.deleteBackgroundImage();
-      setUser(prev => ({ ...prev, backgroundImage: null }));
-      if (userData) {
-        dispatch(userReducerActions.setUser({ ...userData, backgroundImage: null }));
-      }
-      showNotification('배경 이미지가 제거되었습니다.');
+      const updatedUser = await userService.getMyUserInfo();
+      setUser(updatedUser);
+      dispatch(userReducerActions.setUser(updatedUser));
+      showNotification('배경 이미지가 삭제되었습니다.');
     } catch (err) {
-      console.error('배경 이미지 제거 오류:', err);
-      showNotification('배경 이미지 제거에 실패했습니다.', 'error');
+      console.error('삭제 에러:', err);
+      showNotification('배경 이미지 삭제 실패', 'error');
     }
   };
+  
 
   // URL 새 탭 이동
   const handleGoToUrl = () => {
@@ -319,37 +318,39 @@ const UserProfile = () => {
 
   return (
     <>
-      {/* 배경 이미지 */}
+   {/* 배경 이미지 */}
       <div className="relative w-full h-48 bg-gray-800 overflow-hidden group">
-          {user.backgroundImage ? (
-            <img
-              src={user.backgroundImage}
-              alt="배경"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
-          )}
+        {user.backgroundImage ? (
+          <img
+            src={user.backgroundImage} // ✅ 서버에서 받은 URL 그대로 사용
+            alt="배경"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.error('🚨 배경 이미지 로딩 실패:', user.backgroundImage)
+              e.currentTarget.style.display = 'none'
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
+        )}
 
-          {/* Hover 시 업로드 및 삭제 아이콘 */}
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition duration-200"
+        {/* Hover 시 아이콘 */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition duration-200">
+          {/* 업로드 버튼 */}
+          <button
+            onClick={handleBackgroundImageChange}
+            className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
+            title="배경 이미지 업로드"
           >
-            {/* 업로드 */}
-            <button
-              onClick={handleBackgroundImageChange}
-              className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
-              title="배경 이미지 업로드"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="currentColor"
+              viewBox="0 0 20 20"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 5a2 2 0 00-2 2v8a2 2 
+              <path
+                fillRule="evenodd"
+                d="M4 5a2 2 0 00-2 2v8a2 2 
                   0 002 2h12a2 2 0 002-2V7a2 2 
                   0 00-2-2h-1.586a1 1 0 
                   01-.707-.293l-1.121-1.121A2 2 
@@ -357,22 +358,24 @@ const UserProfile = () => {
                   00-1.414.586L6.293 4.707A1 1 
                   0 015.586 5H4zm6 9a3 3 0 100-6 
                   3 3 0 000 6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
 
-            {/* 삭제 (이미지가 있을 때만 표시) */}
-            {user.backgroundImage && (
-              <button
-                onClick={handleDeleteBackgroundImage}
-                className="opacity-0 group-hover:opacity-100 text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition"
-              >
-                이미지 삭제
-              </button>
-            )}
-          </div>
+          {/* 삭제 버튼 */}
+          {user.backgroundImage && (
+            <button
+              onClick={handleDeleteBackgroundImage}
+              className="opacity-0 group-hover:opacity-100 text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition"
+            >
+              이미지 삭제
+            </button>
+          )}
         </div>
+      </div>
+
+        
       {/* 프로필/정보 */}
       <div className="border-b border-gray-800 py-3 relative">
         <div className="flex items-start mb-5">
