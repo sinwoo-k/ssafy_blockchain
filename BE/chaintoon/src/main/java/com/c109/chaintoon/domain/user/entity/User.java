@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Getter
@@ -35,6 +37,9 @@ public class User {
     @Column(name = "background_image", length = 255)
     private String backgroundImage;
 
+    @Column(name = "url", length = 255)
+    private String url;
+
     @Column(name = "follower")
     private Integer follower = 0;
 
@@ -56,4 +61,17 @@ public class User {
 
     @Column(name = "status", length = 1)
     private String status;
+
+    @PrePersist
+    public void prePersist() {
+        joinDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        following = 0;
+        follower = 0;
+        introduction = "";
+        deleted = "N";
+        status = "Y";
+        backgroundImage = "";
+        profileImage = "";
+        url = "";
+    }
 }

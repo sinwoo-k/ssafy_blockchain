@@ -6,7 +6,7 @@ export const connect = (userId, onNotification) => {
   if (stompClient?.connected) return;
 
   stompClient = new Client({
-    brokerURL: 'ws://j12c109.p.ssafy.io/socket',
+    brokerURL: 'wss://j12c109.p.ssafy.io/socket',
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,

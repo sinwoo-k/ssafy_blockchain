@@ -12,10 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -49,7 +49,17 @@ public class BlockchainController {
     @PostMapping("/mint")
     public ResponseEntity<NftMintResponseDto> mintNft(@AuthenticationPrincipal Integer userId,@RequestBody NftMintRequestDto request) {
         NftMintResponseDto response = blockchainService.mintNft(request, userId).block();
-        log.info("mintNft: {}", request);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/wallet-info")
+    public ResponseEntity<WalletBalance> getWalletInfo(@AuthenticationPrincipal Integer userId) {
+        return ResponseEntity.ok(blockchainService.getWalletBalanceAsync(userId).block());
+    }
+    @GetMapping("/nonce/{walletAddress}")
+    public ResponseEntity<Map<String, String>> getNonce(@PathVariable String walletAddress) {
+        String nonce = blockchainService.getNonce(walletAddress).block();
+        Map<String, String> response = new HashMap<>();
+        response.put("nonce", nonce);
         return ResponseEntity.ok(response);
     }
 }

@@ -70,6 +70,7 @@ public class UserService {
                 .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
                 .follower(user.getFollower())
                 .following(user.getFollowing())
+                .url(user.getUrl())
                 .joinDate(user.getJoinDate())
                 .build();
     }
@@ -85,6 +86,7 @@ public class UserService {
                 .backgroundImage(s3Service.getPresignedUrl(user.getBackgroundImage()))
                 .follower(user.getFollower())
                 .following(user.getFollowing())
+                .url(user.getUrl())
                 .joinDate(user.getJoinDate())
                 .build();
     }
@@ -122,6 +124,7 @@ public class UserService {
         // 회원 정보 업데이트
         user.setNickname(userRequestDto.getNickname());
         user.setIntroduction(userRequestDto.getIntroduction());
+        user.setUrl(userRequestDto.getUrl());
 
         userRepository.save(user);
 
@@ -133,6 +136,7 @@ public class UserService {
         return s3Service.uploadFile(file, "user/" + userId + "/profile");
     }
 
+    // 배경 이미지 삽입
     @PreAuthorize("hasRole('USER')")
     public String updateBackgroundImage(Integer userId, MultipartFile backgroundImage) {
         // 기존 유저 조회
@@ -171,7 +175,7 @@ public class UserService {
         if(user.getProfileImage() != null) {
             s3Service.deleteFile(user.getProfileImage());
         }
-        user.setProfileImage(null);
+        user.setProfileImage("");
         userRepository.save(user);
 
         return toMyInfoResponseDto(user);
@@ -186,7 +190,7 @@ public class UserService {
         if(user.getBackgroundImage() != null) {
             s3Service.deleteFile(user.getBackgroundImage());
         }
-        user.setBackgroundImage(null);
+        user.setBackgroundImage("");
         userRepository.save(user);
 
         return toMyInfoResponseDto(user);

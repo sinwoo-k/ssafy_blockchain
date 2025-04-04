@@ -62,7 +62,7 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    // 배경 이미지 수정
+    // 배경 이미지 삽입
     @PatchMapping("/background-image")
     public ResponseEntity<?> updateBackgroundImage(
             @AuthenticationPrincipal Integer loginId,

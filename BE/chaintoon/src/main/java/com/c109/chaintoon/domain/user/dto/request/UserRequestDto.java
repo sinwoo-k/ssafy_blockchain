@@ -12,4 +12,7 @@ public class UserRequestDto {
     private String nickname;
 
     private String introduction = "";
+
+    private String url = "";
+
 }
