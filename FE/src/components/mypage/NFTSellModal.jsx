@@ -80,12 +80,16 @@ const NFTSellModal = ({ isOpen, onClose, nft, onSell }) => {
       return;
     }
   
+    // NFT 데이터 확인
+    console.log('판매할 NFT:', nft);
+    
     const sellInfo = {
-      nftId: nft?.nftId || nft?.id,
+      // 실제 API 호출은 MyNFTList.jsx에서 selectedNft.nftId를 사용
       minimumBidPrice: startPrice,
       buyNowPrice: endPrice,
       endTime: `${auctionEndDate}T${selectedTime}:00:00`
-    };  
+    };
+    
     onSell(sellInfo);
     onClose();
   };

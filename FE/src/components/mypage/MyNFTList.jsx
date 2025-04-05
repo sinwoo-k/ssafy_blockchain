@@ -22,6 +22,7 @@ const MyNFTList = () => {
     try {
       setLoading(true);
       const response = await nftService.getMyNFTs();
+      console.log('받아온 NFT 목록:', response); // 데이터 확인용
       setTransactions(response || []);
       setLoading(false);
     } catch (err) {
@@ -31,9 +32,23 @@ const MyNFTList = () => {
     }
   };
 
+  // #표시 이전까지의 제목만 추출하는 함수
+  const extractTitleBeforeHash = (title) => {
+    if (!title) return '';
+    const hashIndex = title.lastIndexOf('#');
+    return hashIndex !== -1 ? title.substring(0, hashIndex).trim() : title;
+  };
+  
+  // NFT ID 추출 함수 (#숫자 형식)
+  const extractNftNumber = (title) => {
+    if (!title) return '';
+    const match = title.match(/#(\d+)/);
+    return match ? `#${match[1]}` : ''; // #을 포함하여 반환
+  };
+
   // NFT 판매 버튼 클릭 핸들러
   const handleSellClick = (nft) => {
-    setSelectedNft(nft); // ✅ 전체 객체 전달
+    setSelectedNft(nft);
     setShowSellModal(true);
   };
 
@@ -46,27 +61,37 @@ const MyNFTList = () => {
   // NFT 판매 처리 핸들러
   const handleSellNft = async (sellInfo) => {
     try {
-      await nftService.sellNFT({
-        nftId : sellInfo.nftId,
+      // 선택된 NFT에서 nftId 확인
+      if (!selectedNft || !selectedNft.nftId) {
+        console.error('선택된 NFT에 nftId가 없습니다:', selectedNft);
+        alert('유효한 NFT ID가 없습니다.');
+        return;
+      }
+  
+      // 판매 등록 API 요청 데이터
+      const sellData = {
+        nftId: selectedNft.nftId,
         minimumBidPrice: sellInfo.minimumBidPrice,
         buyNowPrice: sellInfo.buyNowPrice,
         endTime: sellInfo.endTime
-      });
-      // 푸시좀 되게 해라
+      };
   
-      // ✅ 사용자에게 알림 표시
+      console.log('판매 등록 요청 데이터:', sellData);
+      
+      // API 호출
+      await nftService.sellNFT(sellData);
+      
       alert('NFT가 판매 등록되었습니다.');
-  
-      // ✅ 상태 업데이트 (판매중 표시)
-      setTransactions(prev =>
-        prev.map(item =>
-          item.id === sellInfo.nftId
-            ? { ...item, isOnSale: true, sellInfo }
+      
+      // 판매중 상태 업데이트
+      setTransactions(prev => 
+        prev.map(item => 
+          item.nftId === selectedNft.nftId 
+            ? { ...item, isOnSale: true } 
             : item
         )
       );
-  
-      // ✅ 모달 닫기
+      
       handleCloseSellModal();
     } catch (err) {
       console.error('NFT 판매 등록 오류:', err);
@@ -127,19 +152,17 @@ const MyNFTList = () => {
       <div className="mb-2 grid grid-cols-7 text-xs text-gray-400 border-b border-gray-800 pb-2">
         <div className="pl-2">아이템</div>
         <div>아이템 명</div>
-        <div className="text-center">가격</div>
-        <div className="text-center">최근 거래가</div>
-        <div className="text-center">소유자</div>
-        <div className="text-center">최종 일자</div>
-        <div className="text-center">작업</div>
+        <div className="text-center">NFT 번호</div>
+        <div className="col-span-3"></div> {/* 빈 칸 공간 */}
+        <div className="text-center">상태</div>
       </div>
 
       {/* NFT 목록 */}
       <div className="overflow-y-auto max-h-[calc(100vh-400px)]">
         {filteredTransactions.length > 0 ? (
           filteredTransactions.map((item) => (
-            <div key={item.id} className="grid grid-cols-7 items-center py-3 border-b border-gray-800">
-              <div className="flex items-center pl-2">
+            <div key={item.nftId || item.id} className="grid grid-cols-7 items-center py-3 border-b border-gray-800">
+              <div className="flex items-center pl-1">
                 <div className="h-10 w-10 bg-gray-700 rounded overflow-hidden">
                   {item.image ? (
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
@@ -148,18 +171,21 @@ const MyNFTList = () => {
                   )}
                 </div>
               </div>
-              <div className="text-sm font-medium truncate pr-2">{item.title || '웹툰 이름'}</div>
-              <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[80px]">{item.price || '0'} ETH</div>
-              <div className="text-sm text-center">{item.lastPrice || '0'} ETH</div>
-              <div className="text-sm text-center">{item.owner || '나'}</div>
-              <div className="text-sm text-center">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-'}</div>
+              <div className="text-sm font-medium truncate pr-2">
+                {extractTitleBeforeHash(item.title) || '웹툰 이름'}
+              </div>
+              <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[80px]">
+                {extractNftNumber(item.title) || '-'}
+              </div>
+              <div className="col-span-3"></div> {/* 빈 칸 공간 */}
               <div className="text-center">
                 {item.isOnSale ? (
-                  <span className="text-xs text-[#3cc3ec]">판매 중</span>
+                  <span className="text-xs text-[#3cc3ec] px-3 py-1">판매 중</span>
                 ) : (
                   <button 
                     className="bg-[#3cc3ec] text-black px-3 py-1 rounded-md text-xs"
                     onClick={() => handleSellClick(item)}
+                    disabled={item.isOnSale}
                   >
                     판매
                   </button>
