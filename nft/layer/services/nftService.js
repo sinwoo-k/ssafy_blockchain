@@ -236,6 +236,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       type,
       typeId,
       tokenId,
+      imageUrl,
       contractAddress: NFT_MARKETPLACE_ADDRESS,
       metadataUri,
     });
