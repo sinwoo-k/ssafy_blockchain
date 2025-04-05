@@ -9,6 +9,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // NFT 민팅 관련 변수
     uint256 private _tokenIds;
 
+
     // 판매 목록 구조체 정의
     struct Listing {
         address seller;
@@ -16,8 +17,6 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint256 amount; // 판매 금액 (여기서 기록)
         bool isListed;
     }
-    // 토큰 ID -> Listing (판매 정보)
-    mapping(uint256 => Listing) public listings;
 
     // 로열티 관련 구조체 정의 (원작자, 등록자, 관리자 지갑)
     struct RoyaltyInfo {
@@ -32,13 +31,12 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint256 purchaseTime;
     }
 
-    // tokenId별 구매 기록 저장 매핑
-    mapping(uint256 => PurchaseRecord) public purchaseRecords;
-    // 토큰 ID -> RoyaltyInfo (분배 주소 보관)
+    mapping(uint256 => Listing) public listings;
     mapping(uint256 => RoyaltyInfo) public royaltyInfoByToken;
+    mapping(uint256 => PurchaseRecord) public purchaseRecords;
 
     // 이벤트 정의
-    event NFTMinted(address indexed to, uint256 tokenId, string tokenURI);
+    event Minted(address indexed to, uint256 tokenId, string tokenURI);
     event NFTListed(uint256 tokenId, address seller, uint256 price);
     event NFTSold(uint256 tokenId, address buyer, uint256 price);
 
@@ -76,7 +74,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             adminWallet: adminWallet
         });
 
-        emit NFTMinted(to, newTokenId, _tokenURI);
+        emit Minted(to, newTokenId, _tokenURI);
         return newTokenId;
     }
     /**
@@ -112,48 +110,43 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @param tokenId 구매할 토큰 ID
      */
     function buyNFT(uint256 tokenId) public payable {
-        Listing memory listing = listings[tokenId];
+        Listing storage listing = listings[tokenId];
         require(listing.isListed, "NFT is not listed for sale");
         require(msg.value >= listing.price, "Insufficient funds");
 
-        // (1) 이 NFT의 로열티 정보 가져오기
+        uint256 salePrice = msg.value;  // 실제 구매 금액 기준
+
+        // 로열티·분배 정보
         RoyaltyInfo storage info = royaltyInfoByToken[tokenId];
 
-        // (2) 예: 4% / 95% / 1% 분배 계산
-        uint256 originalCreatorShare = (listing.price * 4) / 100;
-        uint256 ownerShare = (listing.price * 95) / 100;
-        uint256 adminShare = (listing.price * 1) / 100;
+        // 1) msg.value 기준으로 4%, 95% 계산
+        uint256 originalCreatorShare = (salePrice * 4) / 100;
+        uint256 ownerShare           = (salePrice * 95) / 100;
 
-        // 분배 총액과 나머지 계산 (정수 나눗셈으로 인해 소수점 이하가 버려진 잔여 금액)
-        uint256 totalDistributed = originalCreatorShare +
-            ownerShare +
-            adminShare;
-        uint256 remainder = listing.price - totalDistributed;
+        // 2) 나머지 전액 → 관리자 몫
+        uint256 adminShare = salePrice - (originalCreatorShare + ownerShare);
 
-        // 잔여 금액을 관리자에게 추가 송금
-        if (remainder > 0) {
-            adminShare += remainder;
-        }
+        // 3) 분배 (call 방식 + 성공 체크)
+        (bool ok1,) = payable(info.originalCreator).call{value: originalCreatorShare}("");
+        (bool ok2,) = payable(info.ownerShare).call{value: ownerShare}("");
+        (bool ok3,) = payable(info.adminWallet).call{value: adminShare}("");
+        require(ok1 && ok2 && ok3, "Transfer failed");
 
-        // (3) 각각 분배
-        payable(info.originalCreator).transfer(originalCreatorShare);
-        payable(info.ownerShare).transfer(ownerShare);
-        payable(info.adminWallet).transfer(adminShare);
-
-        // (4) NFT 소유권 이전
+        // 4) NFT 소유권 이전
         _transfer(listing.seller, msg.sender, tokenId);
-        listings[tokenId].isListed = false;
+        listing.isListed = false;
 
-        // 구매 후 ownerShare 주소를 구매자의 주소로 업데이트
+        // 5) 다음 판매자를 위해 ownerShare 주소 업데이트
         info.ownerShare = msg.sender;
 
+        // 6) 구매 기록 저장
         purchaseRecords[tokenId] = PurchaseRecord({
             buyer: msg.sender,
-            price: listing.price,
+            price: salePrice,
             purchaseTime: block.timestamp
         });
-        // (5) 이벤트 발생
-        emit NFTSold(tokenId, msg.sender, listing.price);
+
+        emit NFTSold(tokenId, msg.sender, salePrice);
     }
     // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
 
