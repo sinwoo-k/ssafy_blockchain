@@ -22,7 +22,6 @@ import com.c109.chaintoon.domain.fanart.exception.FanartNotFoundException;
 import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -92,11 +92,21 @@ public class FanartService {
                 .build();
     }
 
-    // 1. 팬아트 메인 목록 조회
-    // 1-1. 가장 최근에 등록된 팬아트 7개 조회
-    public List<FanartListResponseDto> getLatestSevenFanarts(int page, int pageSize, String orderBy) {
+    // 팬아트 목록 조회
+    @Transactional
+    public List<FanartListResponseDto> getFanartList(int page, int pageSize, String orderBy, Integer writerId) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<Fanart> fanartPage = fanartRepository.findAllByDeleted("N", pageable);
+
+        // 기본 조건: 삭제되지 않은 팬아트
+        Specification<Fanart> spec = (root, query, cb) -> cb.equal(root.get("deleted"), "N");
+
+        // 작가 ID 조건 추가 (값이 존재하는 경우만 필터링)
+        if (writerId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), writerId));
+        }
+
+        // Specification을 사용하여 동적 쿼리 실행
+        Page<Fanart> fanartPage = fanartRepository.findAll(spec, pageable);
 
         return fanartPage.getContent().stream()
                 .map(this::toFanartListResponseDto)

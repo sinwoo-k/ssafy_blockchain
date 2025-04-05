@@ -29,9 +29,10 @@ public class WebtoonController {
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "latest") String orderBy,
             @RequestParam(required = false) String genre,
-            @RequestParam(required = false) @Pattern (regexp = "[YN]", message = "2차 창작 여부는 Y/N으로 입력하세요.") String adaptable
+            @RequestParam(required = false) @Pattern (regexp = "[YN]", message = "2차 창작 여부는 Y/N으로 입력하세요.") String adaptable,
+            @RequestParam(required = false) Integer writerId
     ) {
-        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre, adaptable);
+        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre, adaptable, writerId);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
 
