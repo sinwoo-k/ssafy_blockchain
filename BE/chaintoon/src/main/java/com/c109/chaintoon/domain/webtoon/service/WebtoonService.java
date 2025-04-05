@@ -143,7 +143,7 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable) {
+    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable, Integer writerId) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Webtoon> webtoonPage;
 
@@ -158,6 +158,11 @@ public class WebtoonService {
         // adaptable 조건 추가 (값이 "Y"인 경우만 필터링)
         if (adaptable != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("adaptable"), adaptable));
+        }
+
+        // 웹툰 작가 조건 추가 (특정 웹툰 작가의 웹툰만 필터링)
+        if (writerId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), writerId));
         }
 
         // Specification을 사용하여 동적 쿼리 실행
