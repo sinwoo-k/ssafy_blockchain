@@ -18,4 +18,5 @@ public class UserResponseDto {
     private Integer following;
     private String url;
     private String joinDate;
+    private String hasFollowed;
 }

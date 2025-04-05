@@ -13,7 +13,6 @@ public interface FanartRepository extends JpaRepository<Fanart, Integer>, JpaSpe
 
     Page<Fanart> findByUserIdAndDeleted(Integer userId, String deleted, Pageable pageable);
 
-    Page<Fanart> findAllByDeleted(String deleted, Pageable pageable);
 
     Page<Fanart> findAllByWebtoonIdAndDeleted(Integer webtoonId, String deleted, Pageable pageable);
 

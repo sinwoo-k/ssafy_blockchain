@@ -23,7 +23,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     // 회원 검색 (목록)
     @GetMapping("/search")
@@ -38,8 +37,11 @@ public class UserController {
 
     // id로 회원 정보 조회
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserById(@PathVariable Integer userId) {
-        UserResponseDto user = userService.findUserById(userId);
+    public ResponseEntity<?> getUserById(
+            @AuthenticationPrincipal Integer inquirerId,
+            @PathVariable Integer userId
+    ) {
+        UserResponseDto user = userService.findUserById(inquirerId, userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
