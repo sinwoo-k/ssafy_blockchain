@@ -149,7 +149,10 @@ public class NoticeService {
     public void addAuctionCompleteNotice(TradingHistory tradingHistory, Webtoon webtoon) {
         addNftPurchaseNotice(tradingHistory);
         addNftSoldNotice(tradingHistory);
-        addSecondaryCreationNftSoldNotice(tradingHistory, webtoon);
+
+        if (webtoon != null && !webtoon.getUserId().equals(tradingHistory.getSellerId())) {
+            addSecondaryCreationNftSoldNotice(tradingHistory, webtoon);
+        }
     }
 
     // 구매자에게 구매 알림

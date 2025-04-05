@@ -28,6 +28,9 @@ public class Nft {
     @Column(name = "type", length = 50)
     private String type;
 
+    @Column(name = "image_url", length = 255)
+    private String imageUrl;
+
     @Column(name = "token_id")
     private Integer tokenId;
 
