@@ -7,7 +7,7 @@ export async function saveNftToDatabase({ webtoonId, userId, type, typeId, token
   
   const query = `
     INSERT INTO nft (webtoon_id, user_id, type, type_id, token_id, image_url, contract_address, metadata_uri, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const [result] = await pool.execute(query, [webtoonId, userId, type, typeId, tokenId, imageUrl,contractAddress, metadataUri, now]);
   return { id: result.insertId };
