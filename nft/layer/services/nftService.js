@@ -219,7 +219,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     for (const log of receipt.logs) {
       try {
         const parsedLog = nftMarketplace.interface.parseLog(log);
-        if (parsedLog.name === 'NFTMinted') {
+        if (parsedLog.name === 'Minted') {
           tokenId = parsedLog.args.tokenId.toString();
           break;
         }
@@ -228,7 +228,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       }
     }
     if (!tokenId) {
-      throw new AppError('NFTMinted 이벤트를 찾을 수 없습니다.', 500);
+      throw new AppError('Minted 이벤트를 찾을 수 없습니다.', 500);
     }
     const nftData = await saveNftToDatabase({
       webtoonId,
