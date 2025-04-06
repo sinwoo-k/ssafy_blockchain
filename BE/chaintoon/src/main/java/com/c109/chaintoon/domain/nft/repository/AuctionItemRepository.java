@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface AuctionItemRepository extends JpaRepository<AuctionItem, Integer> {
 
@@ -32,4 +34,6 @@ public interface AuctionItemRepository extends JpaRepository<AuctionItem, Intege
             "where a.ended = 'N' and n.userId = :userId")
     Page<AuctionItem> findActiveSaleItems(@Param("userId") Integer userId,
                                           Pageable pageable);
+
+    Optional<AuctionItem> findByNftIdAndEnded(Integer nftId, String ended);
 }
