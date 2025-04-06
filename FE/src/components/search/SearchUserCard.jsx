@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom'
 import { getRandomColor } from '../../utils/randomColor'
 
 const SearchUserCard = ({ user }) => {
-  console.log(user)
   const [randomColor, setRandomColor] = useState(getRandomColor())
 
   return (

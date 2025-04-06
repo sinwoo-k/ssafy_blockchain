@@ -25,7 +25,7 @@ const UserProfile = () => {
   }, [params.userId])
   return (
     <div className='py-[60px]'>
-      <UserProfileInfo user={userData} setUser={setUserData} />
+      <UserProfileInfo user={userData} patchData={getData} />
       <div className='flex justify-center py-5'>
         <div className='flex w-[1000px] border-b'>
           <button
@@ -44,8 +44,8 @@ const UserProfile = () => {
           </button>
         </div>
       </div>
-      {active === 'webtoon' && <UserProfileWebtoon />}
-      {active === 'fanart' && <UserProfileFanart />}
+      {active === 'webtoon' && <UserProfileWebtoon userId={userData.id} />}
+      {active === 'fanart' && <UserProfileFanart userId={userData.id} />}
     </div>
   )
 }

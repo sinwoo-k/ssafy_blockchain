@@ -3,27 +3,29 @@ import UserProfileWebtoonCard from './UserProfileWebtoonCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
-
-const webtoonDummy = Array(5)
-  .fill()
-  .map((_, i) => {
-    return {
-      webtoonId: i + 1,
-      title: `웹툰 ${i + 1}`,
-      writer: `작가 ${i + 1}`,
-      cover: `https://placehold.co/200x250?text=Webtoon+${i + 1}`,
-    }
-  })
+import { getUserWebtoon } from '../../api/webtoonAPI'
 
 const UserProfileWebtoon = ({ userId }) => {
   const [webtoons, setWebtoons] = useState([])
 
+  const getData = async () => {
+    try {
+      const result = await getUserWebtoon(userId)
+      console.log(result)
+      setWebtoons(result)
+    } catch (error) {
+      console.error('웹툰 조회 실패: ', error)
+    }
+  }
+
   useEffect(() => {
     // mount
-    setWebtoons(webtoonDummy)
+    if (userId) {
+      getData()
+    }
     // unmount
     return () => {}
-  }, [])
+  }, [userId])
   return (
     <div className='flex justify-center'>
       <div className='min-h-[500px] w-[1000px] py-10'>

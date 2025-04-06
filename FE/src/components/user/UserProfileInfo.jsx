@@ -1,22 +1,30 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 // 아이콘
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import IconButton from '../common/IconButton'
+import userService from '../../api/userApi'
 
-const UserProfileInfo = ({ user, setUser }) => {
-  const handleFollow = () => {
-    setUser((prev) => {
-      return { ...prev, followersCount: prev.followersCount + 1, follow: 'Y' }
-    })
-  }
+const UserProfileInfo = ({ user, patchData }) => {
+  const [isFollowed, setIsFollowed] = useState(false)
 
-  const handleUnfollow = () => {
-    setUser((prev) => {
-      return { ...prev, followersCount: prev.followersCount - 1, follow: 'N' }
-    })
+  const toggleFollow = async () => {
+    try {
+      if (isFollowed) {
+        const result = await userService.unfollowUser(user.id)
+      } else {
+        const result = await userService.followUser(user.id)
+      }
+      patchData()
+    } catch (error) {
+      console.error('팔로우 토글 실패: ', error)
+    }
   }
+  useEffect(() => {
+    // mount
+    setIsFollowed(user.hasFollowed === 'Y' ? true : false)
+  }, [user])
   return (
     <div className='mt-10 flex justify-center py-3'>
       <div className='w-[1000px]'>
@@ -56,23 +64,21 @@ const UserProfileInfo = ({ user, setUser }) => {
           <span>팔로워 {user?.follower || 0}</span>
           <span className='text-gray-400'>|</span>
           <span>팔로잉 {user?.following || 0}</span>
-          {user?.follow === 'Y' ? (
-            <button className={`cursor-pointer`} onClick={handleUnfollow}>
+          <button className={`cursor-pointer`} onClick={toggleFollow}>
+            {isFollowed ? (
               <IconButton
                 Icon={FavoriteIcon}
                 tooltip={'언팔로우'}
                 style={{ color: '#ff2525' }}
               />
-            </button>
-          ) : (
-            <button className={`cursor-pointer`} onClick={handleFollow}>
+            ) : (
               <IconButton
                 Icon={FavoriteBorderIcon}
                 tooltip={'팔로우하기'}
                 style={{ color: '#ff2525' }}
               />
-            </button>
-          )}
+            )}
+          </button>
         </div>
 
         {/* 가입일 */}
