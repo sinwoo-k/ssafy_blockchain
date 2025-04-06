@@ -3,15 +3,12 @@ import React, { useState, useEffect } from 'react';
 const NFTSellModal = ({ isOpen, onClose, nft, onSell }) => {
   const [startPrice, setStartPrice] = useState('');
   const [endPrice, setEndPrice] = useState('');
-  const [category, setCategory] = useState('액션');
   const [auctionEndDate, setAuctionEndDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('12');
-  
-  // 카테고리 목록
-  const categories = [
-    '액션', '로맨스', '판타지', '개그', '스릴러', 
-    '드라마', '일상', '무협/사극', '스포츠', '감성'
-  ];
+  const [inputMinPrice, setInputMinPrice] = useState('');
+  const [inputBuyNowPrice, setInputBuyNowPrice] = useState('');
+  const [inputEndTime, setInputEndTime] = useState('');
+
   
   // 시간 옵션 생성 (1시부터 24시까지)
   const hours = Array.from({ length: 24 }, (_, i) => {
@@ -57,10 +54,6 @@ const NFTSellModal = ({ isOpen, onClose, nft, onSell }) => {
     setEndPrice(value);
   };
   
-  // 카테고리 변경 핸들러
-  const handleCategoryChange = (e) => {
-    setCategory(e.target.value);
-  };
   
   // 날짜 변경 핸들러
   const handleDateChange = (e) => {
@@ -74,38 +67,29 @@ const NFTSellModal = ({ isOpen, onClose, nft, onSell }) => {
   
   // 판매 등록 핸들러
   const handleSubmit = () => {
-    // 필수값 검증
     if (!startPrice || !endPrice || !auctionEndDate || !selectedTime) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
-    
-    // 날짜와 시간을 결합하여 Date 객체 생성
+  
     const endDateTime = new Date(`${auctionEndDate}T${selectedTime}:00:00`);
     const now = new Date();
-    
+  
     if (endDateTime <= now) {
       alert('경매 종료 일시는 현재 시간 이후로 설정해야 합니다.');
       return;
     }
-    
-    // 판매 정보 객체 생성
+  
     const sellInfo = {
-      nftId: nft.id,
-      startPrice: parseFloat(startPrice),
-      endPrice: parseFloat(endPrice),
-      category,
-      auctionEndDate: endDateTime.toISOString(),
-      // 경매 기간 (일) 계산
-      duration: Math.ceil((endDateTime - now) / (1000 * 60 * 60 * 24))
-    };
-    
-    // 부모 컴포넌트로 판매 정보 전달
+      nftId: nft?.nftId || nft?.id,
+      minimumBidPrice: startPrice,
+      buyNowPrice: endPrice,
+      endTime: `${auctionEndDate}T${selectedTime}:00:00`
+    };  
     onSell(sellInfo);
-    
-    // 모달 닫기
     onClose();
   };
+  
 
   // 선택한 날짜와 시간으로 경매 기간 (일) 계산
   const calculateDuration = () => {
@@ -173,20 +157,6 @@ const NFTSellModal = ({ isOpen, onClose, nft, onSell }) => {
               placeholder="ETH 단위로 입력"
               className="w-full rounded bg-gray-200 p-2 text-black"
             />
-          </div>
-          
-          {/* 카테고리 - 드롭다운으로 변경 */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">카테고리</label>
-            <select
-              value={category}
-              onChange={handleCategoryChange}
-              className="w-full rounded bg-gray-200 p-2 text-black"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
           </div>
           
           {/* 경매 기간 설정 */}
