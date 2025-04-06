@@ -65,13 +65,41 @@ const getMyTradingHistory = async () => {
   }
 };
 
-// 지갑 정보 조회
-const getWalletInfo = async () => {
+// 지갑 정보 조회 (사용자 ID 파라미터 추가)
+const getWalletInfo = async (userId) => {
   try {
-    const response = await API.get('/nft/wallet-info');
+    // userId는 항상 제공된다고 가정
+    if (!userId) {
+      console.error('유저 ID가 제공되지 않았습니다.');
+      throw new Error('유저 ID는 필수입니다.');
+    }
+    
+    // 상대 경로로 API 요청
+    const url = `/nft/wallet-info/${userId}`;
+    const response = await API.get(url);
     return response.data;
   } catch (error) {
-    throw error;
+    console.error('지갑 정보 가져오기 오류:', error);
+    // 오류 발생 시에도 최소한의 구조를 가진 객체 반환
+    return {
+      balances: {
+        eth: '0 ETH'
+      }
+    };
+  }
+};
+
+// ETH-USD 환율 조회 (외부 API 사용)
+const getEthUsdRate = async () => {
+  try {
+    // CoinGecko API를 사용하여 이더리움의 USD 환율 조회
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    const data = await response.json();
+    return data.ethereum.usd;
+  } catch (error) {
+    console.error('ETH-USD 환율 조회 오류:', error);
+    // 오류 발생 시 기본값 반환
+    return 3000; // 기본값
   }
 };
 
@@ -82,7 +110,8 @@ export const nftService = {
   sellNFT,
   getMyTradingHistory,
   getWalletInfo,
-  mintNFT
+  mintNFT,
+  getEthUsdRate
 };
 
 export default nftService;

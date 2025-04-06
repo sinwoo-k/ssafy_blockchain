@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import ProfileEditModal from './ProfileEdit';
 import FollowModal from './FollowModal';
 import userService from '../../api/userApi';
+import nftService from '../../api/nftApi';
 import { userReducerActions } from '../../redux/reducers/userSlice';
 
 const UserProfile = () => {
@@ -14,8 +15,12 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 지갑, NFT 등 부가 상태 (필요 없으면 제거 가능)
-  const [walletInfo, setWalletInfo] = useState(null);
+  // 지갑, NFT 등 부가 상태
+  const [walletInfo, setWalletInfo] = useState({
+    balance: '0',
+    usdValue: '0',
+    ethToUsd: 0
+  });
   const [nftCount, setNftCount] = useState(0);
 
   // 프로필 수정 모달
@@ -46,7 +51,7 @@ const UserProfile = () => {
     type: 'success'
   });
 
-  // 사용자 정보 로딩
+  // 사용자 정보 및 지갑 정보 로딩
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -60,6 +65,46 @@ const UserProfile = () => {
         if (myUserInfo?.id) {
           const userDetails = await userService.getUserInfo(myUserInfo.id);
           setUser(userDetails);
+          
+          // 실시간 ETH-USD 환율 가져오기
+          let ethUsdRate = 3000; // 기본값
+          try {
+            ethUsdRate = await nftService.getEthUsdRate();
+            console.log('ETH-USD 환율:', ethUsdRate);
+          } catch (rateErr) {
+            console.error('환율 정보 로드 오류:', rateErr);
+          }
+          
+          // 지갑 정보 가져오기 (사용자 ID 전달)
+          try {
+            const walletInfoData = await nftService.getWalletInfo(myUserInfo.id);
+            console.log('지갑 정보:', walletInfoData);
+            
+            // eth 잔액 추출 (예: "1.08488 ETH"에서 숫자 부분만)
+            if (walletInfoData && walletInfoData.balances && walletInfoData.balances.eth) {
+              const ethBalanceStr = walletInfoData.balances.eth.split(' ')[0] || '0';
+              const ethBalance = parseFloat(ethBalanceStr);
+              
+              // USD 가치 계산
+              const usdValue = (ethBalance * ethUsdRate).toFixed(2);
+              
+              setWalletInfo({
+                balance: ethBalanceStr,
+                usdValue: usdValue,
+                ethToUsd: ethUsdRate
+              });
+            }
+          } catch (walletErr) {
+            console.error('지갑 정보 로드 오류:', walletErr);
+          }
+          
+          // NFT 개수 가져오기
+          try {
+            const nftList = await nftService.getMyNFTs();
+            setNftCount(nftList?.length || 0);
+          } catch (nftErr) {
+            console.error('NFT 정보 로드 오류:', nftErr);
+          }
         } else {
           setError('사용자 정보를 찾을 수 없습니다.');
         }
@@ -315,52 +360,36 @@ const UserProfile = () => {
       </div>
     );
   }
+  console.log('🚨 배경 이미지 URL:', user.backgroundImage);
 
   return (
     <>
-   {/* 배경 이미지 */}
-      <div className="relative w-full h-48 bg-gray-800 overflow-hidden group">
+      <div className="relative w-full h-48 overflow-hidden group">
         {user.backgroundImage ? (
           <img
-            src={user.backgroundImage} // ✅ 서버에서 받은 URL 그대로 사용
+            src={user.backgroundImage}
             alt="배경"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              console.error('🚨 배경 이미지 로딩 실패:', user.backgroundImage)
-              e.currentTarget.style.display = 'none'
-            }}
+            className="absolute inset-0 w-full h-full object-cover z-0"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-gray-700 to-gray-900" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 z-0" />
         )}
 
-        {/* Hover 시 아이콘 */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition duration-200">
+        {/* Hover 시 업로드 및 삭제 아이콘 */}
+        <div
+          className="
+            absolute inset-0 flex flex-col items-center justify-center
+            bg-black/0 group-hover:bg-black/50
+            transition duration-200 z-10
+          "
+        >
           {/* 업로드 버튼 */}
           <button
             onClick={handleBackgroundImageChange}
             className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
             title="배경 이미지 업로드"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 5a2 2 0 00-2 2v8a2 2 
-                  0 002 2h12a2 2 0 002-2V7a2 2 
-                  0 00-2-2h-1.586a1 1 0 
-                  01-.707-.293l-1.121-1.121A2 2 
-                  0 0011.172 3H8.828a2 2 0 
-                  00-1.414.586L6.293 4.707A1 1 
-                  0 015.586 5H4zm6 9a3 3 0 100-6 
-                  3 3 0 000 6z"
-                clipRule="evenodd"
-              />
-            </svg>
+            {/* SVG 아이콘 */}
           </button>
 
           {/* 삭제 버튼 */}
@@ -374,6 +403,7 @@ const UserProfile = () => {
           )}
         </div>
       </div>
+
 
         
       {/* 프로필/정보 */}
@@ -499,7 +529,7 @@ const UserProfile = () => {
             )}
           </div>
 
-          {/* (예시) 지갑 잔액/금액 */}
+          {/* 지갑 잔액/금액 */}
           <div className="text-right text-sm mt-3">
             <div className="mb-3">
               <span className="text-xs text-gray-400 mr-2">순자산</span>
@@ -508,6 +538,9 @@ const UserProfile = () => {
             <div className="mb-1">
               <span className="text-xs text-gray-400 mr-2">USD가치</span>
               <span>$ {walletInfo?.usdValue || '0'}</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              {walletInfo.ethToUsd > 0 && `1 ETH = $${walletInfo.ethToUsd}`}
             </div>
           </div>
         </div>
