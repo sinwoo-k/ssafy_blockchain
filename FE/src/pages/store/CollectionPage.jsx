@@ -3,46 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Loader from '../../components/common/Loader'
 import CollectionDetailInfo from '../../components/store/CollectionDetailInfo'
-import { dummyProducts } from './storeData'
-
-// 더미 에피소드 데이터 생성 함수
-const generateDummyEpisodes = (count, webtoonId, startId = 0) => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: startId + i,
-    title: `${i + 1}화`,
-    webtoonId: webtoonId,
-    price: 0.05 + (Math.random() * 0.1).toFixed(2) * 1,
-    uploadDate: `2025-0${Math.floor(Math.random() * 9) + 1}-${Math.floor(Math.random() * 28) + 1}`,
-    image: `/api/placeholder/300/${320 + i}`,
-    status: Math.random() > 0.2 ? 'sell' : 'notsell',
-    category: '웹툰회차' // 웹툰 카테고리로 설정하여 구매 페이지에서 구분
-  }))
-}
-
-// 더미 태그 생성 함수
-const generateDummyTags = (genre) => {
-  const tagsByGenre = {
-    '판타지': ['판타지', '마법사', '먼치킨', '모험', '이세계', '용사'],
-    '액션': ['액션', '격투', '무협', '히어로', '배틀', '격돌'],
-    '로맨스': ['로맨스', '연애', '멜로', '학교', '직장', '삼각관계'],
-    '드라마': ['드라마', '일상', '성장', '가족', '감동', '우정'],
-    '무협/사극': ['무협', '사극', '고전', '무당', '전통', '동방'],
-    '코미디': ['코미디', '개그', '일상', '유머', '직장', '학교'],
-    '스릴러': ['스릴러', '공포', '미스터리', '서스펜스', '심리', '추리'],
-    'SF': ['SF', '미래', '우주', '로봇', '외계인', '기술'],
-    '스포츠': ['스포츠', '야구', '축구', '격투기', '농구', '승부'],
-    '일상': ['일상', '학교', '직장', '성장', '청춘', '힐링']
-  };
-
-  // 기본 태그 설정
-  let tags = tagsByGenre[genre] || ['웹툰', '만화', '체인툰', '아트'];
-  
-  // 태그 객체로 변환
-  return tags.map((tag, index) => ({
-    id: index,
-    tagName: tag
-  }));
-};
+import { getWebtoon } from '../../api/webtoonAPI'
+import { getEpisodeAuctions, getGoodsAuctions, getFanartAuctions } from '../../api/storeApi'
 
 const CollectionPage = () => {
   const { collectionId } = useParams()
@@ -55,40 +17,113 @@ const CollectionPage = () => {
   const [tags, setTags] = useState([])
 
   useEffect(() => {
-    console.log("CollectionPage mounted with ID:", collectionId);
-    
-    // API 호출 지연 시뮬레이션
-    setTimeout(() => {
-      // 컬렉션 정보 가져오기 (실제로는 API 호출)
-      const foundCollection = dummyProducts.find(p => p.id === parseInt(collectionId));
-      
-      if (foundCollection) {
-        // 작가 정보 추가 (웹툰인 경우)
-        if (foundCollection.category === '웹툰' && !foundCollection.author) {
-          foundCollection.author = '작가' + Math.floor(Math.random() * 10 + 1);
+    const fetchCollectionData = async () => {
+      try {
+        setIsLoading(true)
+        
+        // 웹툰 정보 가져오기
+        const webtoonData = await getWebtoon(collectionId)
+        
+        if (webtoonData) {
+          // 웹툰 정보 설정
+          const collectionData = {
+            id: webtoonData.webtoonId,
+            title: webtoonData.webtoonName,
+            category: '웹툰',
+            genre: webtoonData.genre || '',
+            price: 0,
+            status: 'sell',
+            image: webtoonData.garoThumbnail,
+            author: webtoonData.writer,
+            description: webtoonData.summary,
+            rating: webtoonData.rating,
+            views: webtoonData.viewCount,
+            likes: webtoonData.favoriteCount
+          }
+          
+          setCollection(collectionData)
+          
+          // 태그 생성 - API 응답에 태그 정보가 있으면 사용
+          if (webtoonData.tags && webtoonData.tags.length > 0) {
+            const tagsList = webtoonData.tags.map((tag, index) => ({
+              id: index,
+              tagName: tag
+            }))
+            setTags(tagsList)
+          } else {
+            // 기본 태그 설정
+            const tagsList = []
+            if (webtoonData.genre) {
+              tagsList.push({ id: 1, tagName: webtoonData.genre })
+            }
+            tagsList.push({ id: 2, tagName: '웹툰' })
+            tagsList.push({ id: 3, tagName: '체인툰' })
+            setTags(tagsList)
+          }
+          
+          // 관련 에피소드, 굿즈, 팬아트 불러오기
+          const [episodeAuctions, goodsAuctions, fanartAuctions] = await Promise.all([
+            getEpisodeAuctions(collectionId),
+            getGoodsAuctions(collectionId),
+            getFanartAuctions(collectionId)
+          ])
+          
+          // 에피소드 데이터 구성
+          const episodeItems = (episodeAuctions || []).map(auction => ({
+            id: auction.auctionId,
+            title: `${auction.episodeNumber || ''}화`,
+            webtoonId: auction.webtoonId,
+            price: auction.currentPrice || auction.startingPrice || 0,
+            uploadDate: auction.createdAt ? new Date(auction.createdAt).toISOString().split('T')[0] : '',
+            image: auction.thumbnailUrl,
+            status: auction.ended === 'Y' ? 'notsell' : 'sell',
+            category: '웹툰회차',
+            auctionId: auction.auctionId,
+            endTime: auction.endTime
+          }))
+          
+          setEpisodes(episodeItems)
+          
+          // 관련 상품 데이터 구성 (굿즈와 팬아트)
+          const relatedItemsList = [
+            ...(goodsAuctions || []).map(auction => ({
+              id: auction.auctionId,
+              title: auction.title || auction.goodsName || '굿즈',
+              image: auction.thumbnailUrl,
+              price: auction.currentPrice || auction.startingPrice || 0,
+              category: '굿즈',
+              genre: webtoonData.genre || '',
+              status: auction.ended === 'Y' ? 'notsell' : 'sell',
+              webtoonId: auction.webtoonId,
+              auctionId: auction.auctionId,
+              collectionId: auction.webtoonId
+            })),
+            ...(fanartAuctions || []).map(auction => ({
+              id: auction.auctionId,
+              title: auction.title || auction.fanartTitle || '팬아트',
+              image: auction.thumbnailUrl,
+              price: auction.currentPrice || auction.startingPrice || 0,
+              category: '팬아트',
+              genre: webtoonData.genre || '',
+              status: auction.ended === 'Y' ? 'notsell' : 'sell',
+              webtoonId: auction.webtoonId,
+              auctionId: auction.auctionId,
+              collectionId: auction.webtoonId
+            }))
+          ]
+          
+          setRelatedItems(relatedItemsList)
+        } else {
+          console.error("웹툰 정보를 찾을 수 없습니다:", collectionId)
         }
-        
-        setCollection(foundCollection);
-        
-        // 태그 생성
-        const dummyTags = generateDummyTags(foundCollection.genre)
-        setTags(dummyTags)
-        
-        // 관련 웹툰 회차 생성 (더미 데이터)
-        const dummyEpisodes = generateDummyEpisodes(15, parseInt(collectionId), 100)
-        setEpisodes(dummyEpisodes)
-        
-        // 관련 상품들 (동일한 장르를 가진 다른 상품들)
-        const relatedProducts = dummyProducts.filter(p => 
-          p.id !== parseInt(collectionId) && p.genre === foundCollection.genre
-        )
-        setRelatedItems(relatedProducts)
-      } else {
-        console.error("Collection not found with ID:", collectionId);
+      } catch (err) {
+        console.error("컬렉션 데이터 로드 오류:", err)
+      } finally {
+        setIsLoading(false)
       }
-      
-      setIsLoading(false)
-    }, 800)
+    }
+    
+    fetchCollectionData()
   }, [collectionId])
 
   // 상품 페이지 이동 함수
