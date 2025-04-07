@@ -21,7 +21,7 @@ export async function createWallet(walletData) {
 
   const [result] = await pool.execute(
     `INSERT INTO wallet (user_id, wallet_address, private_key, public_key, recovery_phrase, created_at)
-     VALUES (?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [userId, walletAddress, privateKey, publicKey, recoveryPhrase, now]
   );
   return result.insertId;
