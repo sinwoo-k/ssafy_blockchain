@@ -26,7 +26,7 @@ const ProductDetail = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
-
+  
   // 경매 상세 정보 및 입찰 기록 로드
   useEffect(() => {
     const fetchAuctionDetail = async () => {
@@ -208,14 +208,14 @@ const ProductDetail = () => {
 
   // 입찰가 증가 함수
   const increaseBid = () => {
-    const bidIncrement = 0.01 // 최소 입찰 단위
+    const bidIncrement =.01 // 최소 입찰 단위
     setBidPrice((prev) => parseFloat((prev + bidIncrement).toFixed(2)))
   }
 
   // 입찰가 감소 함수
   const decreaseBid = () => {
-    const bidIncrement = 0.01
-    const minBid = parseFloat(auction?.biddingPrice || 0) + 0.01
+    const bidIncrement = .01
+    const minBid = parseFloat(auction?.biddingPrice || 0) + .01
     if (bidPrice > minBid) {
       setBidPrice((prev) => parseFloat((prev - bidIncrement).toFixed(2)))
     }
@@ -240,7 +240,7 @@ const ProductDetail = () => {
       // 입찰 API 호출
       await API.post('/auctions/bid', { 
         auctionItemId: productId,
-        bidAmount: bidPrice 
+        biddingPrice: bidPrice 
       })
       
       // 입찰 성공 처리
@@ -292,7 +292,12 @@ const ProductDetail = () => {
       setIsProcessing(false)
     }
   }
-
+  
+  // 입찰 기록 모달 표시/숨김 처리
+  const handleToggleBidHistoryModal = () => {
+    setShowBidHistoryModal(!showBidHistoryModal);
+  };
+  
   // 찜하기 처리 함수
   const handleAddToWishlist = async () => {
     if (!isAuthenticated) {
@@ -454,9 +459,9 @@ const ProductDetail = () => {
               <div className='mb-4 flex items-center justify-between'>
                 <div className='text-lg font-medium'>거래 기록</div>
                 <div className='flex items-center'>
-                  <span className='mr-2'>{bidHistory.length}회</span>
+                  <span className='mr-2'>거래내역 조회</span>
                   <button 
-                    onClick={() => setShowBidHistoryModal(true)}
+                    onClick={handleToggleBidHistoryModal}
                     className='text-[#3cc3ec] hover:text-[#2aabda]'
                   >
                     [기록보기]
@@ -627,14 +632,8 @@ const ProductDetail = () => {
         {/* 입찰 기록 모달 컴포넌트 */}
         <BidHistoryModal 
           isOpen={showBidHistoryModal}
-          onClose={() => setShowBidHistoryModal(false)}
-          bidHistory={bidHistory.map((bid, index) => ({
-            id: index + 1,
-            date: new Date(bid.timestamp).toLocaleDateString(),
-            time: new Date(bid.timestamp).toLocaleTimeString(),
-            user: bid.bidder || bid.walletAddress || '익명',
-            price: formatPrice(bid.bidAmount)
-          }))}
+          onClose={handleToggleBidHistoryModal}
+          auctionItemId={productId}
         />
       </div>
     </div>
