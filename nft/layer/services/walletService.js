@@ -51,8 +51,9 @@ export async function connectWalletService({ walletAddress, signature, message }
     // 지갑이 없는 경우 새로운 유저와 지갑 생성
     const randomNumber = Math.floor(Math.random() * 1000000);
     const nickname = `Metamask${randomNumber}`;
-    const joinDate = new Date().toISOString().split('T')[0];
-    console.log(`Join Date: ${joinDate}`);
+    const now = new Date();
+    now.setHours(now.getHours() + 9);
+    const joinDate = now.toISOString().split('T')[0];
 
     const userData = {
       nickname,
@@ -64,8 +65,7 @@ export async function connectWalletService({ walletAddress, signature, message }
       throw new AppError('User not found', 404);
     }
     const wallet = await createMetamaskWallet(walletAddress, userId);
-
-    return { walletAddress, wallet };
+    return { walletAddress, userId };
   } catch (error) {
     console.error(`connectWalletService Error: ${error.stack}`);
     if (error instanceof AppError) throw error;
