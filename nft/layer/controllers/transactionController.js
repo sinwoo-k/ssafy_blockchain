@@ -5,7 +5,8 @@ import {
   getWalletNFTsService,
   syncNewTransactionsService,
   getTransactionDetailsService,
-  getSaleTransactionsService
+  getSaleTransactionsService,
+  getNftTransfersService
 } from '../services/transactionService.js';
 import { NFT_MARKETPLACE_ADDRESS } from '../config/contract.js';
 
@@ -55,5 +56,15 @@ export async function getSaleTransactionsController(req, res, next) {
     res.status(200).json({ success: true, data });
   } catch (error) {
     next(new AppError("판매 거래 내역 조회 실패: " + error.message, error.statusCode || 500));
+  }
+}
+
+export async function getNftTransfersController(req, res, next) {
+  try {
+    const { walletAddress } = req.params;
+    const data = await getNftTransfersService(walletAddress);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(new AppError(error.message, error.statusCode || 500));
   }
 }

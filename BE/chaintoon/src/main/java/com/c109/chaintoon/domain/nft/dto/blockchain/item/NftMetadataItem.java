@@ -12,4 +12,6 @@ public class NftMetadataItem {
     private Integer tokenId;
     private String tokenURI;
     private NftMetadata metadata;
+    private Boolean onSale;
+    private Double salePrice;
 }
