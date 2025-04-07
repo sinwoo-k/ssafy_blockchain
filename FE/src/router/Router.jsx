@@ -212,28 +212,28 @@ const router = createBrowserRouter([
       },
       // store section
       {
-        path: '/store',
-        element: (
+        path : '/store',
+        element:(
           <Suspense fallback={<Loader />}>
             <StoreMain />
           </Suspense>
-        ),
+        )
       },
       {
-        path: '/store/product/:productId',
-        element: (
+        path : '/store/product/:productId',
+        element:(
           <Suspense fallback={<Loader />}>
             <ProductDetail />
           </Suspense>
-        ),
+        )
       },
       {
-        path: '/store/collection/:collectionId',
-        element: (
+        path : '/store/collection/:collectionId',
+        element:(
           <Suspense fallback={<Loader />}>
             <CollectionPage />
           </Suspense>
-        ),
+        )
       },
       // 팬아트 section
       {

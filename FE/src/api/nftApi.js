@@ -11,17 +11,7 @@ const getMyNFTs = async () => {
   }
 };
 
-// NFT 상세 정보 조회
-const getNFTDetails = async (tokenId) => {
-  try {
-    const response = await API.get(`/nft/nft-details/${tokenId}`, {
-      params: { type: 'nft' }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+
 
 // NFT 거래 내역 조회
 const getNFTTradingHistory = async (nftId) => {
@@ -55,15 +45,6 @@ const mintNFT = async(payload) => {
   }
 };
 
-// 내 거래 내역 조회
-const getMyTradingHistory = async () => {
-  try {
-    const response = await API.get('/users/trading-histories');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
 
 // 지갑 정보 조회 (사용자 ID 파라미터 추가)
 const getWalletInfo = async (userId) => {
@@ -105,10 +86,8 @@ const getEthUsdRate = async () => {
 
 export const nftService = {
   getMyNFTs,
-  getNFTDetails,
   getNFTTradingHistory,
   sellNFT,
-  getMyTradingHistory,
   getWalletInfo,
   mintNFT,
   getEthUsdRate
