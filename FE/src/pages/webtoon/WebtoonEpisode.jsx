@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
@@ -9,6 +9,7 @@ import CommentList from '../../components/comment/CommentList'
 
 const WebtoonEpisode = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   // 에피소드 데이터
   const [episode, setEpisode] = useState([])
@@ -53,6 +54,7 @@ const WebtoonEpisode = () => {
       setWebtoonName(webtoonNameResult.webtoonName)
     } catch (error) {
       console.error('회차 불러오기 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
   useEffect(() => {

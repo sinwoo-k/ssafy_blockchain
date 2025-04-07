@@ -6,8 +6,11 @@ import { getWebtoonList } from '../../api/webtoonAPI'
 import Slider from 'react-slick'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
+import { useNavigate } from 'react-router-dom'
 
 const TodayRecommend = () => {
+  const navigate = useNavigate()
+
   // 배경 이미지
   const [backgroundImg, setBackgroundImg] = useState()
   // 추천 웹툰 리스트
@@ -16,9 +19,11 @@ const TodayRecommend = () => {
   const getData = async () => {
     try {
       const result = await getWebtoonList(1, 7)
-      setWebtoons(result)
+      const data = result.sort((a, b) => b.rating - a.rating)
+      setWebtoons(data)
       setBackgroundImg(result[0].garoThumbnail)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('웹툰 조회 실패: ', error)
     }
   }
@@ -27,7 +32,7 @@ const TodayRecommend = () => {
   const setting = {
     dots: false,
     Infinite: true,
-    speed: 1500,
+    speed: 2000,
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: false,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // 아이콘
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
@@ -7,6 +8,8 @@ import IconButton from '../common/IconButton'
 import userService from '../../api/userApi'
 
 const UserProfileInfo = ({ user, patchData }) => {
+  const navigate = useNavigate()
+
   const [isFollowed, setIsFollowed] = useState(false)
 
   const toggleFollow = async () => {
@@ -19,6 +22,7 @@ const UserProfileInfo = ({ user, patchData }) => {
       patchData()
     } catch (error) {
       console.error('팔로우 토글 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
   useEffect(() => {

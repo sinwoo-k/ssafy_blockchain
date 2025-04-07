@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { getWebtoonList } from '../../api/webtoonAPI'
 import RankingWebtoonCard from './RankingWebtoonCard'
+import { useNavigate } from 'react-router-dom'
 
 const RankingWebtoonList = ({ type }) => {
+  const navigate = useNavigate()
+
   const [webtoons, setWebtoons] = useState([])
 
   const getViewData = async () => {
@@ -10,6 +13,7 @@ const RankingWebtoonList = ({ type }) => {
       const result = await getWebtoonList(1, 5, 'view')
       setWebtoons(result)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('뷰어십 웹툰 조회 실패: ', error)
     }
   }
@@ -19,6 +23,7 @@ const RankingWebtoonList = ({ type }) => {
       const result = await getWebtoonList(1, 5, 'rating')
       setWebtoons(result)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('별점 웹툰 조회 실패: ', error)
     }
   }

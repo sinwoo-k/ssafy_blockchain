@@ -9,6 +9,9 @@ import IconButton from '../common/IconButton'
 
 const FavoriteWebtoonCard = ({ webtoon, patchData }) => {
   const deleteData = async () => {
+    if (!confirm('관심 웹툰에서 삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteFavoriteWebtoon(webtoon.webtoonId)
       patchData()

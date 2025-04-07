@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import SearchNavBar from '../../components/search/SearchNavBar'
 import SearchAll from '../../components/search/SearchAll'
 import SearchWebtoon from '../../components/search/SearchWebtoon'
@@ -9,6 +9,8 @@ import SearchGoods from '../../components/search/SearchGoods'
 import { getAllSearch } from '../../api/searchAPI'
 
 const SearchRoot = () => {
+  const navigate = useNavigate()
+
   const [searchParams, setSearchParams] = useSearchParams()
   const keyword = searchParams.get('keyword')
   const searchType = searchParams.get('searchType') || 'all'
@@ -26,6 +28,7 @@ const SearchRoot = () => {
       setFanart(result.FANART)
       setGoods(result.GOODS)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('통합 검색 조회 실패: ', error)
     }
   }

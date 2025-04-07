@@ -104,6 +104,7 @@ const MyFanartUpdate = () => {
       navigate('/myworks/fanart')
     } catch (error) {
       console.error('팬아트 수정 실패: ', error)
+      alert('팬아트 정보 수정에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 

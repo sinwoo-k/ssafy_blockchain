@@ -104,6 +104,7 @@ const MyWebtoonGoodsUpdate = () => {
       navigate(`/myworks/webtoon/${webtoonId}/goods`)
     } catch (error) {
       console.error('굿즈 수정 실패: ', error)
+      alert('굿즈 정보 수정에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 

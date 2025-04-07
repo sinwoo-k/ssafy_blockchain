@@ -1,26 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import BarLoader from 'react-spinners/BarLoader'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
 import { getUserFanarts } from '../../api/fanartAPI'
 
-const fanartDummy = Array(10)
-  .fill()
-  .map((_, i) => {
-    // 100 ~ 400 사이의 랜덤 크기를 예시로 만듭니다.
-    const randomWidth = Math.floor(Math.random() * 101) + 200 // 200~300
-    const randomHeight = Math.floor(Math.random() * 201) + 200 // 200~400
-    return {
-      fanartId: i + 1,
-      fanartName: `팬아트 ${i + 1}`,
-      fanartImage: `https://placehold.co/${randomWidth}x${randomHeight}?text=Fanart+${i + 1}`,
-    }
-  })
-
 const UserProfileFanart = ({ userId }) => {
+  const navigate = useNavigate()
+
   const [isLoading, setIsLoding] = useState(true)
   const [fanarts, setFanarts] = useState([])
 
@@ -31,12 +20,12 @@ const UserProfileFanart = ({ userId }) => {
       setFanarts(result)
     } catch (error) {
       console.error('팬아트 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 
   useEffect(() => {
     // mount
-    setFanarts(fanartDummy)
     if (userId) {
       getData()
     }

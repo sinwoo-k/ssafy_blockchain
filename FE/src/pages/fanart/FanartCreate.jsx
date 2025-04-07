@@ -100,6 +100,7 @@ const FanartCreate = () => {
       navigate(`/fanart/webtoon/${params.webtoonId}`)
     } catch (error) {
       console.error('팬아트 등록 실패: ', error)
+      alert('팬아트 등록에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 

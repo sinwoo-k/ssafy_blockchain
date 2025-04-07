@@ -99,6 +99,7 @@ const MyWebtoonGoodsCreate = () => {
       navigate(`/myworks/webtoon/${params.webtoonId}/goods`)
     } catch (error) {
       console.error('굿즈 등록 실패: ', error)
+      alert('굿즈 등록에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
 import CommentCard from './CommentCard'
@@ -7,6 +9,8 @@ import { createComment, getComments } from '../../api/commentAPI'
 import { addComma } from '../../utils/formatting'
 
 const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
+  const navigate = useNavigate()
+
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
 
   const [page, setPage] = useState(1)
@@ -27,6 +31,7 @@ const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
       }
     } catch (error) {
       console.error('댓글 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 

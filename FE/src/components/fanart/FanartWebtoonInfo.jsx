@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { getWebtoon } from '../../api/webtoonAPI'
 import { formattingNumber } from '../../utils/formatting'
@@ -12,6 +12,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import StarIcon from '@mui/icons-material/Star'
 
 const FanartWebtoonInfo = ({ webtoonId }) => {
+  const navigate = useNavigate()
+
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
 
@@ -24,11 +26,11 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
   const getData = async () => {
     try {
       const result = await getWebtoon(webtoonId)
-      console.log(result)
       setWebtoon(result)
       setBackgroundImg(result.garoThumbnail)
     } catch (error) {
       console.error('웹툰 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 

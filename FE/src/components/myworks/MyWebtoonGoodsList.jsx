@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import GoodsCard from './GoodsCard'
 
 // 아이콘
@@ -6,6 +7,8 @@ import ErrorIcon from '@mui/icons-material/Error'
 import { getGoodsList } from '../../api/goodsAPI'
 
 const MyWebtoonGoodsList = ({ webtoonId }) => {
+  const navigate = useNavigate()
+
   const [goodsList, setGoodsList] = useState([])
 
   const getData = async () => {
@@ -13,6 +16,7 @@ const MyWebtoonGoodsList = ({ webtoonId }) => {
       const result = await getGoodsList(webtoonId)
       setGoodsList(result.goodsList)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('굿즈 목록 조회 실패: ', error)
     }
   }

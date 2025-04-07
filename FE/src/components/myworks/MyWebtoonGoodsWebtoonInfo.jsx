@@ -25,6 +25,7 @@ const MyWebtoonGoodsWebtoonInfo = ({ webtoonId }) => {
       setWebtoon(result)
       setBackgroundImg(result.garoThumbnail)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('웹툰 정보 불러오기 실패: ', error)
     }
   }
@@ -36,7 +37,7 @@ const MyWebtoonGoodsWebtoonInfo = ({ webtoonId }) => {
     return () => {}
   }, [])
   return (
-    <div className={`relative mb-10 flex w-full justify-center py-10`}>
+    <div className={`relative mb-10 flex w-full justify-center py-[80px]`}>
       <div
         className='absolute inset-0 bg-cover bg-center'
         style={{

@@ -1,40 +1,32 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import NewFanartCard from './NewFanartCard'
+import { getLatestFanarts } from '../../api/fanartAPI'
 
 // carousel
 import Slider from 'react-slick'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
-import NewFanartCard from './NewFanartCard'
-import { getLatestFanarts } from '../../api/fanartAPI'
-
-const dummyData = [1, 2, 3, 4, 5, 6, 7].map((number) => {
-  return {
-    fanartId: number,
-    userId: 1,
-    webtoonId: 1,
-    fanartImage: `https://placehold.co/300x300?text=Fanart+${number}`,
-    fanartName: '팬아트 테스트',
-    garoThumbnail: null,
-    seroThumbnail: null,
-    description: null,
-    webtoonName: null,
-    writer: null,
-  }
-})
 
 const NewFanartList = () => {
+  const navigate = useNavigate()
+
   const [fanarts, setFanarts] = useState([])
+  const [backgroundImg, setBackgroundImg] = useState(null)
 
   // carousel setting
   const setting = {
     dots: false,
     Infinity: true,
-    speed: 1000,
+    speed: 1500,
     slidesToShow: 5,
     slidesToScroll: 1,
     arrows: false,
     autoplay: true,
-    autoplaySpeed: 3000,
+    autoplaySpeed: 5000,
+    beforeChange: (current, next) => {
+      setBackgroundImg(fanarts[next]?.fanartImage)
+    },
     draggable: false,
   }
 
@@ -42,8 +34,10 @@ const NewFanartList = () => {
     try {
       const result = await getLatestFanarts()
       setFanarts(result)
+      setBackgroundImg(result[0].fanartImage)
     } catch (error) {
       console.error('최신 팬아트 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 
@@ -54,8 +48,15 @@ const NewFanartList = () => {
     return () => {}
   }, [])
   return (
-    <div className='flex justify-center'>
-      <div className='w-[1000px] py-20'>
+    <div className='relative flex justify-center'>
+      <div
+        className='absolute inset-0 bg-cover bg-center'
+        style={{
+          backgroundImage: `url(${backgroundImg})`,
+          filter: 'blur(15px) brightness(0.5)',
+        }}
+      ></div>
+      <div className='relative w-[1000px] py-30'>
         <h1 className='mb-5 text-xl'>🎨 따끈따끈 신규 팬아트</h1>
         {/* <div className='flex gap-3 px-2'> */}
         <Slider {...setting}>

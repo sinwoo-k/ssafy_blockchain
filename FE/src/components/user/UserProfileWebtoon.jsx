@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import UserProfileWebtoonCard from './UserProfileWebtoonCard'
 
 // 아이콘
@@ -6,6 +7,8 @@ import ErrorIcon from '@mui/icons-material/Error'
 import { getUserWebtoon } from '../../api/webtoonAPI'
 
 const UserProfileWebtoon = ({ userId }) => {
+  const navigate = useNavigate()
+
   const [webtoons, setWebtoons] = useState([])
 
   const getData = async () => {
@@ -15,6 +18,7 @@ const UserProfileWebtoon = ({ userId }) => {
       setWebtoons(result)
     } catch (error) {
       console.error('웹툰 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 

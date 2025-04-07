@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getMyWebtoon } from '../../api/webtoonAPI'
 
 // 컴포넌트
@@ -9,14 +9,9 @@ import MyWebtoonCard from '../../components/myworks/MyWebtoonCard'
 import ErrorIcon from '@mui/icons-material/Error'
 import AddIcon from '@mui/icons-material/Add'
 
-// 디폴트 이미지
-import fantasyCover from '../../assets/defaultCover/fantasy.webp'
-import actionCover from '../../assets/defaultCover/action.webp'
-import romanceCover from '../../assets/defaultCover/romance.webp'
-import dramaCover from '../../assets/defaultCover/drama.webp'
-import historyCover from '../../assets/defaultCover/history.webp'
-
 const MyWebtoon = () => {
+  const navigate = useNavigate()
+
   // 내 작품 목록
   const [webtoons, setWebtoons] = useState([])
 
@@ -25,6 +20,7 @@ const MyWebtoon = () => {
       const data = await getMyWebtoon(page, pageSize)
       setWebtoons(data)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('내 웹툰 불러오기 실패: ', error)
     }
   }
