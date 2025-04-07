@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
+import { getGoods, patchGoods } from '../../api/goodsAPI'
 
 const MyWebtoonGoodsUpdate = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   const [goodsImage, setGoodsImage] = useState(null) // 굿즈 이미지
   const [goodsImageURL, setGoodsImageURL] = useState('')
+  const [webtoonId, setWebtoonId] = useState(null)
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
   const [goodsName, setGoodsName] = useState('') // 굿즈명
   const [goodsDescription, setGoodsDescription] = useState('') // 굿즈 설명
@@ -62,30 +65,51 @@ const MyWebtoonGoodsUpdate = () => {
     setGoodsImageURL('')
   }
 
+  const getData = async () => {
+    try {
+      const result = await getGoods(params.goodsId)
+      setWebtoonId(result.webtoonId)
+      setWeboonName(result.webtoonName)
+      setGoodsName(result.goodsName)
+      setGoodsDescription(result.description)
+      setGoodsImageURL(result.goodsImage)
+      console.log(result)
+    } catch (error) {
+      console.error('굿즈 조회 실패: ', error)
+    }
+  }
+
   // 굿즈 등록 함수
-  const updateGoods = () => {
-    if (goodsImage === null) {
+  const updateGoods = async () => {
+    if (goodsImage === null && goodsImageURL === '') {
       alert('굿즈를 등록해주세요.')
-    } else if (goodsName.trim() === '') {
+      return
+    }
+    if (goodsName.trim() === '') {
       alert('굿즈명을 작성해주세요.')
-    } else if (goodsDescription.trim() === '') {
+      return
+    }
+    if (goodsDescription.trim() === '') {
       alert('굿즈 설명을 작성해주세요.')
-    } else {
-      const payload = {
-        goodsName: goodsName,
-        goodsDescription: goodsDescription,
-      }
-      console.log(payload)
+      return
+    }
+    const payload = {
+      webtoonId: webtoonId,
+      goodsName: goodsName,
+      description: goodsDescription,
+    }
+    try {
+      const result = await patchGoods(params.goodsId, payload, goodsImage)
+      console.log(result)
+      navigate(`/myworks/webtoon/${webtoonId}/goods`)
+    } catch (error) {
+      console.error('굿즈 수정 실패: ', error)
     }
   }
 
   useEffect(() => {
     // mount
-    setWeboonName('테스트')
-    setGoodsName('테스트 굿즈')
-    setGoodsDescription('테스트 데이터입니다.')
-    setGoodsImage()
-    setGoodsImageURL(`https://placehold.co/300x300?text=Goods+${1}`)
+    getData()
     // unmount
     return () => {}
   }, [])
