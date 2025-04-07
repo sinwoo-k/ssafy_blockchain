@@ -57,7 +57,7 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
         className='absolute inset-0 bg-cover bg-center'
         style={{
           backgroundImage: `url(${backgroundImg})`,
-          filter: 'blur(35px) brightness(0.5)',
+          filter: 'blur(15px) brightness(0.5)',
         }}
       ></div>
       <div className='relative w-[1000px]'>
@@ -69,7 +69,7 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
               <img
                 src={webtoon.seroThumbnail}
                 alt={`${webtoon?.webtoonName} 대표 이미지`}
-                className='h-[300px] w-[250px] rounded-xl'
+                className='min-h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}
@@ -98,7 +98,9 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
           <div className='flex flex-col justify-between'>
             <div className='flex flex-col gap-5'>
               <p className='text-2xl'>{webtoon.webtoonName}</p>
-              <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+              <Link to={`/user/${webtoon.userId}`}>
+                <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+              </Link>
               <p className='text-lg text-[#b9b9b9]'>{webtoon.genre}</p>
               <div className=''>
                 {webtoon.summary?.split('\n').map((line, index) => (

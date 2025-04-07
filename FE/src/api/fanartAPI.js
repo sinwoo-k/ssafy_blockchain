@@ -18,6 +18,19 @@ export const getMyFanarts = async () => {
   return response.data
 }
 
+/** 유저 팬아트 조회 */
+export const getUserFanarts = async (
+  userId,
+  page = 1,
+  pageSize = 10,
+  orderBy = 'latest',
+) => {
+  const response = await API.get(
+    `fanarts/latest?page=${page}&pageSize=${pageSize}&orderBy=${orderBy}&writerId=${userId}`,
+  )
+  return response.data
+}
+
 /** 팬아트 상세 조회 */
 export const getFanart = async (fanartId) => {
   const response = await API.get(`/fanarts/${fanartId}`)

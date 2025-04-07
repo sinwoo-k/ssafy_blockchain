@@ -1,25 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import UserProfileInfo from '../../components/user/UserProfileInfo'
 import UserProfileWebtoon from '../../components/user/UserProfileWebtoon'
 import UserProfileFanart from '../../components/user/UserProfileFanart'
-
-const dummy = {
-  userId: 1,
-  username: '유저',
-  profileImage: null,
-  url: null,
-  follow: 'N',
-  followersCount: 0,
-  followingCount: 0,
-  createdAt: '20250331',
-}
+import userService from '../../api/userApi'
+import { useParams } from 'react-router-dom'
 
 const UserProfile = () => {
-  const [userData, setUserData] = useState(dummy)
+  const params = useParams()
+  const [userData, setUserData] = useState({})
   const [active, setActive] = useState('webtoon')
+
+  const getData = async () => {
+    try {
+      const result = await userService.getUserInfo(params.userId)
+      console.log(result)
+      setUserData(result)
+    } catch (error) {
+      console.error('유저 정보 조회 실패: ', error)
+    }
+  }
+
+  useEffect(() => {
+    getData()
+  }, [params.userId])
   return (
     <div className='py-[60px]'>
-      <UserProfileInfo user={userData} setUser={setUserData} />
+      <UserProfileInfo user={userData} patchData={getData} />
       <div className='flex justify-center py-5'>
         <div className='flex w-[1000px] border-b'>
           <button
@@ -38,8 +44,8 @@ const UserProfile = () => {
           </button>
         </div>
       </div>
-      {active === 'webtoon' && <UserProfileWebtoon />}
-      {active === 'fanart' && <UserProfileFanart />}
+      {active === 'webtoon' && <UserProfileWebtoon userId={userData.id} />}
+      {active === 'fanart' && <UserProfileFanart userId={userData.id} />}
     </div>
   )
 }

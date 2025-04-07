@@ -1,21 +1,59 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
 import { Link } from 'react-router-dom'
 import BarLoader from 'react-spinners/BarLoader'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
+import { getDomainSearch } from '../../api/searchAPI'
 
-const SearchFanart = ({ fanartList }) => {
-  const [isLoading, setIsLoding] = useState(true)
+const SearchFanart = ({ keyword }) => {
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [fanarts, setFanarts] = useState([])
+
+  const getData = async (page) => {
+    try {
+      const result = await getDomainSearch(keyword, 'SEARCH_FANART', page)
+      setFanarts((prev) => [...prev, ...result.searchResult])
+      setTotalCount(result.totalCount)
+      if (result.searchResult.length === 0) {
+        setHasMore(false)
+      }
+    } catch (error) {
+      console.error('검색 결과 조회 실패: ', error)
+    }
+  }
+
+  const handleRequestAppend = async (event) => {
+    if (!hasMore) return
+    const nextPage = currentPage + 1
+    setIsLoading(true)
+    await getData(nextPage)
+    setCurrentPage(nextPage)
+    setIsLoading(false)
+  }
+
+  // 초기 데이터 로딩 및 키워드 변경 시 데이터 초기화
+  useEffect(() => {
+    // mount
+    setCurrentPage(1)
+    setFanarts([])
+    setHasMore(true)
+    setIsLoading(true)
+    getData(1)
+  }, [keyword])
+
   return (
     <div className='flex w-[1000px] flex-col gap-3 py-5'>
       <h2 className='text-xl'>팬아트</h2>
       <div className='flex justify-between'>
-        <span>총 {fanartList.length}건</span>
+        <span>총 {totalCount}건</span>
       </div>
       <div>
-        {fanartList.length === 0 ? (
+        {fanarts.length === 0 && !isLoading ? (
           <div className='flex w-full flex-col items-center justify-center gap-3'>
             <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
             <p className='text-xl'>검색 결과가 없습니다.</p>
@@ -26,10 +64,11 @@ const SearchFanart = ({ fanartList }) => {
               align='center'
               gap={10}
               column={5}
-              onRenderComplete={() => setIsLoding(false)}
+              onRequestAppend={handleRequestAppend}
+              onRenderComplete={() => setIsLoading(false)}
             >
-              {fanartList.map((fanart) => (
-                <div className='item' key={fanart.fanartId}>
+              {fanarts.map((fanart, index) => (
+                <div className='item' key={`${fanart.fanartId}-${index}`}>
                   <Link to={`/fanart/${fanart.fanartId}`}>
                     <img
                       src={fanart.fanartImage}
@@ -37,7 +76,9 @@ const SearchFanart = ({ fanartList }) => {
                       className='w-[190px] rounded-lg'
                     />
                   </Link>
-                  <p className='px-2 py-1'>{fanart.fanartName}</p>
+                  <p className='w-[180px] truncate px-2 py-1'>
+                    {fanart.fanartName}
+                  </p>
                 </div>
               ))}
             </MasonryInfiniteGrid>

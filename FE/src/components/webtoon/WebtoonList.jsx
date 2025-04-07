@@ -16,7 +16,7 @@ const WebtoonList = () => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const columnCount = 4 // 한 줄에 표시할 웹툰 개수
+  const columnCount = 3 // 한 줄에 표시할 웹툰 개수
   const rowHeight = 330 // 각 웹툰 카드의 높이
 
   const fetchWebtoons = async () => {
@@ -64,7 +64,7 @@ const WebtoonList = () => {
 
   return (
     <div className='flex h-full w-full justify-center'>
-      <div className='flex h-full w-[1000px] flex-col'>
+      <div className='flex h-full w-full flex-col'>
         <h2 className='mb-5 text-xl'>🔥 최신 업데이트 웹툰</h2>
         <InfiniteLoader
           isRowLoaded={isRowLoaded}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const IconLink = ({ path, Icon, tooltip }) => {
+const IconLink = ({ path, Icon, tooltip, style }) => {
   const [showTooltip, setShowTooltip] = useState(false)
 
   return (
@@ -11,7 +11,7 @@ const IconLink = ({ path, Icon, tooltip }) => {
         onMouseOver={() => setShowTooltip(true)}
         onMouseOut={() => setShowTooltip(false)}
       >
-        <Icon />
+        <Icon sx={style} />
       </Link>
       {showTooltip && (
         <span

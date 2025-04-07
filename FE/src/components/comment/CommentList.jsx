@@ -55,7 +55,7 @@ const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
     getData()
     // unmount
     return () => {}
-  }, [])
+  }, [usageId])
 
   return (
     <div className='flex justify-center'>

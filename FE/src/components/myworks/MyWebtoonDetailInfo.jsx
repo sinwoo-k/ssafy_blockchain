@@ -50,7 +50,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
         className='absolute inset-0 bg-cover bg-center'
         style={{
           backgroundImage: `url(${backgroundImg})`,
-          filter: 'blur(35px) brightness(0.5)',
+          filter: 'blur(15px) brightness(0.5)',
         }}
       ></div>
       <div className='relative w-[1000px]'>
@@ -73,7 +73,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
               <img
                 src={webtoon.seroThumbnail}
                 alt={`${webtoon?.webtoonName} 대표 이미지`}
-                className='h-[300px] w-[250px] rounded-xl object-cover'
+                className='min-h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>
             {/* 웹툰 정보 관련 아이콘 */}

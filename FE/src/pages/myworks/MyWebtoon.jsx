@@ -7,6 +7,7 @@ import MyWebtoonCard from '../../components/myworks/MyWebtoonCard'
 
 // 아이콘
 import ErrorIcon from '@mui/icons-material/Error'
+import AddIcon from '@mui/icons-material/Add'
 
 // 디폴트 이미지
 import fantasyCover from '../../assets/defaultCover/fantasy.webp'
@@ -47,6 +48,7 @@ const MyWebtoon = () => {
         <div className='mb-1 flex items-end justify-between'>
           <p>총 {webtoons.length}개</p>
           <Link to={'/myworks/webtoon/create'} className='hover:text-chaintoon'>
+            <AddIcon />
             신규 등록
           </Link>
         </div>

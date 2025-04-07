@@ -16,11 +16,11 @@ export const getWebtoonList = async (
 export const getAdaptableWebtoonList = async (
   page = 1,
   pageSize = 50,
-  orederBy = 'latest',
+  orderBy = 'latest',
   adaptable = 'Y',
 ) => {
   const response = await API.get(
-    `/webtoons?page=${page}&pageSize=${pageSize}&orderBy=${orederBy}&adaptable=${adaptable}`,
+    `/webtoons?page=${page}&pageSize=${pageSize}&orderBy=${orderBy}&adaptable=${adaptable}`,
   )
   return response.data
 }
@@ -35,6 +35,31 @@ export const getWebtoon = async (webtoonId) => {
 export const getMyWebtoon = async (page = 1, pageSize = 10) => {
   const response = await API.get(
     `/webtoons/my?page=${page}&pageSize=${pageSize}`,
+  )
+  return response.data
+}
+
+/** 유저 웹툰 조회 */
+export const getUserWebtoon = async (
+  userId,
+  page = 1,
+  pageSize = 20,
+  orderBy = 'latest',
+) => {
+  const response = await API.get(
+    `/webtoons?page=${page}&pageSize=${pageSize}&orderBy=${orderBy}&writerId=${userId}`,
+  )
+  return response.data
+}
+/** 장르별 웹툰 조회 */
+export const getGenreWebtoons = async (
+  genre,
+  page = 1,
+  pageSize = 5,
+  orderBy = 'view',
+) => {
+  const response = await API.get(
+    `/webtoons?page=${page}&pageSize=${pageSize}&orderBy=${orderBy}&genre=${genre}`,
   )
   return response.data
 }
