@@ -56,16 +56,28 @@ const getWalletInfo = async (userId) => {
     }
     
     // 상대 경로로 API 요청
-    const url = `/nft/wallet-info/${userId}`;
+    const url = `/blockchain/wallet-info`;
     const response = await API.get(url);
-    return response.data;
+    
+    // 응답 형식이 { walletAddress: "0x...", amount: 30 } 인 경우를 처리
+    if (response.data) {
+      return {
+        walletAddress: response.data.walletAddress || '',
+        amount: response.data.amount || 0
+      };
+    }
+    
+    // 오류 발생 시에도 최소한의 구조를 가진 객체 반환
+    return {
+      walletAddress: '',
+      amount: 0
+    };
   } catch (error) {
     console.error('지갑 정보 가져오기 오류:', error);
     // 오류 발생 시에도 최소한의 구조를 가진 객체 반환
     return {
-      balances: {
-        eth: '0 ETH'
-      }
+      walletAddress: '',
+      amount: 0
     };
   }
 };
@@ -84,13 +96,28 @@ const getEthUsdRate = async () => {
   }
 };
 
+// ETH-KRW 환율 조회 (외부 API 사용)
+const getEthKrwRate = async () => {
+  try {
+    // CoinGecko API를 사용하여 이더리움의 KRW 환율 조회
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd,krw');
+    const data = await response.json();
+    return data.ethereum.krw;
+  } catch (error) {
+    console.error('ETH-KRW 환율 조회 오류:', error);
+    // 오류 발생 시 기본값 반환
+    return 4500000; // 기본값 (예시)
+  }
+};
+
 export const nftService = {
   getMyNFTs,
   getNFTTradingHistory,
   sellNFT,
   getWalletInfo,
   mintNFT,
-  getEthUsdRate
+  getEthUsdRate,
+  getEthKrwRate
 };
 
 export default nftService;

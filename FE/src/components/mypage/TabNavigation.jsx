@@ -10,16 +10,28 @@ const TabNavigation = ({ activeTab, onTabChange }) => {
         나의 NFT
       </button>
       <button 
-        className={`mr-6 pb-2 text-sm ${activeTab === '거래 내역' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
-        onClick={() => onTabChange('거래 내역')}
+        className={`mr-6 pb-2 text-sm ${activeTab === '판매중인 아이템' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
+        onClick={() => onTabChange('판매중인 아이템')}
       >
-        거래 내역
+        판매중인 아이템
       </button>
       <button 
-        className={`mr-6 pb-2 text-sm ${activeTab === '관심 목록' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
-        onClick={() => onTabChange('관심 목록')}
+        className={`mr-6 pb-2 text-sm ${activeTab === '입찰중인 아이템' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
+        onClick={() => onTabChange('입찰중인 아이템')}
       >
-        관심 목록
+        입찰중인 아이템
+      </button>
+      <button 
+        className={`mr-6 pb-2 text-sm ${activeTab === '구매 내역' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
+        onClick={() => onTabChange('구매 내역')}
+      >
+        구매 내역
+      </button>
+      <button 
+        className={`mr-6 pb-2 text-sm ${activeTab === '판매 내역' ? 'border-b-2 border-[#3cc3ec] text-[#3cc3ec]' : 'text-gray-400'}`}
+        onClick={() => onTabChange('판매 내역')}
+      >
+        판매 내역
       </button>
     </div>
   );
