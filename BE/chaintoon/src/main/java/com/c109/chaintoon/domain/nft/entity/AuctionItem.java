@@ -51,7 +51,7 @@ public class AuctionItem {
 
     @Version
     @Column(name = "version")
-    private Integer version;
+    private Integer version = 0;
 
     @PrePersist
     protected void onCreate() {
