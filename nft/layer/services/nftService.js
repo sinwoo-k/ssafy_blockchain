@@ -5,6 +5,7 @@ import {
   saveNftToDatabase,
   getEpisodeById, getFanartById,
   getGoodsById,
+  getNftCountByTypeId,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -75,7 +76,7 @@ async function downloadFileFromS3(s3Url) {
  * @param {Buffer} fileBuffer 
  * @returns {Promise<string>} IPFS URL
  */
-async function uploadFileToPinata(fileBuffer, name) {
+export async function uploadFileToPinata(fileBuffer, name) {
   try {
     const options = {
       pinataMetadata: {
@@ -96,7 +97,7 @@ async function uploadFileToPinata(fileBuffer, name) {
  * @param {Object} jsonData 
  * @returns {Promise<string>} IPFS URL
  */
-async function uploadJSONToPinata(jsonData) {
+export async function uploadJSONToPinata(jsonData) {
   try {
     const result = await pinata.pinJSONToIPFS(jsonData);
     return `${process.env.IPFS_GATEWAY}${result.IpfsHash}`;
@@ -153,10 +154,10 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     // 1. 이미지 처리: S3 URL이 있으면 다운로드 후 Pinata에 업로드
     const fileBuffer = await downloadFileFromS3(s3Url);
     const imageUrl = await uploadFileToPinata(fileBuffer, title);
-
+    const nftNumber = await getNftCountByTypeId(type, typeId);
     // 2. 메타데이터 생성
     const metadata = {
-      title: `${title} NFT #${typeId}`,
+      title: `${title} NFT #${nftNumber + 1}`,
       description: `${webtoonName.webtoon_name}에 대한 NFT.`,
       image: imageUrl,
       wallets: {
@@ -480,4 +481,6 @@ export default {
   buyNftService,
   confirmSignatureService,
   setChallenge,
+  uploadFileToPinata,
+  uploadJSONToPinata,
 };

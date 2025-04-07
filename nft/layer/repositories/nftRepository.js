@@ -53,3 +53,15 @@ export async function getGoodsById(typeId) {
   const [result] = await pool.execute(query, [typeId]);
   return result[0];
 }
+
+export async function getNftCountByTypeId(type, type_id) {
+  const query = `
+    SELECT COUNT(*) AS count
+      FROM nft
+     WHERE type       = ?
+       AND type_id    = ?
+  `;
+  const [rows] = await pool.execute(query, [type, type_id]);
+  // rows[0].count 에서 count 컬럼을 꺼내서 반환
+  return rows[0].count;
+}
