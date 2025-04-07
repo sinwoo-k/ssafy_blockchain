@@ -12,6 +12,7 @@ public class GoodsResponseDto implements SearchResult {
     private Integer goodsId;
     private Integer userId;
     private Integer webtoonId;
+    private String webtoonName;
     private String goodsName;
     private String description;
     private String goodsImage;

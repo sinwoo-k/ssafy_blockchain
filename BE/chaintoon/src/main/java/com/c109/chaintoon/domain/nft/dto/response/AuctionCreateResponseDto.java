@@ -13,6 +13,7 @@ public class AuctionCreateResponseDto {
     private Integer auctionItemId;
     private Integer nftId;
     private String type;
+    private String imageUrl;
     private Double biddingPrice;
     private Double buyNowPrice;
     private LocalDateTime startTime;

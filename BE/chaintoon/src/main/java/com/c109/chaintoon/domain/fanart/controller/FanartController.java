@@ -22,15 +22,15 @@ public class FanartController {
 
     private final FanartService fanartService;
 
-    // 1. 팬아트 메인 목록 조회
-    // 1-1. 가장 최근에 등록된 팬아트 7개 조회
+    // 팬아트 목록 조회
     @GetMapping("/latest")
-    public ResponseEntity<List<FanartListResponseDto>> getLatestSevenFanarts(
+    public ResponseEntity<List<FanartListResponseDto>> getFanartList(
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "7") int pageSize,
-            @RequestParam(required = false, defaultValue = "latest") String orderBy
+            @RequestParam(required = false, defaultValue = "latest") String orderBy,
+            @RequestParam(required = false) Integer writerId
     ) {
-        List<FanartListResponseDto> response = fanartService.getLatestSevenFanarts(page, pageSize, orderBy);
+        List<FanartListResponseDto> response = fanartService.getFanartList(page, pageSize, orderBy, writerId);
         return ResponseEntity.ok(response);
     }
 

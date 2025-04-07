@@ -19,17 +19,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class TradingHistoryController {
 
     private final TradingHistoryService tradingHistoryService;
-    private final AuctionItemService auctionItemService;
 
-    @GetMapping
-    public ResponseEntity<?> getTradingHistory(
+    @GetMapping("/sold")
+    public ResponseEntity<?> getSoldHistory(
             @AuthenticationPrincipal Integer userId,
-            @RequestParam(defaultValue = "sold") String tradeType,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "tradingDate") String orderBy
     ) {
-        Page<TradingHistoryResponseDto> result = tradingHistoryService.getTradingHistory(userId, tradeType, page, pageSize, orderBy);
+        Page<TradingHistoryResponseDto> result = tradingHistoryService.getSoldHistory(userId, page, pageSize, orderBy);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/bought")
+    public ResponseEntity<?> getBoughtHistory(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "tradingDate") String orderBy
+    ) {
+        Page<TradingHistoryResponseDto> result = tradingHistoryService.getBoughtHistory(userId, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
@@ -40,7 +49,18 @@ public class TradingHistoryController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<ActiveTradingResponseDto> result = tradingHistoryService.getActiveTrades(userId, page, pageSize, orderBy);
+        Page<ActiveTradingResponseDto> result = tradingHistoryService.getActiveBiddingHistory(userId, page, pageSize, orderBy);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/active-sale")
+    public ResponseEntity<?> getActiveSaleHistory(
+            @AuthenticationPrincipal Integer userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String orderBy
+    ) {
+        Page<ActiveTradingResponseDto> result = tradingHistoryService.getActiveSaleItems(userId, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 }

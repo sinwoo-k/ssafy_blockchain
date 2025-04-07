@@ -28,6 +28,9 @@ public class Nft {
     @Column(name = "type", length = 50)
     private String type;
 
+    @Column(name = "image_url", length = 255)
+    private String imageUrl;
+
     @Column(name = "token_id")
     private Integer tokenId;
 
@@ -40,8 +43,6 @@ public class Nft {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "status", length = 10)
-    private String status;
 
     @Column(name = "type_id")
     private Integer typeId;

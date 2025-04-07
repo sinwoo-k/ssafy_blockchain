@@ -18,6 +18,7 @@ import com.c109.chaintoon.domain.nft.dto.blockchain.wrapper.NftMetadataWrapper;
 import com.c109.chaintoon.domain.nft.dto.blockchain.wrapper.TransactionListWrapper;
 import com.c109.chaintoon.domain.nft.exception.NFTMetadataNotfoundException;
 import com.c109.chaintoon.domain.nft.exception.WalletBalanceNotFoundException;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.repository.WalletRepository;
 import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.entity.EpisodeImage;
@@ -58,7 +59,7 @@ public class BlockchainService {
     private final EpisodeImageRepository episodeImageRepository;
     private final ImageMergeService imageMergeService;
     private final NoticeService noticeService;
-
+    private final NftRepository nftRepository;
     // 판매 등록 요청 메서드
     public Mono<BlockchainSaleResponseDto> registerSale(BlockchainSaleRequestDto saleRequestDto) {
         return webClient.post()
@@ -154,7 +155,11 @@ public class BlockchainService {
 
     }
 
-    public Mono<NftMetadataResponseDto> getNFTMetadata(Integer tokenId) {
+    public Mono<NftMetadataResponseDto> getNftMetadata(Integer nftId) {
+        // 로컬 NFT 테이블에서 nft_id에 해당하는 token_id 조회
+        Integer tokenId = nftRepository.findTokenIdByNftId(nftId)
+                .orElseThrow(() -> new NFTMetadataNotfoundException("해당 NFT가 존재하지 않습니다. nft_id: " + nftId));
+
         String url = "/nft/nft-details/" + tokenId;
 
         return webClient.get()
@@ -171,7 +176,8 @@ public class BlockchainService {
                         throw new NFTMetadataNotfoundException("해당 토큰 아이디에 해당하는 NFT가 존재하지 않습니다.");
                     }
                     return NftMetadataResponseDto.builder()
-                            .tokenId(nftMetadata.getTokenId())
+                            // 반환 시 로컬의 nft_id를 그대로 전달하거나 token_id를 포함시킬 수 있음
+                            .nftId(nftId) // 로컬 NFT 테이블의 id 반환
                             .title(nftMetadata.getTitle())
                             .description(nftMetadata.getDescription())
                             .image(nftMetadata.getImage())
@@ -182,10 +188,9 @@ public class BlockchainService {
                             .build();
                 })
                 .onErrorResume(e -> Mono.error(new ServerException("NFT 조회 중 오류가 발생했습니다: " + e.getMessage())));
-
     }
 
-    public Flux<NftMetadataItemResponseDto> getNFTMetadataList(Integer userId) {
+    public Flux<NftMetadataItemResponseDto> getNftMetadataList(Integer userId) {
         String userAddress = walletRepository.findWalletAddressByUserId(userId).orElse(null);
         String url = "/nft/wallet-nfts/" + userAddress;
 
@@ -198,18 +203,19 @@ public class BlockchainService {
                 )
                 .bodyToMono(NftMetadataListWrapper.class)
                 .flatMapMany(wrapper -> {
-                    if(wrapper == null || wrapper.getData() == null) {
+                    if (wrapper == null || wrapper.getData() == null) {
                         return Flux.empty();
                     }
                     return Flux.fromIterable(wrapper.getData());
                 })
-                .map(item-> {
+                .map(item -> {
                     if (item == null || item.getTokenId() == null) {
                         throw new NFTMetadataNotfoundException("보유한 NFT가 없습니다.");
                     }
-
+                    // 로컬 NFT 테이블에서 token_id에 해당하는 nft_id 조회
+                    Integer nftId = nftRepository.findNftIdByTokenId(item.getTokenId()).orElse(null);
                     return NftMetadataItemResponseDto.builder()
-                            .tokenId(item.getTokenId())
+                            .nftId(nftId) // 로컬의 NFT id 반환
                             .title(item.getMetadata().getTitle())
                             .description(item.getMetadata().getDescription())
                             .image(item.getMetadata().getImage())
@@ -220,7 +226,6 @@ public class BlockchainService {
                             .build();
                 })
                 .onErrorResume(e -> Flux.error(new ServerException("나의 보유 NFT 내역 조회 중 오류가 발생했습니다: " + e.getMessage())));
-
     }
 
     public Flux<TransactionItemResponseDto> getTransactionList(Integer userId) {
@@ -245,30 +250,30 @@ public class BlockchainService {
                 .onErrorResume(e -> Flux.error(new ServerException("거래 내역 조회 중 오류가 발생했습니다: " + e.getMessage())));
     }
 
-    public Mono<NftMintResponseDto> mintNft(NftMintRequestDto request, Integer userId) {
-        // Express API의 NFT 민팅 엔드포인트 URL
-        String url = "/nft/mint-nft";
+    @Async
+    public CompletableFuture<Void> mintNftAsync(NftMintRequestDto request, Integer userId) {
+        // 2. 지갑 주소 조회
         String ownerAddress = walletRepository.findWalletAddressByUserId(userId).orElse(null);
         String originatorAddress = walletRepository
-                .findWalletAddressByUserId(webtoonRepository.findById(request.getWebtoonId()).get().getUserId())
-                .orElse(null);
+                .findWalletAddressByUserId(
+                        webtoonRepository.findById(request.getWebtoonId()).get().getUserId()
+                ).orElse(null);
+
         String nftType = request.getType();
         List<String> imageUrls = new ArrayList<>();
         String s3Url = "";
 
+        // 3. NFT 타입에 따른 이미지 URL 처리
         switch (nftType) {
             case "episode" -> {
-                // episodeImageRepository에서 episodeId로 여러 이미지 S3 key를 가져온다고 가정
                 imageUrls = episodeImageRepository.findByEpisodeId(request.getTypeId())
                         .stream()
-                        .map(EpisodeImage::getImageUrl) // 각 EpisodeImage 엔티티가 S3 key를 반환한다고 가정
-                        // S3 key를 presigned URL로 변환
+                        .map(EpisodeImage::getImageUrl)
                         .map(s3Service::getPresignedUrl)
                         .collect(Collectors.toList());
                 s3Url = imageMergeService.mergeAndUploadNftImage(imageUrls, "episode");
             }
             case "fanart" -> {
-                // fanart 타입에 대한 로직
                 imageUrls = fanartRepository.findById(request.getTypeId())
                         .stream()
                         .map(Fanart::getFanartImage)
@@ -276,7 +281,6 @@ public class BlockchainService {
                 s3Url = imageUrls.isEmpty() ? "" : imageUrls.get(0);
             }
             case "goods" -> {
-                // goods 타입에 대한 로직
                 imageUrls = goodsRepository.findById(request.getTypeId())
                         .stream()
                         .map(Goods::getGoodsImage)
@@ -285,7 +289,8 @@ public class BlockchainService {
             }
         }
         String s3Image = s3Service.getPresignedUrl(s3Url);
-        // 기존 DTO의 값과 추가 필드를 Map에 담아서 요청 바디로 전송
+
+        // 4. Express API에 전달할 요청 바디 구성
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("webtoonId", request.getWebtoonId());
         requestBody.put("type", request.getType());
@@ -295,6 +300,9 @@ public class BlockchainService {
         requestBody.put("owner", ownerAddress);
         requestBody.put("originalCreator", originatorAddress);
 
+        String url = "/nft/mint-nft";
+
+        // 5. WebClient를 사용해 Express API 호출 후 결과 처리
         return webClient.post()
                 .uri(url)
                 .bodyValue(requestBody)
@@ -304,9 +312,39 @@ public class BlockchainService {
                                 .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
                 )
                 .bodyToMono(NftMintResponseDto.class)
-                .onErrorResume(e -> Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: " + e.getMessage())));
-
+                .doOnSuccess(response -> {
+                    // 6. 민팅 결과에 따라 NFT 레코드를 SUCCESS 상태로 업데이트
+                    // 예: 응답에 포함된 토큰 아이디와 계약 주소 등을 업데이트 (필요시)
+                    // 7. 알림 전송: owner와 originalCreator 모두에게 알림을 보냅니다.
+                    walletRepository.findUserIdByWalletAddress(ownerAddress)
+                            .ifPresent(ownerUserId ->
+                                    noticeService.addBlockchainNetworkSuccessNotice(ownerUserId, "NFT 민팅이 성공적으로 완료되었습니다.")
+                            );
+                    // 원작자(originalCreator)는 NFT 타입이 fanart일 때만 알림 전송
+                    if ("fanart".equals(request.getType())) {
+                        walletRepository.findUserIdByWalletAddress(originatorAddress)
+                                .ifPresent(creatorUserId ->
+                                        noticeService.addSecondaryCreationNftMintNotice(creatorUserId, request.getTypeId())
+                                );
+                    }
+                })
+                .onErrorResume(e -> {
+                    // 에러 발생 시 추가적인 실패 처리(필요시 상태 업데이트 등)를 진행할 수 있습니다.
+                    log.error("NFT 민팅 처리 중 오류 발생: {}", e.getMessage());
+                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: " + e.getMessage()));
+                })
+                .onErrorResume(e -> {
+                    // 9. 실패 알림 전송: 소유자(owner)는 항상 실패 알림 전송
+                    walletRepository.findUserIdByWalletAddress(ownerAddress)
+                            .ifPresent(ownerUserId ->
+                                    noticeService.addBlockchainNetworkFailNotice(ownerUserId, "NFT 민팅 실패: " + e.getMessage())
+                            );
+                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: " + e.getMessage()));
+                })
+                .then()
+                .toFuture();
     }
+
 
     public Mono<String> getNonce(String walletAddress) {
         String url = "/nft/nonce?walletAddress=" + walletAddress;

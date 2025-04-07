@@ -49,6 +49,10 @@ public class AuctionItem {
     @Column(name = "blockchain_status", length = 20)
     private String blockchainStatus;
 
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
     @PrePersist
     protected void onCreate() {
         startTime = LocalDateTime.now();

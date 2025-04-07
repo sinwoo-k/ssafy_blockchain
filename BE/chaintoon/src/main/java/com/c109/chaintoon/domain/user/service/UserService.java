@@ -61,6 +61,19 @@ public class UserService {
 
     // 개인정보 미포함, 현재는 동일
     private UserResponseDto toUserResponseDto(User user) {
+        return toUserResponseDto(user, null);
+    }
+
+    private UserResponseDto toUserResponseDto(User user, Integer inquirerId) {
+        String hasFollowed = "N";
+        if (inquirerId != null) {
+            FollowingId followingId = new FollowingId(inquirerId, user.getId());
+            Following following = followingRepository.findById(followingId).orElse(null);
+            if (following != null) {
+                hasFollowed = "Y";
+            }
+        }
+
         return UserResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -72,6 +85,7 @@ public class UserService {
                 .following(user.getFollowing())
                 .url(user.getUrl())
                 .joinDate(user.getJoinDate())
+                .hasFollowed(hasFollowed)
                 .build();
     }
 
@@ -93,10 +107,10 @@ public class UserService {
 
     // id로 회원 정보 조회
     @Transactional(readOnly = true)
-    public UserResponseDto findUserById(Integer userId){
+    public UserResponseDto findUserById(Integer inquirerId, Integer userId){
         User user = userRepository.findById(userId).orElseThrow(() -> new UserIdNotFoundException(userId));
 
-        return toUserResponseDto(user);
+        return toUserResponseDto(user, inquirerId);
     }
 
     // 내 정보 조회

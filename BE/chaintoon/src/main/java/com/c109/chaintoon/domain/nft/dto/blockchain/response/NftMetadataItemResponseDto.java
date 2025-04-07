@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class NftMetadataItemResponseDto {
-    Integer tokenId;
+    Integer nftId;
     String title;
     String description;
     String image;

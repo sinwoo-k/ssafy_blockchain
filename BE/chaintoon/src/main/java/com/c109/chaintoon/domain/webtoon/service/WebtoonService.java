@@ -2,8 +2,8 @@ package com.c109.chaintoon.domain.webtoon.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
-import com.c109.chaintoon.domain.fanart.entity.Fanart;
 import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.search.code.SearchType;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -37,6 +37,7 @@ public class WebtoonService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final FanartRepository fanartRepository;
+    private final NftRepository nftRepository;
 
     private Sort getSort(String orderBy) {
         switch (orderBy) {
@@ -142,7 +143,7 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable) {
+    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable, Integer writerId) {
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<Webtoon> webtoonPage;
 
@@ -157,6 +158,11 @@ public class WebtoonService {
         // adaptable 조건 추가 (값이 "Y"인 경우만 필터링)
         if (adaptable != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("adaptable"), adaptable));
+        }
+
+        // 웹툰 작가 조건 추가 (특정 웹툰 작가의 웹툰만 필터링)
+        if (writerId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), writerId));
         }
 
         // Specification을 사용하여 동적 쿼리 실행
@@ -307,11 +313,13 @@ public class WebtoonService {
         }
 
         // 2차 창작 시 삭제 불가
-        Fanart fanart = fanartRepository
-                .findByWebtoonId(webtoonId, Limit.of(1))
-                .orElse(null);
-        if (fanart != null) {
+        if (fanartRepository.existsByWebtoonId(webtoonId)) {
             throw new IllegalArgumentException("팬아트가 등록된 웹툰은 삭제할 수 없습니다.");
+        }
+
+        // NFT 발행 시 삭제 불가
+        if (nftRepository.existsByWebtoonId(webtoonId)) {
+            throw new IllegalArgumentException("NFT가 발행된 웹툰은 삭제할 수 없습니다.");
         }
 
         // S3 이미지 삭제
