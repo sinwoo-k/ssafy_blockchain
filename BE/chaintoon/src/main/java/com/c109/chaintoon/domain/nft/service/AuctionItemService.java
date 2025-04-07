@@ -52,7 +52,6 @@ public class AuctionItemService {
     private final TradingHistoryRepository tradingHistoryRepository;
     private final BlockchainService blockchainService;
     private final SchedulingService schedulingService;
-    private final UserRepository userRepository;
     private final NoticeService noticeService;
     private final WebtoonRepository webtoonRepository;
 
@@ -201,6 +200,7 @@ public class AuctionItemService {
                 .doOnError(e -> {
                     log.error("블록체인 판매 등록 요청 실패: {}", e.getMessage());
                     saved.setBlockchainStatus("FAILED");
+                    saved.setEnded("Y");
                     auctionItemRepository.save(saved);
                     noticeService.addBlockchainNetworkFailNotice(nft.getUserId(), "NFT 판매 등록에 실패했습니다.");
                 })
