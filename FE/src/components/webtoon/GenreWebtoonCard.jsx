@@ -17,8 +17,8 @@ const GenreWebtoonCard = ({ webtoon }) => {
       </Link>
       {/* 웹툰 정보 */}
       <div>
-        <p className='truncate text-sm'>{webtoon.webtoonName}</p>
-        <p className='text-text/75 truncate text-xs'>{webtoon.writer}</p>
+        <p className='truncate'>{webtoon.webtoonName}</p>
+        <p className='text-text/75 truncate text-sm'>{webtoon.writer}</p>
       </div>
     </div>
   )

@@ -8,7 +8,6 @@ const RankingWebtoonList = ({ type }) => {
   const getViewData = async () => {
     try {
       const result = await getWebtoonList(1, 5, 'view')
-      console.log(result)
       setWebtoons(result)
     } catch (error) {
       console.error('뷰어십 웹툰 조회 실패: ', error)

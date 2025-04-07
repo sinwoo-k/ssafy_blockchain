@@ -29,7 +29,7 @@ const UpdateWebtoonList = () => {
             <p className='text-xl'>등록된 웹툰이 없습니다.</p>
           </div>
         ) : (
-          <div className='grid grid-cols-3 gap-3'>
+          <div className='grid grid-cols-3 gap-3 gap-y-7'>
             {webtoons.map((webtoon) => (
               <UpdateWebtoonCard key={webtoon.webtoonId} webtoon={webtoon} />
             ))}

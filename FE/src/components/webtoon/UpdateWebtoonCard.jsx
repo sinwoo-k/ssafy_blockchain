@@ -24,7 +24,9 @@ const UpdateWebtoonCard = ({ webtoon }) => {
       <div className='flex items-center justify-between px-1'>
         <div className='text-chaintoon'>
           <span className='inline-block translate-y-[1px] transform'>
-            {formatUploadDate(webtoon.lastUploadDate)}
+            {webtoon.lastUploadDate !== ''
+              ? formatUploadDate(webtoon.lastUploadDate)
+              : ''}
           </span>
         </div>
       </div>
