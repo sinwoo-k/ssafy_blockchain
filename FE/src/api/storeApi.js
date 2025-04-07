@@ -1,5 +1,21 @@
 import API from './API'
 
+//** NFT 조회 **//
+export const getNFTInfo = async (nftId) => {
+  if (!nftId) {
+    throw new Error('NFT ID는 필수 파라미터입니다.');
+  }
+  
+  try {
+    const response = await API.get(`/blockchain/nft-detail/${nftId}`);
+    return response.data;
+  } catch (error) {
+    console.error('NFT 정보 조회 실패:', error);
+    return null;
+  }
+};
+
+
 /** 에피소드 경매 목록 조회 */
 export const getEpisodeAuctions = async (webtoonId, ended = 'N') => {
   if (!webtoonId) {
@@ -40,13 +56,13 @@ export const getFanartAuctions = async (webtoonId, ended = '') => {
   return response.data;
 };
 
-/** 경매 상세 조회 - 이 API는 추측입니다. 백엔드 개발자와 확인 필요 */
-export const getAuctionDetail = async (auctionId) => {
-  if (!auctionId) {
+/** 경매 입찰기록 조회 */
+export const getAuctionDetail = async (auctionItemId) => {
+  if (!auctionItemId) {
     throw new Error('경매 ID는 필수 파라미터입니다.');
   }
   
-  const response = await API.get(`/auctions/${auctionId}`);
+  const response = await API.get(`/auctions/${auctionItemId}/bidding-history`);
   return response.data;
 };
 
@@ -76,5 +92,6 @@ export default {
   getFanartAuctions,
   getAuctionDetail,
   placeBid,
-  buyNow
+  buyNow,
+  getNFTInfo 
 };
