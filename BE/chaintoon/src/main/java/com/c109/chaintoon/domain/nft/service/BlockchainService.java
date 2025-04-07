@@ -190,6 +190,7 @@ public class BlockchainService {
                 .onErrorResume(e -> Mono.error(new ServerException("NFT 조회 중 오류가 발생했습니다: " + e.getMessage())));
     }
 
+    // 내 NFT 보유 내역 조회
     public Flux<NftMetadataItemResponseDto> getNftMetadataList(Integer userId) {
         String userAddress = walletRepository.findWalletAddressByUserId(userId).orElse(null);
         String url = "/nft/wallet-nfts/" + userAddress;
@@ -223,6 +224,8 @@ public class BlockchainService {
                             .originalCreatorUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOriginalCreator()).orElse(null))
                             .ownerWallet(item.getMetadata().getWallets().getOwner())
                             .ownerWalletUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOwner()).orElse(null))
+                            .onSale(item.getOnSale())
+                            .salePrice(item.getSalePrice())
                             .build();
                 })
                 .onErrorResume(e -> Flux.error(new ServerException("나의 보유 NFT 내역 조회 중 오류가 발생했습니다: " + e.getMessage())));
@@ -313,9 +316,6 @@ public class BlockchainService {
                 )
                 .bodyToMono(NftMintResponseDto.class)
                 .doOnSuccess(response -> {
-                    // 6. 민팅 결과에 따라 NFT 레코드를 SUCCESS 상태로 업데이트
-                    // 예: 응답에 포함된 토큰 아이디와 계약 주소 등을 업데이트 (필요시)
-                    // 7. 알림 전송: owner와 originalCreator 모두에게 알림을 보냅니다.
                     walletRepository.findUserIdByWalletAddress(ownerAddress)
                             .ifPresent(ownerUserId ->
                                     noticeService.addBlockchainNetworkSuccessNotice(ownerUserId, "NFT 민팅이 성공적으로 완료되었습니다.")

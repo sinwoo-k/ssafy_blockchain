@@ -3,11 +3,14 @@ import { pool } from '../../db/db.js';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import AppError from '../../utils/AppError.js';
-import { RPC_URL, NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, ETHERSCAN_API_KEY } from '../config/contract.js';
+import { RPC_URL, NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, ETHERSCAN_API_KEY, FIRST_SYNC_BLOCK } from '../config/contract.js';
+// import { fallbackProvider as provider } from '../config/provider.js';
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const ETHERSCAN_BASE_URL = "https://api-holesky.etherscan.io/api";
+const SOLD_TOPIC    = ethers.id("NFTSold(uint256,address,uint256)");
 
+const contract = new ethers.Contract(NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, provider);
 /* ----- DB 접근 함수들 ----- */
 export async function dbInsertTransactionLog(txData, contractAddress) {
   // 단순 DB 접근: 필수 값 검사나 비즈니스 로직은 서비스에서 처리
@@ -82,16 +85,13 @@ export async function apiFetchWalletTransactions(walletAddress) {
 }
 
 export async function bcFetchWalletNFTs(walletAddress) {
-  const contract = new ethers.Contract(
-    NFT_MARKETPLACE_ADDRESS,
-    NFT_MARKETPLACE_ABI,
-    provider
-  );
   const balance = await contract.balanceOf(walletAddress);
   const tokens = [];
+
   for (let i = 0; i < balance; i++) {
     const tokenId = await contract.tokenOfOwnerByIndex(walletAddress, i);
     const tokenURI = await contract.tokenURI(tokenId);
+
     let metadata = null;
     try {
       const res = await axios.get(tokenURI);
@@ -99,17 +99,37 @@ export async function bcFetchWalletNFTs(walletAddress) {
     } catch (err) {
       console.error(`토큰 ${tokenId.toString()} 메타데이터 조회 실패:`, err.message);
     }
+
+    let onSale = false;
+    let salePrice = "0.00000"; // Ether 단위 (기본값)
+
+    try {
+      const listing = await contract.listings(tokenId);
+      if (listing.isListed) {
+        onSale = true;
+        // listing.price는 Wei 단위의 BigNumber
+        const etherString = ethers.formatEther(listing.price); // 'ethers@6' 문법
+        salePrice = parseFloat(etherString).toFixed(5);        // 소수점 5자리 제한
+      }
+    } catch (err) {
+      console.error(`토큰 ${tokenId.toString()} 판매 정보 조회 실패:`, err.message);
+    }
+
     tokens.push({
       tokenId: tokenId.toString(),
       metadata,
+      onSale,
+      salePrice, // 예: '0.12345'
     });
   }
+
   return tokens;
 }
 
 export async function apiGetAllTransactionsForContract(contractAddress, fromBlock = "0", toBlock = "latest") {
   const apiKey = ETHERSCAN_API_KEY;
   let toBlockParam = toBlock;
+  fromBlock = FIRST_SYNC_BLOCK;
   if (toBlock === "latest") {
     const latestBlock = await provider.getBlockNumber();
     toBlockParam = latestBlock.toString();
@@ -124,25 +144,55 @@ export async function bcGetTransactionReceipt(txHash) {
   return receipt;
 }
 
-export async function bcGetSaleLogs() {
-  const startBlock = 0;
-  const endBlock = await provider.getBlockNumber();
-  const maxChunkSize = 50000;
-  let allLogs = [];
-  for (let from = startBlock; from <= endBlock; from += maxChunkSize) {
-    const to = Math.min(from + maxChunkSize - 1, endBlock);
-    const chunkLogs = await provider.getLogs({
-      address: NFT_MARKETPLACE_ADDRESS,
-      fromBlock: ethers.toBigInt(from),
-      toBlock: ethers.toBigInt(to),
-      topics: [ethers.id("NFTSold(uint256,address,uint256)")]
-    });
-    allLogs = allLogs.concat(chunkLogs);
+async function etherscanGetLogs(topic, fromBlock, toBlock) {
+  const url = `${ETHERSCAN_BASE_URL}`
+    + `?module=logs`
+    + `&action=getLogs`
+    + `&fromBlock=${fromBlock}`
+    + `&toBlock=${toBlock}`
+    + `&address=${NFT_MARKETPLACE_ADDRESS}`
+    + `&topic0=${topic}`
+    + `&apikey=${ETHERSCAN_API_KEY}`;
+  console.log(`etherscanGetLogs URL: ${url}`);
+  const { data } = await axios.get(url);
+  if (data.status !== "1") {
+    // status=0 이거나 에러 메시지인 경우 빈 배열로 처리
+    return [];
   }
-  return allLogs;
+  return data.result;
 }
 
-export async function bcGetTransactionSender(txHash) {
-  const tx = await provider.getTransaction(txHash);
-  return tx?.from;
+/**
+ * 전체 판매 완료(NFTSold) 로그(청크 처리)
+ */
+export async function bcGetSaleLogs(fromBlock = FIRST_SYNC_BLOCK, toBlock = 'latest') {
+  if (toBlock === 'latest') {
+    const latest = await provider.getBlockNumber();
+    toBlock = latest.toString();
+  }
+  return etherscanGetLogs(SOLD_TOPIC, fromBlock, toBlock);
+}
+
+/**
+ * 개인 지갑의 NFT 전송(Transfer) 이력 조회
+ */
+export async function getWalletNftTransfers(walletAddress, fromBlock = 0, toBlock = 'latest') {
+  if (toBlock === 'latest') {
+    const latest = await provider.getBlockNumber();
+    toBlock = latest.toString();
+  }
+  const url = `${ETHERSCAN_BASE_URL}`
+    + `?module=account`
+    + `&action=tokennfttx`
+    + `&address=${walletAddress}`
+    + `&startblock=${fromBlock}`
+    + `&endblock=${toBlock}`
+    + `&sort=asc`
+    + `&apikey=${ETHERSCAN_API_KEY}`;
+  const { data } = await axios.get(url);
+  if (data.status !== "1") {
+    // 실패하거나 이력이 없으면 빈 배열
+    return [];
+  }
+  return data.result;
 }
