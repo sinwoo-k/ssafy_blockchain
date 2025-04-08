@@ -94,6 +94,11 @@ public class NoticeService {
     }
 
     @Transactional
+    public void deleteAllNotices(Integer userId) {
+        noticeRepository.deleteAllByUserId(userId);
+    }
+
+    @Transactional
     public void readNotice(Integer userId, Integer noticeId) {
         // 알림 조회
         Notice notice = noticeRepository.findByNoticeIdAndDeleted(noticeId, "N")
