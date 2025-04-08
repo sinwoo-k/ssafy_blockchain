@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import IconButton from '../common/IconButton'
 import FanartDetailModal from './FanartDetailModal'
@@ -17,6 +17,7 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 
 const FanartDetailInfo = ({ fanartId, setCommentCount }) => {
+  const navigate = useNavigate()
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
 
@@ -32,6 +33,7 @@ const FanartDetailInfo = ({ fanartId, setCommentCount }) => {
       setIsLike(result.hasLiked === 'Y' ? true : false)
       setCommentCount(result.commentCount)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('팬아트 상세 조회 실패: ', error)
     }
   }

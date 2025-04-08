@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
-import {nftService} from '../../api/nftApi'
+import { nftService } from '../../api/nftApi'
 import MintNFT from '../common/MintNFT'
 
 // 아이콘
@@ -16,11 +16,15 @@ const MyFanartCard = ({ fanart, patchData }) => {
   const userData = useSelector((state) => state.user.userData)
 
   const deleteData = async () => {
+    if (!confirm('삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteFanart(fanart.fanartId, userData.id)
       patchData()
     } catch (error) {
       console.error('팬아트 삭제 실패: ', error)
+      alert('팬아트 정보 삭제에 실패하였습니다. 다시 시도해주세요.')
     }
   }
   return (
@@ -36,11 +40,7 @@ const MyFanartCard = ({ fanart, patchData }) => {
           </Link>
         </div>
         <div className='flex justify-between'>
-          <MintNFT
-            item={fanart}
-            type="fanart"
-            afterMint={patchData}
-          />
+          <MintNFT item={fanart} type='fanart' afterMint={patchData} />
           <div className='flex gap-3'>
             <Link
               to={`/myworks/fanart/${fanart.fanartId}/update`}
@@ -59,11 +59,7 @@ const MyFanartCard = ({ fanart, patchData }) => {
         </div>
       </div>
       {showModal && (
-        <MintNFT
-          item={fanart}
-          type={'fanart'}
-          setShowModal={setShowModal}
-        />
+        <MintNFT item={fanart} type={'fanart'} setShowModal={setShowModal} />
       )}
     </div>
   )

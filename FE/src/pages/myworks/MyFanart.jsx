@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import MyFanartCard from '../../components/myworks/MyFanartCard'
 import { getMyFanarts } from '../../api/fanartAPI'
 
 const MyFanart = () => {
+  const navigate = useNavigate()
+
   const [fanarts, setFanarts] = useState([])
 
   const getData = async () => {
@@ -11,6 +13,7 @@ const MyFanart = () => {
       const result = await getMyFanarts()
       setFanarts(result)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('내 팬아트 조회 실패: ', error)
     }
   }

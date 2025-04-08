@@ -127,6 +127,7 @@ const MyWebtoonEpisodeUpdate = () => {
       navigate(`/myworks/webtoon/${webtoonId}`)
     } catch (error) {
       console.error('회차 정보 수정 실패: ', error)
+      alert('회차 정보 수정에 실패하였습니다. 다시 시도해주세요.')
     }
   }
 

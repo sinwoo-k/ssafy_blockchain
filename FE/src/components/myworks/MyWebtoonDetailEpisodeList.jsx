@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MyEpisodeCard from './MyEpisodeCard'
 import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 
@@ -6,6 +7,8 @@ import { deleteEpisode, getEpisodeList } from '../../api/webtoonAPI'
 import ErrorIcon from '@mui/icons-material/Error'
 
 const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
+  const navigate = useNavigate()
+
   // 에피소드 리스트
   const [episodes, setEpisodes] = useState([])
   const [episodeData, setEpisodeData] = useState([])
@@ -37,11 +40,15 @@ const MyWebtoonDetailEpisodeList = ({ webtoonId }) => {
       setEpisodeData(result)
       setEpisodes(result.slice(0, 10))
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('에피소드 목록 불러오기 실패: ', error)
     }
   }
 
   const deleteData = async (episodeId) => {
+    if (!confirm('삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteEpisode(episodeId)
       setEpisodeData((prev) => prev.filter((v) => v.episodeId !== episodeId))

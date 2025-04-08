@@ -12,7 +12,8 @@ const GenreWebtoonList = ({ genre }) => {
       const result = await getGenreWebtoons(genre)
       setWebtoons(result)
     } catch (error) {
-      console.error('')
+      console.error(`${genre} 웹툰 조회 실패: `, error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
   useEffect(() => {

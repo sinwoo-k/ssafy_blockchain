@@ -5,6 +5,7 @@ import { noticeReducerActions } from '../../redux/reducers/noticeSlice'
 import { getNotice } from '../../api/noticeAPI'
 
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import IconButton from './IconButton'
 
 const MyNotice = () => {
   const dispatch = useDispatch()
@@ -31,7 +32,11 @@ const MyNotice = () => {
         className='hover:text-chaintoon cursor-pointer'
         onClick={() => setShowModal(true)}
       >
-        <NotificationsNoneIcon sx={{ fontSize: 32 }} />
+        <IconButton
+          Icon={NotificationsNoneIcon}
+          tooltip={'알림 확인'}
+          style={{ fontSize: 32 }}
+        />
       </div>
       <div className='bg-chaintoon absolute -top-1 -right-2 flex h-[22px] w-[22px] items-center justify-center rounded-full text-center text-xs text-black'>
         <span className='inline-block translate-y-[0.5px] transform'>

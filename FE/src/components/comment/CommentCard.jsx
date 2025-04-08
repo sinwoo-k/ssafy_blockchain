@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { getRandomColor } from '../../utils/randomColor'
 import {
@@ -24,6 +25,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 
 const CommentCard = ({ comment, patchData }) => {
+  const navigate = useNavigate()
+
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
 
@@ -56,6 +59,7 @@ const CommentCard = ({ comment, patchData }) => {
       setReplies(result)
     } catch (error) {
       console.error('답글 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 

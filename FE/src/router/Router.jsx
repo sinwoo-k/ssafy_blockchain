@@ -1,7 +1,8 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
+import Page404 from '../pages/error/Page404'
 import CollectionPage from '../pages/store/CollectionPage'
 
 // Sso Callback
@@ -54,10 +55,18 @@ const SearchRoot = lazy(() => import('../pages/search/SearchRoot'))
 // 유저 프로필 section
 const UserProfile = lazy(() => import('../pages/user/UserProfile'))
 
+// 정책 section
+const TermsOfService = lazy(() => import('../pages/policy/TermsOfService'))
+const PrivacyPolicy = lazy(() => import('../pages/policy/PrivacyPolicy'))
+
+// 에러 section
+const ErrorPage = lazy(() => import('../pages/error/ErrorPage'))
+
 const router = createBrowserRouter([
   {
     path: '/',
     element: <RootPage />,
+    errorElement: <Page404 />,
     children: [
       // SSO 콜백
       {
@@ -111,6 +120,7 @@ const router = createBrowserRouter([
           </Suspense>
         ),
         children: [
+          { index: true, element: <Navigate to={'webtoon'} replace /> },
           {
             path: 'webtoon',
             element: (
@@ -286,7 +296,32 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      // 정책 section
+      {
+        path: 'policy/terms',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <TermsOfService />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'policy/privacy',
+        element: (
+          <Suspense fallback={<Loader />}>
+            <PrivacyPolicy />
+          </Suspense>
+        ),
+      },
     ],
+  },
+  {
+    path: 'error',
+    element: (
+      <Suspense fallback={<Loader />}>
+        <ErrorPage />
+      </Suspense>
+    ),
   },
 ])
 export default router
