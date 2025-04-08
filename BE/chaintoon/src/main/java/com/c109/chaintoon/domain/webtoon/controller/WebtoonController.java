@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -28,11 +29,17 @@ public class WebtoonController {
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize,
             @RequestParam(required = false, defaultValue = "latest") String orderBy,
-            @RequestParam(required = false) String genre,
-            @RequestParam(required = false) @Pattern (regexp = "[YN]", message = "2차 창작 여부는 Y/N으로 입력하세요.") String adaptable,
+            @RequestParam(required = false) String genre,  // 단일 장르 (기존 호환성 유지)
+            @RequestParam(required = false) List<String> genres,  // 다중 장르 (새 기능)
+            @RequestParam(required = false) @Pattern(regexp = "[YN]", message = "2차 창작 여부는 Y/N으로 입력하세요.") String adaptable,
             @RequestParam(required = false) Integer writerId
     ) {
-        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(page, pageSize, orderBy, genre, adaptable, writerId);
+        // genres 파라미터가 있으면 우선 사용, 없으면 genre 파라미터 사용
+        List<String> genreList = genres != null ? genres :
+                (genre != null ? Collections.singletonList(genre) : null);
+
+        List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(
+                page, pageSize, orderBy, genreList, adaptable, writerId);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
     }
 

@@ -2,6 +2,7 @@ package com.c109.chaintoon.domain.comment.service;
 
 import com.c109.chaintoon.common.exception.DuplicatedException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.comment.code.CommentType;
 import com.c109.chaintoon.domain.comment.dto.request.CommentRequestDto;
 import com.c109.chaintoon.domain.comment.dto.request.CommentUpdateDto;
@@ -37,6 +38,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final EpisodeRepository episodeRepository;
     private final FanartRepository fanartRepository;
+    private final S3Service s3Service;
 
     private CommentResponseDto convertToDto(Comment comment) {
         return convertToDto(comment, null);
@@ -69,7 +71,7 @@ public class CommentService {
                 .commentId(comment.getCommentId())
                 .userId(comment.getUserId())
                 .nickname(writer.getNickname())
-                .profileImage(writer.getProfileImage())
+                .profileImage(s3Service.getPresignedUrl(writer.getProfileImage()))
                 .usageId(comment.getUsageId())
                 .type(comment.getType())
                 .parentId(comment.getParentId())
