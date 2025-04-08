@@ -135,7 +135,7 @@ const WebtoonDetailInfo = ({ webtoon, patchData }) => {
           >
             {isFavorite ? '관심 웹툰 취소' : '관심 웹툰 등록'}
           </button>
-          <Link>
+          <Link to={`/store/collection/${webtoon.webtoonId}`}>
             <button
               className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded'

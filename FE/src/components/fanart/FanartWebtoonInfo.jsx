@@ -136,20 +136,20 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
               팬아트 올리기
             </button>
           </Link>
+          <Link to={`/store/collection/${webtoonId}`}>
+            <button
+              className='bg-chaintoon h-[45px] w-[250px] 
+              cursor-pointer rounded'
+            >
+              스토어 바로가기
+            </button>
+          </Link>
           <Link to={`/webtoon/${webtoonId}`}>
             <button
               className='bg-chaintoon h-[45px] w-[250px] 
               cursor-pointer rounded'
             >
               웹툰 보러가기
-            </button>
-          </Link>
-          <Link>
-            <button
-              className='bg-chaintoon h-[45px] w-[250px] 
-              cursor-pointer rounded'
-            >
-              스토어 바로가기
             </button>
           </Link>
         </div>
