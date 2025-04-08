@@ -26,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 
 const CommentCard = ({ comment, patchData }) => {
   const navigate = useNavigate()
+  console.log(comment)
 
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
@@ -194,7 +195,8 @@ const CommentCard = ({ comment, patchData }) => {
           {comment.profileImage ? (
             <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
               <img
-                alt={comment.profileImage}
+                src={comment.profileImage}
+                alt={`작성자 프로필 이미지`}
                 className='bg-text/30 h-[30px] w-[30px] rounded-full'
               />
             </div>

@@ -53,7 +53,8 @@ const FanartList = ({ webtoonId }) => {
                     <img
                       src={fanart.fanartImage}
                       alt='팬아트 이미지'
-                      className='w-[190px] rounded-lg'
+                      className='w-[190px] rounded-lg
+                      transition-transform duration-150 ease-in-out hover:scale-105'
                     />
                   </Link>
                   <p className='truncate py-1'>{fanart.fanartName}</p>

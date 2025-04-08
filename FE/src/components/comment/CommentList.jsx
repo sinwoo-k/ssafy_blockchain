@@ -24,6 +24,7 @@ const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
   const getData = async () => {
     try {
       const result = await getComments(usageId, type, page)
+      console.log(result)
       setComments((prev) => [...prev, ...result])
       setPage((prev) => prev + 1)
       if (result.length < 10) {
