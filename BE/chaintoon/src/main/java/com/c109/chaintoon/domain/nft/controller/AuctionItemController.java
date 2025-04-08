@@ -41,11 +41,12 @@ public class AuctionItemController {
     public ResponseEntity<?> getEpisodeAuctions(
             @RequestParam Integer webtoonId,
             @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "episode", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "episode", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
@@ -54,11 +55,12 @@ public class AuctionItemController {
     public ResponseEntity<?> getGoodAuctions(
             @RequestParam(required = false) Integer webtoonId,
             @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "goods", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "goods", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
@@ -67,11 +69,12 @@ public class AuctionItemController {
     public ResponseEntity<?> getFanartAuctions(
             @RequestParam(required = false) Integer webtoonId,
             @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "fanart", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "fanart", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 

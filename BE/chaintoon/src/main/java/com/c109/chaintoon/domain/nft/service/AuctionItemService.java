@@ -589,12 +589,13 @@ public class AuctionItemService {
 
     // 에피소드, 굿즈, 팬아트별 목록 조회
     @Transactional
-    public Page<AuctionCreateResponseDto> getFilteredAuctionItems(Integer webtoonId, String type, String ended, int page, int pageSize, String orderBy) {
+    public Page<AuctionCreateResponseDto> getFilteredAuctionItems(Integer webtoonId, String type, String ended, List<String> genres, int page, int pageSize, String orderBy) {
         Specification<AuctionItem> spec = Specification
                 .where(AuctionItemSpecification.hasBlockchainSuccess()) // 등록 성공
                 .and(AuctionItemSpecification.hasType(type)) // type 일치
                 .and(AuctionItemSpecification.hasWebtoonId(webtoonId)) // webtoonId 일치, null 인 경우 생략
-                .and(AuctionItemSpecification.hasEnded(ended)); // ended 일치
+                .and(AuctionItemSpecification.hasEnded(ended)) // ended 일치
+                .and(AuctionItemSpecification.hasGenres(genres)); // 장르 포함 in 연산자
 
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
         Page<AuctionItem> pageResult = auctionItemRepository.findAll(spec, pageable);
