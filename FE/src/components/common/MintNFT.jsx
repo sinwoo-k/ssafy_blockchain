@@ -11,7 +11,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
       const payload = {
         webtoonId: item.webtoonId || item.webtoon?.webtoonId, // 웹툰 ID
         type: type, // 'fanart' | 'goods' | 'webtoon'
-        typeId: item.fanartId || item.goodsId || item.episodeId // 실제 아이템 ID
+        typeId: item.fanartId || item.goodsId || item.episodeId, // 실제 아이템 ID
       }
 
       await nftService.mintNFT(payload)
@@ -25,7 +25,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
 
   return (
     <button
-      className='text-chaintoon hover:text-white border border-chaintoon px-4 py-1 rounded'
+      className='text-chaintoon border-chaintoon rounded border px-4 py-1 hover:text-white'
       onClick={handleMint}
     >
       NFT 발행하기

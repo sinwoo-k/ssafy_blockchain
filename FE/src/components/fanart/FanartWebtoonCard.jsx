@@ -31,7 +31,7 @@ const FanartWebtoonCard = ({ webtoon }) => {
       <div>
         {/* 웹툰 대표이미지 */}
         <div
-          className='border-chaintoon mb-3 w-[200px] rounded-xl border'
+          className='border-chaintoon mb-3 w-[200px] overflow-hidden rounded-xl border'
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
         >
@@ -42,14 +42,23 @@ const FanartWebtoonCard = ({ webtoon }) => {
             <img
               src={webtoon.seroThumbnail}
               alt={`${webtoon.webtoonName} 대표 이미지`}
-              className='h-[250px] w-[200px] rounded-xl object-cover'
+              className='h-[250px] w-[200px] rounded-xl object-cover
+              transition-transform duration-150 ease-in-out hover:scale-105'
             />
           </Link>
         </div>
         {/* 웹툰 정보 */}
         <div className='px-2'>
-          <h2 className='text-lg'>{webtoon.webtoonName}</h2>
-          <p className='text-text/75 truncate'>{webtoon.writer}</p>
+          <Link to={`/fanart/webtoon/${webtoon.webtoonId}`}>
+            <h2 className='truncate text-lg hover:underline'>
+              {webtoon.webtoonName}
+            </h2>
+          </Link>
+          <Link to={`/user/${webtoon.userId}`}>
+            <p className='text-text/75 truncate hover:underline'>
+              {webtoon.writer}
+            </p>
+          </Link>
         </div>
       </div>
     </div>
