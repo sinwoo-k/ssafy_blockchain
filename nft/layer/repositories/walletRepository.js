@@ -18,7 +18,6 @@ export async function createWallet(walletData) {
     recoveryPhrase = ""
   } = walletData;
   const now = new Date();
-  now.setHours(now.getHours() + 9);
   const [result] = await pool.execute(
     `INSERT INTO wallet (user_id, wallet_address, private_key, public_key, recovery_phrase, created_at)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -32,11 +31,11 @@ export async function createMetamaskWallet(walletAddress, userId) {
   const privateKey = "";
   const publicKey = "";
   const recoveryPhrase = "";
-  
+  const now = new Date();
   const [result] = await pool.execute(
-    `INSERT INTO wallet (wallet_address, user_id, private_key, public_key, recovery_phrase)
-     VALUES (?, ?, ?, ?, ?)`,
-    [walletAddress, userId, privateKey, publicKey, recoveryPhrase]
+    `INSERT INTO wallet (wallet_address, user_id, private_key, public_key, recovery_phrase, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [walletAddress, userId, privateKey, publicKey, recoveryPhrase, now]
   );
   return result.insertId;
 }
@@ -58,7 +57,6 @@ export async function createUser(userData) {
   } = userData;
   
   const now = new Date();
-  now.setHours(now.getHours() + 9);
   const join_date = now.toISOString().split('T')[0];
   const created_at = now.toISOString().slice(0, 19).replace('T', ' ');
   
