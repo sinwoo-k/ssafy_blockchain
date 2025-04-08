@@ -9,6 +9,7 @@ import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainSaleRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.BlockchainBuyResponseDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -21,10 +22,7 @@ import com.c109.chaintoon.domain.nft.entity.BiddingHistory;
 import com.c109.chaintoon.domain.nft.entity.Nft;
 import com.c109.chaintoon.domain.nft.entity.TradingHistory;
 import com.c109.chaintoon.domain.nft.exception.*;
-import com.c109.chaintoon.domain.nft.repository.AuctionItemRepository;
-import com.c109.chaintoon.domain.nft.repository.BiddingHistoryRepository;
-import com.c109.chaintoon.domain.nft.repository.NftRepository;
-import com.c109.chaintoon.domain.nft.repository.TradingHistoryRepository;
+import com.c109.chaintoon.domain.nft.repository.*;
 import com.c109.chaintoon.domain.nft.specification.AuctionItemSpecification;
 import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.entity.Episode;
@@ -63,6 +61,7 @@ public class AuctionItemService {
     private final EpisodeRepository episodeRepository;
     private final FanartRepository fanartRepository;
     private final GoodsRepository goodsRepository;
+    private final WalletRepository walletRepository;
 
     private AuctionItem getOrThrowAuctionItem(Integer auctionItemId) {
         return auctionItemRepository.findById(auctionItemId)
@@ -139,13 +138,6 @@ public class AuctionItemService {
                 .build();
     }
 
-    private Webtoon getWebtoonByNft(Nft nft) {
-        if (nft.getWebtoonId() != null) {
-            return webtoonRepository.findById(nft.getWebtoonId())
-                    .orElseThrow(() -> new WebtoonNotFoundException(nft.getWebtoonId()));
-        }
-        return null;
-    }
 
     private Sort getSort(String orderBy) {
         if ("biddingPrice".equalsIgnoreCase(orderBy)) {
@@ -364,8 +356,7 @@ public class AuctionItemService {
                 .userId(userId)
                 .build();
 
-        blockchainService.registerBuy(buyRequestDto);
-
+        BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
         // 경매 아이템 업데이트
         auctionItem.setBiddingPrice(buyNowPrice);
         auctionItem.setEnded("Y");
@@ -392,10 +383,18 @@ public class AuctionItemService {
 
         tradingHistoryRepository.save(tradingHistory);
 
-        Webtoon webtoon = getWebtoonByNft(nft);
+        noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
+        Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
+        Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
 
-        noticeService.addAuctionCompleteNotice(tradingHistory, webtoon);
-
+        if(originalCreator != null && !originalCreator.equals(nft.getUserId())) {
+            noticeService.addSecondaryCreationNftSoldNotice(
+                    originalCreator,
+                    nftId,
+                    Double.valueOf(blockchainBuyResponseDto.getSoldPriceEther()),
+                    Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
+            );
+        }
         // 비동기적으로 구매 후 지갑 잔액 조회해서 로그 출력
         blockchainService.getWalletBalanceAsync(userId)
                 .subscribe(remainingBalance -> {
@@ -528,12 +527,23 @@ public class AuctionItemService {
                     .price(bidderBidMap.get(winner))
                     .userId(winner)
                     .build();
-            blockchainService.registerBuy(buyRequestDto);
+            BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
+            Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
+
+            Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
             log.info("블록체인 구매 등록 요청 보내짐 for 낙찰자: {}", winner);
 
-            Webtoon webtoon = getWebtoonByNft(nft);
 
-            noticeService.addAuctionCompleteNotice(tradingHistory, webtoon);
+            noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
+
+            if(originalCreator != null && !originalCreator.equals(nft.getUserId())) {
+                noticeService.addSecondaryCreationNftSoldNotice(
+                        originalCreator,
+                        nftId,
+                        Double.valueOf(blockchainBuyResponseDto.getTokenId()),
+                        Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
+                );
+            }
         }
     }
 
