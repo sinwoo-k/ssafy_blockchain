@@ -30,11 +30,12 @@ export async function dbInsertTransactionLog(txData, contractAddress) {
     gas_used: txData.gasUsed || null,
     input: txData.input || null,
   };
+  const now = new Date();
 
   const query = `
     INSERT INTO contract_transactions 
-      (block_number, block_hash, time_stamp, hash, nonce, transaction_index, \`from\`, \`to\`, value, gas, gas_price, contract_address, gas_used, input)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (block_number, block_hash, time_stamp, hash, nonce, transaction_index, \`from\`, \`to\`, value, gas, gas_price, contract_address, gas_used, input, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE hash = hash;
   `;
   const params = [
@@ -52,6 +53,7 @@ export async function dbInsertTransactionLog(txData, contractAddress) {
     data.contract_address,
     data.gas_used,
     data.input,
+    now
   ];
 
   return pool.execute(query, params);
