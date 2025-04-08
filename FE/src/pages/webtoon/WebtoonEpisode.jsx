@@ -132,6 +132,7 @@ const WebtoonEpisode = () => {
       <WebtoonEpisodeUtility episode={episode} />
       {/* 댓글 */}
       <CommentList
+        key={params.episodeId}
         usageId={params.episodeId}
         type={'COMMENT_EPISODE'}
         commentCount={commentCount}
