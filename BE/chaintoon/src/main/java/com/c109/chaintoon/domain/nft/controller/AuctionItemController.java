@@ -8,7 +8,6 @@ import com.c109.chaintoon.domain.nft.dto.response.AuctionBidResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionBuyNowResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionCreateResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.BiddingHistoryResponseDto;
-import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.service.AuctionItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,7 @@ public class AuctionItemController {
     @GetMapping("/episodes")
     public ResponseEntity<?> getEpisodeAuctions(
             @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false, defaultValue = "N") String ended,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
@@ -53,8 +52,8 @@ public class AuctionItemController {
     // 굿즈 경매 목록 조회
     @GetMapping("/goods")
     public ResponseEntity<?> getGoodAuctions(
-            @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false) Integer webtoonId,
+            @RequestParam(required = false, defaultValue = "N") String ended,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
@@ -66,8 +65,8 @@ public class AuctionItemController {
     // 팬아트 경매 목록 조회
     @GetMapping("/fanarts")
     public ResponseEntity<?> getFanartAuctions(
-            @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false) Integer webtoonId,
+            @RequestParam(required = false, defaultValue = "N") String ended,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
