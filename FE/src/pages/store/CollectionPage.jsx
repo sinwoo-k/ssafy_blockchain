@@ -53,6 +53,7 @@ const CollectionPage = () => {
             image: webtoonData.garoThumbnail,
             author: webtoonData.writer,
             description: webtoonData.summary,
+            authorId: webtoonData.userId, 
             rating: webtoonData.rating,
             views: webtoonData.viewCount,
             likes: webtoonData.favoriteCount

@@ -5,26 +5,9 @@ import { genres } from '../../pages/store/storeData'
 const StoreFilter = ({ onFilterChange, activeFilters = {}, activeCategory = '' }) => {
   const filterGroups = [
     {
-      id: 'status',
-      title: '판매 상태',
-      filters: [
-        { id: 'sell', label: '판매중' },
-        { id: 'notsell', label: '미판매' },
-      ],
-    },
-    {
       id: 'genre',
       title: '장르',
       filters: genres.map(genre => ({ id: genre, label: genre })),
-    },
-    {
-      id: 'category',
-      title: '카테고리',
-      filters: [
-        { id: '웹툰', label: '웹툰' },
-        { id: '굿즈', label: '굿즈' },
-        { id: '팬아트', label: '팬아트' }
-      ],
     },
   ]
 
