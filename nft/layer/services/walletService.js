@@ -10,7 +10,7 @@ import {
 import AppError from '../../utils/AppError.js';
 import { getNonce, deleteNonce } from './nonceService.js';
 import { setChallenge } from './nftService.js';
-import { WALLET_CONTRACT_ABI, WALLET_CONTRACT_ADDRESS, RPC_URL } from '../config/contract.js'
+import { WALLET_CONTRACT_ABI, WALLET_CONTRACT_ADDRESS, RPC_URL } from '../config/contract.js';
 // 이더리움 네트워크 연결 및 관리자 지갑 생성
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const serverWallet = new ethers.Wallet(process.env.SERVER_PRIVATE_KEY, provider);

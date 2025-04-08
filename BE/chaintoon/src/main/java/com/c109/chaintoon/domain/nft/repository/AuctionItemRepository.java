@@ -13,10 +13,20 @@ import java.util.Optional;
 @Repository
 public interface AuctionItemRepository extends JpaRepository<AuctionItem, Integer> {
 
-    @Query("select a from AuctionItem a join Nft n on a.nftId = n.nftId where a.type = :type and n.webtoonId = :webtoonId and a.ended = :ended")
+    @Query("select a " +
+            "from AuctionItem a " +
+            "join Nft n on a.nftId = n.nftId " +
+            "where a.type = :type " +
+            "and n.webtoonId = :webtoonId " +
+            "and a.ended = :ended " +
+            "and a.blockchainStatus = 'SUCCESS'")
     Page<AuctionItem> findByTypeAndWebtoonIdAndEnded(@Param("type") String type, @Param("webtoonId") Integer webtoonId, @Param("ended") String ended, Pageable pageable);
 
-    @Query("select a from AuctionItem a join Nft n on a.nftId = n.nftId where a.type = :type and n.webtoonId = :webtoonId")
+    @Query("select a from AuctionItem a " +
+            "join Nft n on a.nftId = n.nftId " +
+            "where a.type = :type " +
+            "and n.webtoonId = :webtoonId " +
+            "and a.blockchainStatus = 'SUCCESS'")
     Page<AuctionItem> findByTypeAndWebtoonId(@Param("type") String type, @Param("webtoonId") Integer webtoonId, Pageable pageable);
 
     @Query("select a from AuctionItem a join Nft n on a.nftId = n.nftId " +

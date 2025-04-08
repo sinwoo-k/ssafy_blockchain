@@ -127,6 +127,29 @@ const deleteProfileImage = async () => {
   }
 };
 
+//유저가 입찰중인 목록
+const BidingMyNFT = async() => {
+  const res = await API.get(`/trade-history/active`);
+  return res.data;
+};
+// 유저가 판매중인 목록
+const sellingMyNFT = async () => {
+  const res = await API.get(`/trade-history/active-sale`);
+  return res.data;
+};
+
+//유저가 구매완료한 목록
+const BoughtMyNFT = async() => {
+  const res = await API.get(`/trade-history/bought`);
+  return res.data;
+};
+
+//유저가 판매 완료한 목록
+const selledMyNFT = async() => {
+  const res = await API.get(`trade-history/sold`);
+  return res.data;
+};
+
 
 const uploadBackgroundImage = async (formData) => {
   try {
@@ -151,8 +174,11 @@ export const userService = {
   deleteProfileImage,
   deleteBackgroundImage,
   updateBackgroundImage,
-  // uploadProfileImage,
   uploadBackgroundImage,
+  sellingMyNFT,
+  BidingMyNFT,
+  BoughtMyNFT,
+  selledMyNFT
 };
 
 export default userService;
