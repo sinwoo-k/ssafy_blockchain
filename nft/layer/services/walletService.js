@@ -52,7 +52,6 @@ export async function connectWalletService({ walletAddress, signature, message }
     const randomNumber = Math.floor(Math.random() * 1000000);
     const nickname = `Metamask${randomNumber}`;
     const now = new Date();
-    now.setHours(now.getHours() + 9);
     const joinDate = now.toISOString().split('T')[0];
 
     const userData = {

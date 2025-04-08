@@ -143,16 +143,21 @@ public class WebtoonService {
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy, String genre, String adaptable, Integer writerId) {
+    public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy,
+                                                       List<String> genres, String adaptable, Integer writerId) {
+
         Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<Webtoon> webtoonPage;
 
         // 삭제되지 않은 웹툰만 조회하는 기본 조건
         Specification<Webtoon> spec = (root, query, cb) -> cb.equal(root.get("deleted"), "N");
 
-        // genre 조건 추가 (값이 존재하는 경우만 필터링)
-        if (genre != null && !genre.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("genre"), genre));
+        // 장르 조건 처리 (단일 또는 다중)
+        if (genres != null && !genres.isEmpty()) {
+            if (genres.size() == 1) {
+                spec = spec.and((root, query, cb) -> cb.equal(root.get("genre"), genres.get(0)));
+            } else {
+                spec = spec.and((root, query, cb) -> root.get("genre").in(genres));
+            }
         }
 
         // adaptable 조건 추가 (값이 "Y"인 경우만 필터링)
@@ -165,9 +170,8 @@ public class WebtoonService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), writerId));
         }
 
-        // Specification을 사용하여 동적 쿼리 실행
-        webtoonPage = webtoonRepository.findAll(spec, pageable);
-
+        // 조건에 맞는 웹툰 조회
+        Page<Webtoon> webtoonPage = webtoonRepository.findAll(spec, pageable);
         return toDtoList(webtoonPage);
     }
 

@@ -13,6 +13,6 @@ public class AuctionBidRequestDto {
     @Positive(message = "경매장 아이템 ID는 음수일 수 없습니다.")
     private Integer auctionItemId;
 
-    @DecimalMin(value = "1E-9", message = "입찰가는 1 gwei 이상을 입력하세요.")
+    @DecimalMin(value = "1E-5", message = "입찰가는 0.00001 ETH 이상을 입력하세요.")
     private Double  biddingPrice;
 }

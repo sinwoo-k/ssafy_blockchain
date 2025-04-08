@@ -10,12 +10,13 @@ if (!NFT_MARKETPLACE_ADDRESS) {
 
 // 매 시간 0분마다 실행하도록 스케줄링 (즉, 매 정시에 동기화 실행)
 cron.schedule('0 * * * *', async () => {
-  console.log(`[${new Date().toISOString()}] 자동 동기화 시작...`);
+  const now = new Date();
+  console.log(`[${now.toISOString()}] 자동 동기화 시작...`);
   try {
     const result = await syncNewTransactionsService(NFT_MARKETPLACE_ADDRESS);
-    console.log(`[${new Date().toISOString()}] 동기화 결과:`, result);
+    console.log(`[${now.toISOString()}] 동기화 결과:`, result);
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] 동기화 에러:`, error);
+    console.error(`[${now.toISOString()}] 동기화 에러:`, error);
   }
 });
 
