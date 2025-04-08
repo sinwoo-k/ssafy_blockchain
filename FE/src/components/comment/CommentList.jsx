@@ -24,7 +24,6 @@ const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
   const getData = async () => {
     try {
       const result = await getComments(usageId, type, page)
-      console.log(result)
       setComments((prev) => [...prev, ...result])
       setPage((prev) => prev + 1)
       if (result.length < 10) {
@@ -58,10 +57,13 @@ const CommentList = ({ usageId, type, commentCount, setCommentCount }) => {
 
   useEffect(() => {
     // mount
-    getData()
+    if (usageId) {
+      getData()
+    }
+
     // unmount
     return () => {}
-  }, [usageId])
+  }, [])
 
   return (
     <div className='flex justify-center'>
