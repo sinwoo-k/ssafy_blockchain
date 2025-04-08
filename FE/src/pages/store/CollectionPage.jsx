@@ -93,6 +93,9 @@ const CollectionPage = () => {
             
             // Promise.all 대신 일반 for 루프 사용하여 안정성 높이기
             const episodeItems = [];
+            // NFT 불러오는 중 로딩 상태를 표시하기 위한 변수
+            setIsLoading(true);
+            console.log('NFT 정보 불러오는 중...');
             
             for (const auction of episodeContent) {
               try {
@@ -213,6 +216,18 @@ const CollectionPage = () => {
     }
   }
 
+  // isLoading 상태에 따른 로딩 화면 표시
+  if (isLoading) {
+    return (
+      <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85 flex items-center justify-center'>
+        <div className='text-center'>
+          <Loader size={60} />
+          <p className='mt-4 text-xl text-gray-400'>NFT 정보를 불러오는 중입니다...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!collection) {
     return (
       <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
@@ -248,6 +263,7 @@ const CollectionPage = () => {
     }
     return []
   }
+  
 
   return (
     <div className='min-h-screen bg-black pt-[80px] pb-10 text-text/85'>

@@ -5,6 +5,9 @@ import FollowModal from './FollowModal';
 import userService from '../../api/userApi';
 import nftService from '../../api/nftApi';
 import { userReducerActions } from '../../redux/reducers/userSlice';
+import WalletInfo from './WalletInfo'
+
+// WalletInfo 컴포넌트는 별도 파일로 분리됨
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -14,13 +17,6 @@ const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // 지갑, NFT 등 부가 상태
-  const [walletInfo, setWalletInfo] = useState({
-    balance: '0',
-    usdValue: '0',
-    ethToUsd: 0
-  });
   const [nftCount, setNftCount] = useState(0);
 
   // 프로필 수정 모달
@@ -51,7 +47,7 @@ const UserProfile = () => {
     type: 'success'
   });
 
-  // 사용자 정보 및 지갑 정보 로딩
+  // 사용자 정보 로딩
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -65,38 +61,6 @@ const UserProfile = () => {
         if (myUserInfo?.id) {
           const userDetails = await userService.getUserInfo(myUserInfo.id);
           setUser(userDetails);
-          
-          // 실시간 ETH-USD 환율 가져오기
-          let ethUsdRate = 3000; // 기본값
-          try {
-            ethUsdRate = await nftService.getEthUsdRate();
-            console.log('ETH-USD 환율:', ethUsdRate);
-          } catch (rateErr) {
-            console.error('환율 정보 로드 오류:', rateErr);
-          }
-          
-          // 지갑 정보 가져오기 (사용자 ID 전달)
-          try {
-            const walletInfoData = await nftService.getWalletInfo(myUserInfo.id);
-            console.log('지갑 정보:', walletInfoData);
-            
-            // eth 잔액 추출 (예: "1.08488 ETH"에서 숫자 부분만)
-            if (walletInfoData && walletInfoData.balances && walletInfoData.balances.eth) {
-              const ethBalanceStr = walletInfoData.balances.eth.split(' ')[0] || '0';
-              const ethBalance = parseFloat(ethBalanceStr);
-              
-              // USD 가치 계산
-              const usdValue = (ethBalance * ethUsdRate).toFixed(2);
-              
-              setWalletInfo({
-                balance: ethBalanceStr,
-                usdValue: usdValue,
-                ethToUsd: ethUsdRate
-              });
-            }
-          } catch (walletErr) {
-            console.error('지갑 정보 로드 오류:', walletErr);
-          }
           
           // NFT 개수 가져오기
           try {
@@ -179,8 +143,6 @@ const UserProfile = () => {
     input.click();
   };
   
-  
-
   // 배경 이미지 제거
   const handleDeleteBackgroundImage = async () => {
     try {
@@ -195,7 +157,6 @@ const UserProfile = () => {
     }
   };
   
-
   // URL 새 탭 이동
   const handleGoToUrl = () => {
     if (user?.url && user.url.trim() !== '') {
@@ -360,7 +321,6 @@ const UserProfile = () => {
       </div>
     );
   }
-  console.log('🚨 배경 이미지 URL:', user.backgroundImage);
 
   return (
     <>
@@ -389,7 +349,9 @@ const UserProfile = () => {
             className="opacity-0 group-hover:opacity-100 mb-2 text-white bg-black/60 hover:bg-black/80 p-2 rounded-full transition"
             title="배경 이미지 업로드"
           >
-            {/* SVG 아이콘 */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </button>
 
           {/* 삭제 버튼 */}
@@ -403,8 +365,6 @@ const UserProfile = () => {
           )}
         </div>
       </div>
-
-
         
       {/* 프로필/정보 */}
       <div className="border-b border-gray-800 py-3 relative">
@@ -488,7 +448,7 @@ const UserProfile = () => {
 
                 {/* 페이지 주소 복사 */}
                 <button
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-white mb-1.5"
                   onClick={handleCopyPageAddress}
                   title="현재 페이지 주소 복사"
                 >
@@ -516,6 +476,9 @@ const UserProfile = () => {
                   </svg>
                 </button>
               </div>
+              <div className="ml-auto">
+                <WalletInfo />
+              </div>
             </div>
 
             {/* 소개/이메일 */}
@@ -527,21 +490,6 @@ const UserProfile = () => {
                 {user.email}
               </p>
             )}
-          </div>
-
-          {/* 지갑 잔액/금액 */}
-          <div className="text-right text-sm mt-3">
-            <div className="mb-3">
-              <span className="text-xs text-gray-400 mr-2">순자산</span>
-              <span>{walletInfo?.balance || '0'} ETH</span>
-            </div>
-            <div className="mb-1">
-              <span className="text-xs text-gray-400 mr-2">USD가치</span>
-              <span>$ {walletInfo?.usdValue || '0'}</span>
-            </div>
-            <div className="text-xs text-gray-500">
-              {walletInfo.ethToUsd > 0 && `1 ETH = $${walletInfo.ethToUsd}`}
-            </div>
           </div>
         </div>
 
