@@ -85,11 +85,11 @@ public class AuthService {
     private User autoRegisterUser(String email) {
         Random rand = new Random();
         int randomNumber = rand.nextInt(900000) + 100000;
-        String nickname="Unnamed"+randomNumber;
+        String nickname=SsoProvider.CHAINTOON.name()+randomNumber;
 
         while(userRepository.existsByNicknameAndDeleted(nickname, "N")){
             randomNumber = rand.nextInt(900000) + 100000;
-            nickname = "Unnamed" + randomNumber;
+            nickname = SsoProvider.CHAINTOON.name() + randomNumber;
         }
 
         User newUser = User.builder()
@@ -121,12 +121,12 @@ public class AuthService {
             // 사용자가 존재하지 않는 경우 새로 생성
             Random rand = new Random();
             int randomNumber = rand.nextInt(900000) + 100000;
-            String nickname = "Unnamed" + randomNumber;
+            String nickname = ssoProvider.name() + randomNumber;
 
             // 닉네임 중복 체크 및 고유 닉네임 생성
             while (userRepository.existsByNicknameAndDeleted(nickname, "N")) {
                 randomNumber = rand.nextInt(900000) + 100000;
-                nickname = "Unnamed" + randomNumber;
+                nickname = ssoProvider.name() + randomNumber;
             }
 
             // 새로운 사용자 생성 및 초기화
