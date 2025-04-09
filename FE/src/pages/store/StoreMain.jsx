@@ -1,79 +1,54 @@
-// StoreMain.jsx 수정
 import React, { useState, useEffect } from 'react'
 import StoreFilter from '../../components/store/StoreFilter'
 import ProductList from '../../components/store/ProductList'
 import Loader from '../../components/common/Loader'
-import { getwebtoonAuctions,getGoodsAuctions, getFanartAuctions } from '../../api/storeApi'
+import { getwebtoonAuctions, getGoodsAuctions, getFanartAuctions } from '../../api/storeApi'
 
 const StoreMain = () => {
-  // 기본값으로 웹툰 카테고리 선택
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
-  const [activeFilters, setActiveFilters] = useState({
-    category: ['웹툰'] // 기본값으로 웹툰 카테고리 필터 설정
-  })
+  const [activeFilters, setActiveFilters] = useState({ category: ['웹툰'] })
   const [isLoading, setIsLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState('웹툰') // 기본값으로 웹툰 선택
-  const [categoryProductCounts, setCategoryProductCounts] = useState({
-    웹툰: 0,
-    굿즈: 0,
-    팬아트: 0
-  })
-  
-  // 페이징 및 정렬 상태 추가
+  const [activeCategory, setActiveCategory] = useState('웹툰')
+  const [categoryProductCounts, setCategoryProductCounts] = useState({ 웹툰: 0, 굿즈: 0, 팬아트: 0 })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [orderBy, setOrderBy] = useState('latest')
-  const [selectedGenres, setSelectedGenres] = useState([]) // 여러 장르 선택을 위해 배열로 변경
-  
-  // 페이지 정보
+  const [selectedGenres, setSelectedGenres] = useState([])
   const [totalPages, setTotalPages] = useState(1)
   const [totalElements, setTotalElements] = useState(0)
 
   useEffect(() => {
+    if (activeFilters.genre && activeFilters.genre.length > 0) {
+      setSelectedGenres(activeFilters.genre)
+    } else {
+      setSelectedGenres([])
+    }
+  }, [activeFilters.genre])
+  
+  // ✅ 상품 불러오기 (selectedGenres 변경될 때 작동)
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true)
-  
-        // 정렬 파라미터 설정
-        let orderByParam = 'latest'
-        if (orderBy === 'priceLow') {
-          orderByParam = 'price,asc'
-        } else if (orderBy === 'priceHigh') {
-          orderByParam = 'price,desc'
-        } else if (orderBy === 'rating') {
-          orderByParam = 'rating,desc'
-        } else if (orderBy === 'view') {
-          orderByParam = 'viewCount,desc'
-        }
-  
         let fetchedProducts = []
         let totalPageCount = 0
         let totalItemCount = 0
   
+        const getGenreParams = () => {
+          return selectedGenres.length > 0 ? { genres: selectedGenres } : {}
+        }
+  
         if (activeCategory === '웹툰') {
-          // ✅ params 객체 기반 요청
-          const params = {
-            page: page - 1,
-            size: pageSize,
-            sort: orderByParam,
-          }
+          let webtoons = []
+          const params = getGenreParams()
+          webtoons = await getwebtoonAuctions(params)
   
-          if (selectedGenres.length > 0) {
-            params.genres = selectedGenres
-          }
-  
-          const response = await getwebtoonAuctions(params)
-  
-          const webtoons = Array.isArray(response) ? response : []
-  
-          // 중복 제거
-          const uniqueWebtoons = webtoons.filter(
-            (webtoon, index, self) =>
-              index === self.findIndex((w) => w.webtoonId === webtoon.webtoonId)
+          webtoons = webtoons.filter((webtoon, index, self) =>
+            index === self.findIndex((w) => w.webtoonId === webtoon.webtoonId)
           )
   
-          fetchedProducts = uniqueWebtoons.map((w) => ({
+          fetchedProducts = webtoons.map((w) => ({
             id: w.webtoonId,
             title: w.webtoonName,
             image: w.garoThumbnail,
@@ -86,31 +61,16 @@ const StoreMain = () => {
             description: w.summary,
             webtoonId: w.webtoonId,
             episodeCount: w.episodeCount,
-            viewCount: w.viewCount
+            viewCount: w.viewCount,
           }))
   
-          setCategoryProductCounts((prev) => ({
-            ...prev,
-            웹툰: fetchedProducts.length
-          }))
-  
+          setCategoryProductCounts((prev) => ({ ...prev, 웹툰: fetchedProducts.length }))
           totalPageCount = Math.ceil(fetchedProducts.length / pageSize)
           totalItemCount = fetchedProducts.length
-        } 
-        else if (activeCategory === '굿즈') {
-          const params = {
-            page: page - 1,
-            size: pageSize,
-            sort: orderByParam,
-          }
-  
-          if (selectedGenres.length > 0) {
-            params.genres = selectedGenres
-          }
-  
-          const goodsResponse = await getGoodsAuctions(params)
-  
-          const goodsProducts = (goodsResponse?.content || []).map((auction) => ({
+        } else if (activeCategory === '굿즈') {
+          const genreParams = getGenreParams()
+          const goodsResponse = await getGoodsAuctions(genreParams)
+          const goodsProducts = (goodsResponse?.content || goodsResponse || []).map(auction => ({
             id: auction.auctionItemId,
             auctionItemId: auction.auctionItemId,
             title: auction.itemName || '굿즈',
@@ -127,30 +87,14 @@ const StoreMain = () => {
             startTime: auction.startTime,
             ended: auction.ended
           }))
-  
           fetchedProducts = goodsProducts
           totalPageCount = goodsResponse?.totalPages || 1
-          totalItemCount = goodsResponse?.totalElements || 0
-  
-          setCategoryProductCounts((prev) => ({
-            ...prev,
-            굿즈: goodsResponse?.totalElements || 0
-          }))
-        } 
-        else if (activeCategory === '팬아트') {
-          const params = {
-            page: page - 1,
-            size: pageSize,
-            sort: orderByParam,
-          }
-  
-          if (selectedGenres.length > 0) {
-            params.genres = selectedGenres
-          }
-  
-          const fanartResponse = await getFanartAuctions(params)
-  
-          const fanartProducts = (fanartResponse?.content || []).map((auction) => ({
+          totalItemCount = goodsResponse?.totalElements || goodsProducts.length
+          setCategoryProductCounts((prev) => ({ ...prev, 굿즈: totalItemCount }))
+        } else if (activeCategory === '팬아트') {
+          const genreParams = getGenreParams()
+          const fanartResponse = await getFanartAuctions(genreParams)
+          const fanartProducts = (fanartResponse?.content || fanartResponse || []).map(auction => ({
             id: auction.auctionItemId,
             auctionItemId: auction.auctionItemId,
             title: auction.itemName || '팬아트',
@@ -167,15 +111,10 @@ const StoreMain = () => {
             startTime: auction.startTime,
             ended: auction.ended
           }))
-  
           fetchedProducts = fanartProducts
           totalPageCount = fanartResponse?.totalPages || 1
-          totalItemCount = fanartResponse?.totalElements || 0
-  
-          setCategoryProductCounts((prev) => ({
-            ...prev,
-            팬아트: fanartResponse?.totalElements || 0
-          }))
+          totalItemCount = fanartResponse?.totalElements || fanartProducts.length
+          setCategoryProductCounts((prev) => ({ ...prev, 팬아트: totalItemCount }))
         }
   
         setProducts(fetchedProducts)
@@ -191,6 +130,7 @@ const StoreMain = () => {
   
     fetchProducts()
   }, [activeCategory, page, pageSize, orderBy, selectedGenres])
+
   
   // 가격 형식 포맷팅 함수 (불필요한 0 제거)
   const formatPrice = (price) => {
@@ -235,43 +175,35 @@ const StoreMain = () => {
   // 필터 변경 핸들러
   const handleFilterChange = (groupId, filterId) => {
     if (groupId === 'genre') {
-      // 장르 필터 처리
       setActiveFilters(prev => {
         const newFilters = { ...prev }
-        
+  
         if (!newFilters[groupId]) {
           newFilters[groupId] = [filterId]
         } else if (newFilters[groupId].includes(filterId)) {
-          // 체크 해제 - 배열에서 제거
           newFilters[groupId] = newFilters[groupId].filter(id => id !== filterId)
           if (newFilters[groupId].length === 0) {
             delete newFilters[groupId]
           }
         } else {
-          // 체크 - 배열에 추가
           newFilters[groupId].push(filterId)
         }
-        
-        // selectedGenres 업데이트
-        if (newFilters.genre && newFilters.genre.length > 0) {
-          setSelectedGenres(newFilters.genre)
-        } else {
-          setSelectedGenres([])
-        }
-        
+  
+        // ✅ 바로 장르 반영
+        setSelectedGenres(newFilters.genre || [])
+  
         return newFilters
       })
+  
     } else {
-      // 카테고리 필터 처리
       setActiveFilters(prev => {
         const newFilters = { ...prev }
-        
+  
         if (!newFilters[groupId]) {
           newFilters[groupId] = [filterId]
         } else if (newFilters[groupId].includes(filterId)) {
           newFilters[groupId] = newFilters[groupId].filter(id => id !== filterId)
           if (newFilters[groupId].length === 0) {
-            // 카테고리 필터가 비어있으면 기본값으로 웹툰 설정
             if (groupId === 'category') {
               newFilters[groupId] = ['웹툰']
             } else {
@@ -281,27 +213,25 @@ const StoreMain = () => {
         } else {
           newFilters[groupId].push(filterId)
         }
-        
-        // 카테고리 그룹에서 변경이 있으면 activeCategory도 업데이트
+  
+        // ✅ 카테고리 반영
         if (groupId === 'category') {
-          // 하나만 선택되었을 때 activeCategory 업데이트
-          if (newFilters.category && newFilters.category.length === 1) {
+          if (newFilters.category?.length === 1) {
             setActiveCategory(newFilters.category[0])
-          } 
-          // 카테고리가 하나도 선택되지 않으면 웹툰으로 설정
-          else if (!newFilters.category || newFilters.category.length === 0) {
+          } else if (!newFilters.category || newFilters.category.length === 0) {
             setActiveCategory('웹툰')
             newFilters.category = ['웹툰']
           }
         }
-        
+  
         return newFilters
       })
     }
-    
-    // 필터 변경 시 데이터 새로 불러오기
-    setPage(1) // 페이지 초기화
+  
+    // ✅ 공통: 필터 변경 시 페이지 초기화
+    setPage(1)
   }
+  
 
   // 검색 핸들러
   const handleSearch = (term) => {
