@@ -67,7 +67,7 @@ const ProductList = ({ products, formatPrice }) => {
             </div>
             
             <button 
-              className='w-full rounded-md bg-blue-600 py-2 font-medium hover:bg-blue-500'
+              className='w-full rounded-md bg-[#3cc3ec] py-2 font-medium hover:bg-blue-500'
               disabled={product.status === 'notsell' || product.ended === 'Y'}
               onClick={(e) => {
                 e.stopPropagation();
