@@ -18,10 +18,26 @@ const TodayRecommend = () => {
 
   const getData = async () => {
     try {
-      const result = await getWebtoonList(1, 7)
-      const data = result.sort((a, b) => b.rating - a.rating)
+      const result = await getWebtoonList(1, 50)
+
+      // viewCount의 최대값 계산
+      const maxViewCount = Math.max(...result.map((item) => item.viewCount))
+      const VIEW_WEIGHT = 1
+
+      const data = result
+        .map((webtoon) => ({
+          ...webtoon,
+          normalizedViewCount: maxViewCount
+            ? webtoon.viewCount / maxViewCount
+            : 0,
+          compositeScore:
+            webtoon.rating + (webtoon.viewCount / maxViewCount) * VIEW_WEIGHT,
+        }))
+        .sort((a, b) => b.compositeScore - a.compositeScore)
+        .slice(0, 7)
+
       setWebtoons(data)
-      setBackgroundImg(result[0].garoThumbnail)
+      setBackgroundImg(data[0].garoThumbnail)
     } catch (error) {
       navigate('/error', { state: { message: error.response.data.message } })
       console.error('웹툰 조회 실패: ', error)
@@ -31,7 +47,7 @@ const TodayRecommend = () => {
   // carousel setting
   const setting = {
     dots: false,
-    Infinite: true,
+    infinite: true,
     speed: 2000,
     slidesToShow: 1,
     slidesToScroll: 1,

@@ -65,7 +65,7 @@ const NavBar = () => {
         <img
           src={userData.profileImage}
           alt='유저 프로필 이미지'
-          className='h-[32px] w-[32px] rounded-full'
+          className='h-[32px] w-[32px] rounded-full object-cover'
         />
       </div>
     )
