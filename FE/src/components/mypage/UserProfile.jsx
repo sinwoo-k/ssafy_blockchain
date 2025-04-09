@@ -63,12 +63,12 @@ const UserProfile = () => {
           setUser(userDetails);
           
           // NFT 개수 가져오기
-          try {
-            const nftList = await nftService.getMyNFTs();
-            setNftCount(nftList?.length || 0);
-          } catch (nftErr) {
-            console.error('NFT 정보 로드 오류:', nftErr);
-          }
+          // try {
+          //   const nftList = await nftService.getMyNFTs();
+          //   setNftCount(nftList?.length || 0);
+          // } catch (nftErr) {
+          //   console.error('NFT 정보 로드 오류:', nftErr);
+          // }
         } else {
           setError('사용자 정보를 찾을 수 없습니다.');
         }

@@ -1,5 +1,6 @@
 import API from '../api/API.js'
-
+import { ethers } from 'ethers';
+import nftMarketplaceArtifact from '../contracts/NFTMarketplace.json'; // ABI JSON 파일 경로
 
 // 내 NFT 목록 조회
 const getMyNFTs = async () => {
@@ -31,6 +32,28 @@ const sellNFT = async (nftData) => {
     const response = await API.post('/auctions', nftData);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+// 메타마스크용 경매 등록 API
+export const createAuctionMetamask = async (nftData) => {
+  try {
+    const response = await API.post('/auctions/metamask', nftData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updateAuctionStatus = async (auctionItemId, status) => {
+  try {
+    const response = await API.post(`/auctions/${auctionItemId}/update-status`, null, {
+      params: { status }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('경매 상태 업데이트 오류:', error);
     throw error;
   }
 };
@@ -110,6 +133,71 @@ const getEthKrwRate = async () => {
   }
 };
 
+// 1) 민팅 요청 → nonce/messageToSign
+const mintNftMetamaskRequest = async (payload) => {
+  // 예: POST /metamask/mint-request
+  const response = await API.post('/blockchain/metamask/mint-request', payload);
+  return response.data; // { needSignature: true, messageToSign: "..." }
+};
+
+// 2) 판매 등록 요청(경매 시작) - 메타마스크 (1단계)
+const sellNFTMetamaskRequest = async (sellData) => {
+  // 예: POST /metamask/sell-request
+  const response = await API.post('/blockchain/metamask/sell-request', sellData);
+  return response.data; // { needSignature: true, messageToSign: "..." }
+};
+
+// 3) 최종 서명 검증 + 트랜잭션 실행
+const confirmSignature = async ({ userId, signature }) => {
+  // 예: POST /confirm-signature
+  const response = await API.post('/blockchain/metamask/confirm-signature', { userId, signature });
+  return response.data; // 트랜잭션 영수증 or payload
+};
+// 3) 메타마스크로 실제 트랜잭션 전송
+export const sendTransactionWithMetamask = async (metamaskPayload) => {
+  if (!window.ethereum) {
+    throw new Error("MetaMask is not installed.");
+  }
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  
+  // signer(현재 메타마스크 계정) 주소를 가져옴
+  const fromAddress = await signer.getAddress();
+
+  // 'from' 필드를 넣어 트랜잭션 객체 생성
+  const tx = {
+    from: fromAddress,
+    to: metamaskPayload.to,
+    data: metamaskPayload.data,
+    value: metamaskPayload.value || 0 // 필요하면 '0x...' 16진수
+  };
+
+  // 실제 트랜잭션 전송
+  const txResponse = await signer.sendTransaction(tx);
+  const receipt = await txResponse.wait();
+  return receipt;
+};
+
+export const signMessageWithMetamask = async (messageToSign) => {
+  if (!window.ethereum) {
+    throw new Error("MetaMask is not installed.");
+  }
+  // 요청: eth_requestAccounts
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  // ethers.js provider/signer
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  const signature = await signer.signMessage(messageToSign);
+  return signature;
+};
+const recordMintToDb = async (mintRecord) => {
+  // POST /nft/record-mint
+  const response = await API.post('/blockchain/record-mint', mintRecord);
+  return response.data;
+};
+export const NFT_MARKETPLACE_ABI = nftMarketplaceArtifact.abi;
 export const nftService = {
   getMyNFTs,
   getNFTTradingHistory,
@@ -117,7 +205,15 @@ export const nftService = {
   getWalletInfo,
   mintNFT,
   getEthUsdRate,
-  getEthKrwRate
+  getEthKrwRate,
+  mintNftMetamaskRequest,
+  sellNFTMetamaskRequest,
+  confirmSignature,
+  sendTransactionWithMetamask,
+  signMessageWithMetamask,
+  recordMintToDb,
+  createAuctionMetamask,
+  updateAuctionStatus
 };
 
 export default nftService;

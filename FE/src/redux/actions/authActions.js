@@ -79,7 +79,7 @@ export const metaMaskLoginAction = () => async (dispatch) => {
     dispatch(userReducerActions.setAuthenticated(true));
     dispatch(userReducerActions.setUser(userData));
 
-    // window.location.reload(); // 페이지 새로고침
+    window.location.reload(); // 페이지 새로고침
 
   } catch (error) {
     dispatch(authActions.setErrorMessage(error.message || '메타마스크 로그인 실패'));
