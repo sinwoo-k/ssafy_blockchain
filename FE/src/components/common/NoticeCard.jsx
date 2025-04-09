@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { deleteNotcie, patchNotice } from '../../api/noticeAPI'
+import { useDispatch } from 'react-redux'
+import { noticeReducerActions } from '../../redux/reducers/noticeSlice'
 
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
 import IconButton from './IconButton'
 
-const NoticeCard = ({ notice, patchData }) => {
+const NoticeCard = ({ notice }) => {
+  const dispatch = useDispatch()
+
   // type에 따라 제목을 반환하는 헬퍼 함수
   const getNoticeTitle = (notice) => {
     switch (notice.type) {
@@ -80,7 +84,7 @@ const NoticeCard = ({ notice, patchData }) => {
   const readData = async () => {
     try {
       const result = await patchNotice(notice.noticeId)
-      patchData()
+      dispatch(noticeReducerActions.markNoticeRead(notice.noticeId))
     } catch (error) {
       console.error('알림 읽음 처리 실패: ', error)
     }
@@ -88,9 +92,12 @@ const NoticeCard = ({ notice, patchData }) => {
 
   const deleteData = async (event) => {
     event.preventDefault()
+    if (!confirm('알림을 삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteNotcie(notice.noticeId)
-      patchData()
+      dispatch(noticeReducerActions.removeNotice(notice.noticeId))
     } catch (error) {
       console.error('알림 삭제 실패: ', error)
     }
