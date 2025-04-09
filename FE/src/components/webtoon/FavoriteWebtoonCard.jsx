@@ -22,7 +22,7 @@ const FavoriteWebtoonCard = ({ webtoon, patchData }) => {
   return (
     <div className='mx-5 w-[200px]'>
       {/* 웹툰 대표이미지 */}
-      <div className='border-chaintoon mb-3 w-full overflow-hidden rounded-xl border'>
+      <div className='mb-3 w-full overflow-hidden rounded-xl'>
         <Link to={`/webtoon/${webtoon.webtoonId}`}>
           <img
             src={webtoon.seroThumbnail}

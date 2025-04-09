@@ -16,7 +16,7 @@ const SingleSearchBar = ({ type }) => {
 
   return (
     <div
-      className='bg-text/30 border-chaintoon flex h-[50px]
+      className='bg-text/30 flex h-[50px]
       w-[800px] items-center rounded-full border px-6'
     >
       <input
@@ -30,10 +30,7 @@ const SingleSearchBar = ({ type }) => {
         maxLength={20}
         onChange={(event) => setKeyword(event.target.value)}
       />
-      <button
-        className='text-chaintoon cursor-pointer'
-        onClick={goSearchResult}
-      >
+      <button className='cursor-pointer' onClick={goSearchResult}>
         <SearchIcon sx={{ fontSize: 30 }} />
       </button>
     </div>

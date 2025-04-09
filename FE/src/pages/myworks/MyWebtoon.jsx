@@ -55,14 +55,16 @@ const MyWebtoon = () => {
               <p className='text-xl'>등록된 웹툰이 없습니다.</p>
             </div>
           ) : (
-            webtoons.map((webtoon) => (
-              <Link
-                key={webtoon.webtoonId}
-                to={`/myworks/webtoon/${webtoon.webtoonId}`}
-              >
-                <MyWebtoonCard webtoon={webtoon} />
-              </Link>
-            ))
+            <div className='mt-5 grid grid-cols-2 gap-3 px-3'>
+              {webtoons.map((webtoon) => (
+                <Link
+                  key={webtoon.webtoonId}
+                  to={`/myworks/webtoon/${webtoon.webtoonId}`}
+                >
+                  <MyWebtoonCard webtoon={webtoon} />
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </div>

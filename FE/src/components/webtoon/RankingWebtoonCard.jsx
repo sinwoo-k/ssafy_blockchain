@@ -7,12 +7,12 @@ const RankingWebtoonCard = ({ webtoon, rank }) => {
       <h1 className='text-chaintoon text-2xl'>{rank}</h1>
       <Link
         to={`/webtoon/${webtoon.webtoonId}`}
-        className='border-chaintoon overflow-hidden rounded-lg border'
+        className=' overflow-hidden rounded-lg '
       >
         <img
           src={webtoon.garoThumbnail}
           alt={`${webtoon.webtoonName} 가로 썸네일`}
-          className='h-[75px] w-[100px] rounded-lg object-cover
+          className='min-h-[55px] w-[100px] rounded-lg object-cover
           transition-transform duration-150 ease-in-out hover:scale-105'
         />
       </Link>
