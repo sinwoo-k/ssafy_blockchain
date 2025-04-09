@@ -6,7 +6,6 @@ import StarIcon from '@mui/icons-material/Star'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 
 const MyWebtoonCard = ({ webtoon }) => {
-  console.log(webtoon)
   return (
     <div className='inset-shadow-text/30 shadow-text/30 flex gap-5 rounded-lg p-3 shadow inset-shadow-xs '>
       {/* 썸네일 이미지 */}
