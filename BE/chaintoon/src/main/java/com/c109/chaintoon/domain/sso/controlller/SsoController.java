@@ -1,7 +1,6 @@
 package com.c109.chaintoon.domain.sso.controlller;
 
 import com.c109.chaintoon.common.jwt.JwtTokenProvider;
-import com.c109.chaintoon.domain.nft.service.BlockchainService;
 import com.c109.chaintoon.domain.sso.dto.request.SsoCodeRequestDto;
 import com.c109.chaintoon.domain.sso.enums.SsoProvider;
 import com.c109.chaintoon.domain.sso.factory.SsoServiceFactory;
@@ -24,7 +23,6 @@ public class SsoController {
     private final SsoServiceFactory ssoServiceFactory;
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final BlockchainService blockchainService;
 
     @GetMapping("/providers/{provider}/authorization-uri")
     public String redirectAuthCodeRequestUrl(@PathVariable String provider) {
@@ -56,7 +54,6 @@ public class SsoController {
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        blockchainService.createWalletAsync(loginId);
 
         return ResponseEntity.ok("인증 성공");
     }
