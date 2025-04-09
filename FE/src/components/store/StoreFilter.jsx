@@ -22,7 +22,7 @@ const StoreFilter = ({ onFilterChange, activeFilters = {}, activeCategory = '' }
   };
 
   return (
-    <div className='mr-8 w-[180px]'>
+    <div className='mt-8 mr-8 w-[180px]'>
       {filterGroups.map((group) => (
         <div key={group.id} className='mb-6'>
           <h2 className='mb-3 border-b border-gray-700 pb-2 text-lg font-medium'>
