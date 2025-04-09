@@ -19,4 +19,5 @@ public class MyInfoResponseDto {
     private Integer following;
     private String url;
     private String joinDate;
+    private String ssoType;
 }
