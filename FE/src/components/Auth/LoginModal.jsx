@@ -170,8 +170,8 @@ const LoginModal = ({ isOpen, onClose }) => {
               disabled={isLoading}
             >
               <div className="flex items-center">
-                <img src={metamasklogo} alt="메타마스크 로고" className="w-[50px]" />
-                <span className="ml-2">Meta Mask</span>
+                <img src={metamasklogo} alt="메타마스크 로고" className="mt-2 mr-3 w-[50px]" />
+                <span className="mr-1">Meta Mask</span>
               </div>
               <span className="rounded bg-[#2a2a2a] px-2 py-1 text-xs text-gray-400">
                 {isMetaMaskAvailable ? '설치됨' : '설치 필요'}
