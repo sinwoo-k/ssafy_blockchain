@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -68,8 +67,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(
                         "/api/auth/**",
-                        "/api/users/search",
-                        "/api/search",
+                        "/api/search/**",
                         "/api/redis/test",
                         "/api/sso/**",
                         "/api/metrics"
