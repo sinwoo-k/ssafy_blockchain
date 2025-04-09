@@ -7,12 +7,12 @@ const GenreWebtoonCard = ({ webtoon }) => {
       {/* 웹툰 이미지 */}
       <Link
         to={`/webtoon/${webtoon.webtoonId}`}
-        className='border-chaintoon overflow-hidden rounded-lg border'
+        className='overflow-hidden rounded-lg'
       >
         <img
           src={webtoon.garoThumbnail}
           alt={`${webtoon.webtoonName} 가로 썸네일`}
-          className='h-[120px] w-[180px] rounded-lg object-cover
+          className='min-h-[120px] w-[180px] rounded-lg object-cover
           transition-transform duration-150 ease-in-out hover:scale-105'
         />
       </Link>
