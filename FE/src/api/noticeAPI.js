@@ -18,8 +18,8 @@ export const deleteNotcie = async (noticeId) => {
   return response.data
 }
 
-/** 아림 전체 삭제 */
+/** 알림 전체 삭제 */
 export const deleteAllNotice = async () => {
-  const response = await API.delete(`/notice`)
+  const response = await API.delete(`/notices`)
   return response.data
 }

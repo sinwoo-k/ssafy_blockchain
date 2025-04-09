@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { deleteAllNotice } from '../../api/noticeAPI'
+import { noticeReducerActions } from '../../redux/reducers/noticeSlice'
 import NoticeCard from './NoticeCard'
 
 // 아이콘
@@ -6,6 +9,8 @@ import CloseIcon from '@mui/icons-material/Close'
 
 const NoticeModal = ({ onClose, notices = [], patchData, hasMore }) => {
   const [animate, setAnimate] = useState(false)
+
+  const dispatch = useDispatch()
 
   // 모달 마운트 시 애니메이션 시작
   useEffect(() => {
@@ -29,6 +34,12 @@ const NoticeModal = ({ onClose, notices = [], patchData, hasMore }) => {
     if (!confirm('알림 전체를 삭제하시겠습니까?')) {
       return
     }
+    try {
+      const result = await deleteAllNotice()
+      dispatch(noticeReducerActions.clearNotices())
+    } catch (error) {
+      console.error('알림 전체 삭제 실패: ', error)
+    }
   }
 
   return (
@@ -47,8 +58,13 @@ const NoticeModal = ({ onClose, notices = [], patchData, hasMore }) => {
         {/* 헤더: 고정 영역 */}
         <div className='flex items-center justify-between border-b p-4'>
           <h2 className='text-xl font-bold'>알림</h2>
-          <div className='flex gap-3'>
-            <button>전체삭제</button>
+          <div className='flex items-center gap-3'>
+            <button
+              className='cursor-pointer rounded-lg border px-2 py-1 hover:text-red-500'
+              onClick={deleteAllData}
+            >
+              전체 삭제
+            </button>
             <button
               onClick={handleClose}
               className='cursor-pointer hover:text-red-500'
@@ -66,7 +82,7 @@ const NoticeModal = ({ onClose, notices = [], patchData, hasMore }) => {
           ) : (
             <p>알림이 없습니다.</p>
           )}
-          {!hasMore && (
+          {hasMore && (
             <button
               className='hover:text-chaintoon w-full cursor-pointer'
               onClick={patchData}

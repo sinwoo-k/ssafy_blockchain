@@ -40,6 +40,10 @@ export const noticeSlice = createSlice({
         state.uncheckedNoticeCount--
       }
     },
+    clearNotices: (state) => {
+      state.noticeList = []
+      state.uncheckedNoticeCount = 0
+    },
   },
 })
 

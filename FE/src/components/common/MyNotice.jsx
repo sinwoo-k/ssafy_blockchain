@@ -18,14 +18,14 @@ const MyNotice = () => {
 
   const getData = async () => {
     try {
-      const result = await getNotice(page, 20)
+      const result = await getNotice(page, 10)
       if (page === 1) {
         dispatch(noticeReducerActions.setNotice(result))
       } else {
         dispatch(noticeReducerActions.addNotices(result))
       }
       setPage((prev) => prev + 1)
-      if (result.length < 20) setHasMore(false)
+      if (result.noticeList.length < 10) setHasMore(false)
     } catch (error) {
       console.error('알림 조회 실패: ', error)
     }
