@@ -19,7 +19,7 @@ const MyPage = () => {
   const { isAuthenticated } = useSelector(state => state.user);
 
   return (
-    <div className="min-h-screen bg-black text-white pt-[80px] relative">
+    <div className="min-h-screen bg-black text-white pt-[62px] relative">
       
       {/* 전체 컨테이너 */}
       <div className="mx-auto max-w-5xl">
