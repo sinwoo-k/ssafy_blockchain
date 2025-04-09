@@ -2,9 +2,14 @@ package com.c109.chaintoon.domain.nft.service;
 
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.scheduler.service.SchedulingService;
+import com.c109.chaintoon.domain.fanart.entity.Fanart;
+import com.c109.chaintoon.domain.fanart.repository.FanartRepository;
+import com.c109.chaintoon.domain.goods.entity.Goods;
+import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.BlockchainSaleRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
+import com.c109.chaintoon.domain.nft.dto.blockchain.response.BlockchainBuyResponseDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -17,22 +22,19 @@ import com.c109.chaintoon.domain.nft.entity.BiddingHistory;
 import com.c109.chaintoon.domain.nft.entity.Nft;
 import com.c109.chaintoon.domain.nft.entity.TradingHistory;
 import com.c109.chaintoon.domain.nft.exception.*;
-import com.c109.chaintoon.domain.nft.repository.AuctionItemRepository;
-import com.c109.chaintoon.domain.nft.repository.BiddingHistoryRepository;
-import com.c109.chaintoon.domain.nft.repository.NftRepository;
-import com.c109.chaintoon.domain.nft.repository.TradingHistoryRepository;
-import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.nft.repository.*;
+import com.c109.chaintoon.domain.nft.specification.AuctionItemSpecification;
 import com.c109.chaintoon.domain.user.service.NoticeService;
-import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
-import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
+import com.c109.chaintoon.domain.webtoon.entity.Episode;
+import com.c109.chaintoon.domain.webtoon.repository.EpisodeRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,9 +54,11 @@ public class AuctionItemService {
     private final TradingHistoryRepository tradingHistoryRepository;
     private final BlockchainService blockchainService;
     private final SchedulingService schedulingService;
-    private final UserRepository userRepository;
     private final NoticeService noticeService;
-    private final WebtoonRepository webtoonRepository;
+    private final EpisodeRepository episodeRepository;
+    private final FanartRepository fanartRepository;
+    private final GoodsRepository goodsRepository;
+    private final WalletRepository walletRepository;
 
     private AuctionItem getOrThrowAuctionItem(Integer auctionItemId) {
         return auctionItemRepository.findById(auctionItemId)
@@ -131,13 +135,6 @@ public class AuctionItemService {
                 .build();
     }
 
-    private Webtoon getWebtoonByNft(Nft nft) {
-        if (nft.getWebtoonId() != null) {
-            return webtoonRepository.findById(nft.getWebtoonId())
-                    .orElseThrow(() -> new WebtoonNotFoundException(nft.getWebtoonId()));
-        }
-        return null;
-    }
 
     private Sort getSort(String orderBy) {
         if ("biddingPrice".equalsIgnoreCase(orderBy)) {
@@ -201,6 +198,7 @@ public class AuctionItemService {
                 .doOnError(e -> {
                     log.error("블록체인 판매 등록 요청 실패: {}", e.getMessage());
                     saved.setBlockchainStatus("FAILED");
+                    saved.setEnded("Y");
                     auctionItemRepository.save(saved);
                     noticeService.addBlockchainNetworkFailNotice(nft.getUserId(), "NFT 판매 등록에 실패했습니다.");
                 })
@@ -355,8 +353,7 @@ public class AuctionItemService {
                 .userId(userId)
                 .build();
 
-        blockchainService.registerBuy(buyRequestDto);
-
+        BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
         // 경매 아이템 업데이트
         auctionItem.setBiddingPrice(buyNowPrice);
         auctionItem.setEnded("Y");
@@ -383,10 +380,18 @@ public class AuctionItemService {
 
         tradingHistoryRepository.save(tradingHistory);
 
-        Webtoon webtoon = getWebtoonByNft(nft);
+        noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
+        Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
+        Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
 
-        noticeService.addAuctionCompleteNotice(tradingHistory, webtoon);
-
+        if(originalCreator != null && !originalCreator.equals(nft.getUserId())) {
+            noticeService.addSecondaryCreationNftSoldNotice(
+                    originalCreator,
+                    nftId,
+                    Double.valueOf(blockchainBuyResponseDto.getSoldPriceEther()),
+                    Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
+            );
+        }
         // 비동기적으로 구매 후 지갑 잔액 조회해서 로그 출력
         blockchainService.getWalletBalanceAsync(userId)
                 .subscribe(remainingBalance -> {
@@ -519,12 +524,23 @@ public class AuctionItemService {
                     .price(bidderBidMap.get(winner))
                     .userId(winner)
                     .build();
-            blockchainService.registerBuy(buyRequestDto);
+            BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
+            Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
+
+            Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
             log.info("블록체인 구매 등록 요청 보내짐 for 낙찰자: {}", winner);
 
-            Webtoon webtoon = getWebtoonByNft(nft);
 
-            noticeService.addAuctionCompleteNotice(tradingHistory, webtoon);
+            noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
+
+            if(originalCreator != null && !originalCreator.equals(nft.getUserId())) {
+                noticeService.addSecondaryCreationNftSoldNotice(
+                        originalCreator,
+                        nftId,
+                        Double.valueOf(blockchainBuyResponseDto.getTokenId()),
+                        Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
+                );
+            }
         }
     }
 
@@ -580,19 +596,21 @@ public class AuctionItemService {
 
     // 에피소드, 굿즈, 팬아트별 목록 조회
     @Transactional
-    public Page<AuctionCreateResponseDto> getFilteredAuctionItems(Integer webtoonId, String type, String ended, int page, int pageSize, String orderBy) {
-        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
-        Page<AuctionItem> pageResult;
+    public Page<AuctionCreateResponseDto> getFilteredAuctionItems(Integer webtoonId, String type, String ended, List<String> genres, int page, int pageSize, String orderBy) {
+        Specification<AuctionItem> spec = Specification
+                .where(AuctionItemSpecification.hasBlockchainSuccess()) // 등록 성공
+                .and(AuctionItemSpecification.hasType(type)) // type 일치
+                .and(AuctionItemSpecification.hasWebtoonId(webtoonId)) // webtoonId 일치, null 인 경우 생략
+                .and(AuctionItemSpecification.hasEnded(ended)) // ended 일치
+                .and(AuctionItemSpecification.hasGenres(genres)); // 장르 포함 in 연산자
 
-        if (StringUtils.hasText(ended)) {
-            pageResult = auctionItemRepository.findByTypeAndWebtoonIdAndEnded(type, webtoonId, ended, pageable);
-        } else {
-            pageResult = auctionItemRepository.findByTypeAndWebtoonId(type, webtoonId, pageable);
-        }
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
+        Page<AuctionItem> pageResult = auctionItemRepository.findAll(spec, pageable);
 
         return pageResult.map(item -> {
                     Nft nft = getOrThrowNft(item.getNftId());
                     String imageUrl = (nft != null) ? nft.getImageUrl() : null;
+                    String itemName = resolveItemName(nft);
 
                     return AuctionCreateResponseDto.builder()
                             .auctionItemId(item.getAuctionItemId())
@@ -604,8 +622,24 @@ public class AuctionItemService {
                             .ended(item.getEnded())
                             .type(item.getType())
                             .imageUrl(imageUrl)
+                            .itemName(itemName)
                             .build();
                 }
         );
+    }
+
+    private String resolveItemName(Nft nft) {
+        return switch (nft.getType()) {
+            case "episode" -> episodeRepository.findById(nft.getTypeId())
+                    .map(Episode::getEpisodeName)
+                    .orElse("Unknown Episode");
+            case "fanart" -> fanartRepository.findById(nft.getTypeId())
+                    .map(Fanart::getFanartName)
+                    .orElse("Unknown Fanart");
+            case "goods" -> goodsRepository.findById(nft.getTypeId())
+                    .map(Goods::getGoodsName)
+                    .orElse("Unknown Goods");
+            default -> "Unsupported Type";
+        };
     }
 }

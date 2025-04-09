@@ -26,14 +26,19 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
       setBackgroundImg(result.garoThumbnail)
     } catch (error) {
       console.error('웹툰 정보 불러오기 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 
   const deleteData = async () => {
+    if (!confirm('삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteWebtoon(webtoonId)
       navigate('/myworks/webtoon')
     } catch (error) {
+      alert(error.response.data.message)
       console.error('웹툰 정보 삭제 실패: ', error)
     }
   }
@@ -45,7 +50,7 @@ const MyWebtoonDetailInfo = ({ webtoonId }) => {
     return () => {}
   }, [])
   return (
-    <div className={`relative mb-10 flex w-full justify-center py-10`}>
+    <div className={`relative mb-10 flex w-full justify-center pt-[80px]`}>
       <div
         className='absolute inset-0 bg-cover bg-center'
         style={{

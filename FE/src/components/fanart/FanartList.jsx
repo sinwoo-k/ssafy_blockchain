@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import BarLoader from 'react-spinners/BarLoader'
 import { getWebtoonFanarts } from '../../api/fanartAPI'
 
@@ -8,6 +8,8 @@ import { getWebtoonFanarts } from '../../api/fanartAPI'
 import ErrorIcon from '@mui/icons-material/Error'
 
 const FanartList = ({ webtoonId }) => {
+  const navigate = useNavigate()
+
   const [isLoading, setIsLoding] = useState(true)
 
   const [fanarts, setFanarts] = useState([])
@@ -15,9 +17,9 @@ const FanartList = ({ webtoonId }) => {
   const getData = async () => {
     try {
       const result = await getWebtoonFanarts(webtoonId)
-      console.log(result)
       setFanarts(result)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('팬아트 조회 실패: ', error)
     }
   }
@@ -46,15 +48,16 @@ const FanartList = ({ webtoonId }) => {
               onRenderComplete={() => setIsLoding(false)}
             >
               {fanarts.map((fanart) => (
-                <div className='item' key={fanart.fanartId}>
+                <div className='item w-[190px]' key={fanart.fanartId}>
                   <Link to={`/fanart/${fanart.fanartId}`}>
                     <img
                       src={fanart.fanartImage}
                       alt='팬아트 이미지'
-                      className='w-[190px] rounded-lg'
+                      className='w-[190px] rounded-lg
+                      transition-transform duration-150 ease-in-out hover:scale-105'
                     />
                   </Link>
-                  <p className='px-2 py-1'>{fanart.fanartName}</p>
+                  <p className='truncate py-1'>{fanart.fanartName}</p>
                 </div>
               ))}
             </MasonryInfiniteGrid>

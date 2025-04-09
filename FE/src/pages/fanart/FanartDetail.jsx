@@ -14,6 +14,7 @@ const FanartDetail = () => {
         setCommentCount={setCommentCount}
       />
       <CommentList
+        key={params.fanartId}
         usageId={params.fanartId}
         type={'COMMENT_FANART'}
         commentCount={commentCount}

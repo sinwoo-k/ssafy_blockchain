@@ -10,11 +10,15 @@ import { deleteGoods } from '../../api/goodsAPI'
 
 const GoodsCard = ({ goods, patchData }) => {
   const deleteData = async () => {
+    if (!confirm('삭제하시겠습니까?')) {
+      return
+    }
     try {
       const result = await deleteGoods(goods.goodsId)
       patchData()
     } catch (error) {
       console.error('굿즈 삭제 실패: ', error)
+      alert('굿즈 정보 삭제에 실패하였습니다. 다시 시도해주세요.')
     }
   }
   return (
@@ -28,11 +32,7 @@ const GoodsCard = ({ goods, patchData }) => {
           />
         </div>
         <div className='flex justify-between'>
-          <MintNFT
-            item={goods}
-            type="goods"
-            afterMint={patchData}
-          />
+          <MintNFT item={goods} type='goods' afterMint={patchData} />
           <div className='flex gap-3'>
             <Link
               to={`/myworks/webtoon/goods/update/${goods.goodsId}`}

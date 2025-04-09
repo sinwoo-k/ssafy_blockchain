@@ -14,4 +14,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Integer> {
     Long countByUserIdAndCheckedAndDeleted(Integer userId, String checked, String deleted, Limit limit);
 
     Optional<Notice> findByNoticeIdAndDeleted(Integer noticeId, String deleted);
+
+    void deleteAllByUserId(Integer userId);
 }

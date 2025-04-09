@@ -5,6 +5,7 @@ import MyWebtoonEpisodePreview from '../../components/myworks/MyWebtoonEpisodePr
 import { getEpisode, patchEpisode } from '../../api/webtoonAPI'
 import IconButton from '../../components/common/IconButton'
 import { checkWidthSize } from '../../utils/image/limiteSize'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
@@ -30,6 +31,8 @@ const MyWebtoonEpisodeUpdate = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [writerComment, setWriterComment] = useState('') // 작가의 말
   const [commentable, setCommentable] = useState(false) // 댓글 허용 여부
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 썸네일 관련 함수
   // 이미지 파일 선택시
@@ -117,6 +120,7 @@ const MyWebtoonEpisodeUpdate = () => {
       writerComment: writerComment,
       commentable: commentable ? 'Y' : 'N',
     }
+    setIsLoading(true)
     try {
       const result = await patchEpisode(
         params.episodeId,
@@ -127,6 +131,9 @@ const MyWebtoonEpisodeUpdate = () => {
       navigate(`/myworks/webtoon/${webtoonId}`)
     } catch (error) {
       console.error('회차 정보 수정 실패: ', error)
+      alert('회차 정보 수정에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -378,6 +385,7 @@ const MyWebtoonEpisodeUpdate = () => {
           </div>
         </div>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

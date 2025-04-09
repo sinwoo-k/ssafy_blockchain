@@ -25,7 +25,7 @@ const SingleSearchBar = ({ type }) => {
         onKeyDown={(event) => {
           if (event.key === 'Enter') goSearchResult()
         }}
-        placeholder='웹툰을 검색하세요'
+        placeholder={`${type === 'webtoon' ? '웹툰을' : ''} ${type === 'fanart' ? '팬아트를' : ''} 검색하세요`}
         value={keyword}
         maxLength={20}
         onChange={(event) => setKeyword(event.target.value)}

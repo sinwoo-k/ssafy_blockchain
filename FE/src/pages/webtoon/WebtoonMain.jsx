@@ -31,18 +31,22 @@ const WebtoonMain = () => {
       <div className='mb-10 flex justify-center'>
         <div className='w-[1000px]'>
           {/* 장르별 웹툰 */}
-          <div className='flex items-end gap-3'>
+          <div className='flex gap-3'>
             <h1 className='text-xl'>장르별 인기 웹툰</h1>
-            <div className='flex gap-2'>
-              {genreList.map((genre) => (
-                <span
-                  key={genre}
-                  className={`${genreActive === genre ? 'text-chaintoon' : 'text-text/75'}
+            <div className='flex gap-1'>
+              {genreList.map((genre, index) => (
+                <div key={genre} className='flex items-center gap-1'>
+                  <span className='text-text/50 text-2xl'>
+                    {index !== 0 && '·'}
+                  </span>
+                  <span
+                    className={`${genreActive === genre ? 'text-chaintoon' : 'text-text/75'}
                   cursor-pointer text-sm`}
-                  onClick={() => setGenreActive(genre)}
-                >
-                  {genre}
-                </span>
+                    onClick={() => setGenreActive(genre)}
+                  >
+                    {genre}
+                  </span>
+                </div>
               ))}
             </div>
           </div>

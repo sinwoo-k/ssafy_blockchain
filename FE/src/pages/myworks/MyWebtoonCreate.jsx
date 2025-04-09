@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
@@ -35,6 +36,7 @@ const MyWebtoonCreate = () => {
   const [showSeroImageModal, setShowSeroImageModal] = useState(false)
   const [adaptable, setAdaptable] = useState(false) // 팬아트 허용
   const [confirmAgreement, setConfirmAgreement] = useState(false) // 약관동의
+  const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
 
@@ -110,12 +112,15 @@ const MyWebtoonCreate = () => {
       adaptable: adaptable ? 'Y' : 'N',
     }
 
+    setIsLoading(true)
     try {
       const result = await createWebtoon(payload, garoImage, seroImage)
       navigate('/myworks/webtoon')
     } catch (error) {
       console.error('웹툰 등록 중 에러 발생:', error)
       alert('웹툰 등록에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
   return (
@@ -378,6 +383,7 @@ const MyWebtoonCreate = () => {
           </div>
         </div>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

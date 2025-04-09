@@ -7,18 +7,25 @@ const GenreWebtoonCard = ({ webtoon }) => {
       {/* 웹툰 이미지 */}
       <Link
         to={`/webtoon/${webtoon.webtoonId}`}
-        className='border-chaintoon rounded-lg border'
+        className='border-chaintoon overflow-hidden rounded-lg border'
       >
         <img
           src={webtoon.garoThumbnail}
           alt={`${webtoon.webtoonName} 가로 썸네일`}
-          className='h-[120px] w-[180px] rounded-lg object-cover'
+          className='h-[120px] w-[180px] rounded-lg object-cover
+          transition-transform duration-150 ease-in-out hover:scale-105'
         />
       </Link>
       {/* 웹툰 정보 */}
       <div>
-        <p className='truncate'>{webtoon.webtoonName}</p>
-        <p className='text-text/75 truncate text-sm'>{webtoon.writer}</p>
+        <Link to={`/webtoon/${webtoon.webtoonId}`}>
+          <p className='truncate hover:underline'>{webtoon.webtoonName}</p>
+        </Link>
+        <Link to={`/user/${webtoon.userId}`}>
+          <p className='text-text/75 truncate text-sm hover:underline'>
+            {webtoon.writer}
+          </p>
+        </Link>
       </div>
     </div>
   )

@@ -1,14 +1,41 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useInView } from 'react-intersection-observer'
 import WebtoonViewerNavBar from '../../components/webtoon/WebtoonViewerNavBar'
 import WebtoonViewer from '../../components/webtoon/WebtoonViewer'
 import WebtoonEpisodeUtility from '../../components/webtoon/WebtoonEpisodeUtility'
 import { getEpisode, getWebtoon } from '../../api/webtoonAPI'
 import CommentList from '../../components/comment/CommentList'
+import ScrollButtons from '../../components/common/ScrollButtons'
+
+/** 스크롤 위치, 만료시간 저장 */
+const setWithExpiry = (key, value, ttl) => {
+  const now = new Date()
+  const item = {
+    value,
+    expiry: now.getTime() + ttl,
+  }
+  localStorage.setItem(key, JSON.stringify(item))
+}
+
+/** 스크롤 위치 만료시간 체크 */
+const getWithExpiry = (key) => {
+  const itemStr = localStorage.getItem(key)
+  if (!itemStr) return null
+  const item = JSON.parse(itemStr)
+  const now = new Date()
+  if (now.getTime() > item.expiry) {
+    localStorage.removeItem(key)
+    return null
+  }
+  return item.value
+}
+
+const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
 
 const WebtoonEpisode = () => {
   const params = useParams()
+  const navigate = useNavigate()
 
   // 에피소드 데이터
   const [episode, setEpisode] = useState([])
@@ -35,6 +62,7 @@ const WebtoonEpisode = () => {
       return
     }
     setNavbarShow(false)
+    setWithExpiry(`scroll-position-${params.episodeId}`, scrollTop, ONE_WEEK)
   }
   // 뷰어 클릭시 내비바 보이기
   const handleClickViewer = () => {
@@ -53,10 +81,19 @@ const WebtoonEpisode = () => {
       setWebtoonName(webtoonNameResult.webtoonName)
     } catch (error) {
       console.error('회차 불러오기 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
   useEffect(() => {
-    getData()
+    getData().then((res) => {
+      const savedPosition = getWithExpiry(`scroll-position-${params.episodeId}`)
+      if (savedPosition !== null) {
+        window.scrollTo({
+          top: Number(savedPosition),
+          behavior: 'smooth',
+        })
+      }
+    })
   }, [params.episodeId])
 
   useEffect(() => {
@@ -85,7 +122,7 @@ const WebtoonEpisode = () => {
         />
       )}
       {/* 웹툰 뷰어 */}
-      <div ref={ref} className='mb-24'>
+      <div ref={ref} className='mb-32'>
         <WebtoonViewer
           handleClickViewer={handleClickViewer}
           images={episode.images}
@@ -95,11 +132,13 @@ const WebtoonEpisode = () => {
       <WebtoonEpisodeUtility episode={episode} />
       {/* 댓글 */}
       <CommentList
+        key={params.episodeId}
         usageId={params.episodeId}
         type={'COMMENT_EPISODE'}
         commentCount={commentCount}
         setCommentCount={setCommentCount}
       />
+      <ScrollButtons entry={entry} />
     </div>
   )
 }

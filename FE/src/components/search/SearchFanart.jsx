@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { MasonryInfiniteGrid } from '@egjs/react-infinitegrid'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import BarLoader from 'react-spinners/BarLoader'
 
 // 아이콘
@@ -8,6 +8,8 @@ import ErrorIcon from '@mui/icons-material/Error'
 import { getDomainSearch } from '../../api/searchAPI'
 
 const SearchFanart = ({ keyword }) => {
+  const navigate = useNavigate()
+
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
@@ -24,6 +26,7 @@ const SearchFanart = ({ keyword }) => {
       }
     } catch (error) {
       console.error('검색 결과 조회 실패: ', error)
+      navigate('/error', { state: { message: error.response.data.message } })
     }
   }
 

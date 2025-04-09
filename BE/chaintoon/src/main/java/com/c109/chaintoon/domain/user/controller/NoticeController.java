@@ -25,6 +25,14 @@ public class NoticeController {
         return new ResponseEntity<>(noticeList, HttpStatus.OK);
     }
 
+    @DeleteMapping()
+    public ResponseEntity<?> deleteAllNotices(
+            @AuthenticationPrincipal Integer userId
+    ) {
+        noticeService.deleteAllNotices(userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PatchMapping("/{noticeId}")
     public ResponseEntity<?> readNotice(
             @AuthenticationPrincipal Integer userId,

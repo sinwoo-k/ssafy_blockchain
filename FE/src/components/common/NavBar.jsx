@@ -65,7 +65,7 @@ const NavBar = () => {
         <img
           src={userData.profileImage}
           alt='유저 프로필 이미지'
-          className='h-[28px] w-[28px]'
+          className='h-[32px] w-[32px] rounded-full object-cover'
         />
       </div>
     )
@@ -143,7 +143,7 @@ const NavBar = () => {
                       : userProfileImage
                   }
                   tooltip={`${userData.nickname}님`}
-                  style={{ fontSize: 30, color: randomColor }}
+                  style={{ fontSize: 32, color: randomColor }}
                 />
               </div>
               <div className='hover:text-chaintoon' onClick={handleLogout}>

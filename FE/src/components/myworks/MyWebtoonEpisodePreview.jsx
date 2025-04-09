@@ -1,7 +1,6 @@
 import React from 'react'
 
 const MyWebtoonEpisodePreview = ({ images, setShowModal }) => {
-  console.log(images)
   return (
     <div className='fixed top-0 left-0 z-50'>
       <div

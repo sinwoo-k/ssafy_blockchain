@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class AuctionCreateResponseDto {
     private Integer auctionItemId;
     private Integer nftId;
+    private String itemName;
     private String type;
     private String imageUrl;
     private Double biddingPrice;

@@ -8,9 +8,8 @@ import com.c109.chaintoon.domain.nft.dto.response.AuctionBidResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionBuyNowResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.AuctionCreateResponseDto;
 import com.c109.chaintoon.domain.nft.dto.response.BiddingHistoryResponseDto;
-import com.c109.chaintoon.domain.nft.exception.AuctionItemNotFoundException;
-import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.service.AuctionItemService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +24,12 @@ import java.util.List;
 public class AuctionItemController {
 
     private final AuctionItemService auctionItemService;
-    private final NftRepository nftRepository;
 
     // 판매 등록
     @PostMapping
     public ResponseEntity<?> createAuctionItem(
             @AuthenticationPrincipal Integer userId,
-            @RequestBody AuctionCreateRequestDto auctionCreateRequestDto
+            @RequestBody @Valid AuctionCreateRequestDto auctionCreateRequestDto
             ) {
         // 소유자 체크 통과 시 경매 등록 진행
         AuctionCreateResponseDto response = auctionItemService.createAuctionItem(userId, auctionCreateRequestDto);
@@ -42,38 +40,41 @@ public class AuctionItemController {
     @GetMapping("/episodes")
     public ResponseEntity<?> getEpisodeAuctions(
             @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "episode", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "episode", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
     // 굿즈 경매 목록 조회
     @GetMapping("/goods")
     public ResponseEntity<?> getGoodAuctions(
-            @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false) Integer webtoonId,
+            @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "goods", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "goods", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
     // 팬아트 경매 목록 조회
     @GetMapping("/fanarts")
     public ResponseEntity<?> getFanartAuctions(
-            @RequestParam Integer webtoonId,
-            @RequestParam(required = false) String ended,
+            @RequestParam(required = false) Integer webtoonId,
+            @RequestParam(required = false, defaultValue = "N") String ended,
+            @RequestParam(required = false) List<String> genres,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String orderBy
     ) {
-        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "fanart", ended, page, pageSize, orderBy);
+        Page<AuctionCreateResponseDto> result = auctionItemService.getFilteredAuctionItems(webtoonId, "fanart", ended, genres, page, pageSize, orderBy);
         return ResponseEntity.ok(result);
     }
 
@@ -81,7 +82,7 @@ public class AuctionItemController {
     @PostMapping("/bid")
     public ResponseEntity<?> tenderBid (
             @AuthenticationPrincipal Integer userId,
-            @RequestBody AuctionBidRequestDto auctionBidRequestDto
+            @RequestBody @Valid AuctionBidRequestDto auctionBidRequestDto
             ) {
         AuctionBidResponseDto response = auctionItemService.tenderBid(userId, auctionBidRequestDto);
         return ResponseEntity.ok(response);
@@ -103,7 +104,7 @@ public class AuctionItemController {
     @PostMapping("buy-now")
     public ResponseEntity<?> buyNow (
             @AuthenticationPrincipal Integer userId,
-            @RequestBody AuctionBuyNowRequestDto buyNowRequestDto
+            @RequestBody @Valid AuctionBuyNowRequestDto buyNowRequestDto
             ) {
         AuctionBuyNowResponseDto response = auctionItemService.buyNow(userId, buyNowRequestDto);
         return ResponseEntity.ok(response);

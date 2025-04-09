@@ -5,6 +5,7 @@ import {
   saveNftToDatabase,
   getEpisodeById, getFanartById,
   getGoodsById,
+  getNftCountByTypeId,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -75,7 +76,7 @@ async function downloadFileFromS3(s3Url) {
  * @param {Buffer} fileBuffer 
  * @returns {Promise<string>} IPFS URL
  */
-async function uploadFileToPinata(fileBuffer, name) {
+export async function uploadFileToPinata(fileBuffer, name) {
   try {
     const options = {
       pinataMetadata: {
@@ -96,7 +97,7 @@ async function uploadFileToPinata(fileBuffer, name) {
  * @param {Object} jsonData 
  * @returns {Promise<string>} IPFS URL
  */
-async function uploadJSONToPinata(jsonData) {
+export async function uploadJSONToPinata(jsonData) {
   try {
     const result = await pinata.pinJSONToIPFS(jsonData);
     return `${process.env.IPFS_GATEWAY}${result.IpfsHash}`;
@@ -113,7 +114,7 @@ async function uploadJSONToPinata(jsonData) {
 export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, owner }) {
   try {
     const ownerId = await getWalletByAddress(owner);
-    if(ownerId.user_id != userId){
+    if (ownerId.user_id != userId) {
       throw new AppError("작성자의 지갑과 유저의 아이디가 다릅니다.", 403);
     }
     let title;
@@ -122,7 +123,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       if (fanart == null) {
         throw new AppError("해당하는 펜아트가 없습니다.", 404);
       }
-      if(fanart?.user_id != userId){
+      if (fanart?.user_id != userId) {
         throw new AppError("펜아트의 작성자만 등록 할 수 있습니다.", 403);
       }
       title = fanart.fanart_name;
@@ -131,7 +132,7 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       if (goods == null) {
         throw new AppError("해당하는 굿즈가 없습니다.", 404);
       }
-      if(goods?.user_id != userId){
+      if (goods?.user_id != userId) {
         throw new AppError("굿즈의 작성자만 등록 할 수 있습니다.", 403);
       }
       title = goods.goods_name;
@@ -153,22 +154,12 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     // 1. 이미지 처리: S3 URL이 있으면 다운로드 후 Pinata에 업로드
     const fileBuffer = await downloadFileFromS3(s3Url);
     const imageUrl = await uploadFileToPinata(fileBuffer, title);
-
+    const nftNumber = await getNftCountByTypeId(type, typeId);
     // 2. 메타데이터 생성
     const metadata = {
-      title: `${title} NFT #${typeId}`,
+      title: `${title} NFT #${nftNumber + 1}`,
       description: `${webtoonName.webtoon_name}에 대한 NFT.`,
       image: imageUrl,
-      wallets: {
-        originalCreator,
-        owner: owner,
-        adminWallet,
-      },
-      revenueDistribution: {
-        originalCreator: "4%",
-        owner: "95%",
-        adminWallet: "1%",
-      }
     };
 
     // 3. 메타데이터 JSON을 Pinata에 업로드
@@ -209,7 +200,6 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
       owner,
       metadataUri,
       originalCreator,
-      owner,
       adminWallet
     );
     const receipt = await tx.wait();
@@ -343,22 +333,61 @@ export async function buyNftService({ tokenId, price, userId }) {
       const tx = await nftMarketplace.buyNFT(tokenId, { value: priceWei });
       const receipt = await tx.wait();
 
-      let sold = false;
+      let soldEvent = null;
       for (const log of receipt.logs) {
         try {
           const parsedLog = nftMarketplace.interface.parseLog(log);
           if (parsedLog.name === 'NFTSold') {
-            sold = true;
+            // 예: event NFTSold(uint256 tokenId, address buyer, address seller, uint256 price);
+            soldEvent = {
+              tokenId: parsedLog.args.tokenId.toString(),
+              buyer: parsedLog.args.buyer,
+              seller: parsedLog.args.seller,
+              priceWei: parsedLog.args.price.toString(),
+            };
             break;
           }
         } catch (parseError) {
-          // 해당 로그가 NFTMarketplace 이벤트가 아닐 경우 무시
+          // ignore non-related logs
         }
       }
-      if (!sold) {
+      if (!soldEvent) {
         throw new AppError('NFTSold 이벤트가 발생하지 않았습니다.', 500);
       }
-      return { message: 'NFT 구매 성공', tokenId };
+
+      const royaltyInfo = await nftMarketplace.royaltyInfoByToken(soldEvent.tokenId);
+      const originalCreator = royaltyInfo.originalCreator;
+      const prevOwner = royaltyInfo.ownerShare; // buyNFT가 끝난 시점엔 이미 업데이트 되었을 수도 있으니 주의
+      // 총 거래 금액(Wei)
+      const totalPaidWei = BigInt(soldEvent.priceWei);
+      // 4%, 95%, 1% 계산
+      const originalCreatorShareWei = (totalPaidWei * 4n) / 100n;
+      const prevOwnerShareWei = (totalPaidWei * 95n) / 100n;
+
+      // Wei → Ether(소수점 5자리)
+      const soldPriceEther = parseFloat(ethers.formatEther(totalPaidWei)).toFixed(5);
+      const originalCreatorShareEther = parseFloat(ethers.formatEther(originalCreatorShareWei)).toFixed(5);
+      const prevOwnerShareEther = parseFloat(ethers.formatEther(prevOwnerShareWei)).toFixed(5);
+      console.log("soldPriceEther:", soldPriceEther);
+      console.log("originalCreatorShareEther:", originalCreatorShareEther);
+      return {
+        message: 'NFT 구매 성공',
+        tokenId: soldEvent.tokenId,
+        // 구매자 / 판매자
+        buyer: soldEvent.buyer,
+        seller: soldEvent.seller,
+
+        // 전체 판매금액
+        soldPriceEther,
+
+        // 로열티 주소
+        originalCreator,
+        prevOwner,       // 이번에 판 사람과 같을 것
+
+        // 실제 분배 금액
+        originalCreatorShareEther,
+        prevOwnerShareEther,
+      };
     } else {
       const messageToSign = `${userId}-${Date.now()}`;
       const challengeData = {
@@ -480,4 +509,6 @@ export default {
   buyNftService,
   confirmSignatureService,
   setChallenge,
+  uploadFileToPinata,
+  uploadJSONToPinata,
 };

@@ -146,7 +146,8 @@ const ReplyCard = ({ reply, patchData }) => {
             {reply.profileImage ? (
               <div className='flex h-[35px] w-[35px] items-center justify-center rounded-full'>
                 <img
-                  alt={reply.profileImage}
+                  src={reply.profileImage}
+                  alt={`작성자 프로필 이미지`}
                   className='bg-text/30 h-[30px] w-[30px] rounded-full'
                 />
               </div>

@@ -19,4 +19,6 @@ public interface NftRepository extends JpaRepository<Nft, Integer> {
     Optional<Integer> findNftIdByTokenId(@Param("tokenId") Integer tokenId);
 
     boolean existsByWebtoonId(Integer webtoonId);
+
+    boolean existsByTypeIdAndType(Integer typeId, String type);
 }

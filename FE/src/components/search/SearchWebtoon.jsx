@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getDomainSearch } from '../../api/searchAPI'
 import Pagination from '../common/Pagination'
 import SearchWebtoonCard from './SearchWebtoonCard'
@@ -7,6 +8,8 @@ import SearchWebtoonCard from './SearchWebtoonCard'
 import ErrorIcon from '@mui/icons-material/Error'
 
 const SearchWebtoon = ({ keyword }) => {
+  const navigate = useNavigate()
+
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPage, setTotalPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
@@ -24,6 +27,7 @@ const SearchWebtoon = ({ keyword }) => {
         setTotalPage(Math.ceil(result.totalCount / pageSize))
       }
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('검색 결과 조회 실패: ', error)
     }
   }

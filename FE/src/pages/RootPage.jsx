@@ -2,6 +2,7 @@ import React from 'react'
 import { Outlet } from 'react-router-dom'
 import NavBar from '../components/common/NavBar'
 import ScrollToTop from '../components/common/ScrollToTop'
+import Footer from '../components/common/Footer'
 
 const RootPage = () => {
   return (
@@ -9,6 +10,7 @@ const RootPage = () => {
       <ScrollToTop />
       <NavBar />
       <Outlet />
+      <Footer />
     </div>
   )
 }

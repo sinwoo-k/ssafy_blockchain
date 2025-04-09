@@ -18,9 +18,15 @@ const UserProfileWebtoonCard = ({ webtoon }) => {
         </div>
         {/* 웹툰 정보 */}
         <div className='px-2'>
-          <h2 className='text-lg'>{webtoon.webtoonName}</h2>
+          <Link to={`/webtoon/${webtoon.webtoonId}`}>
+            <p className='truncate text-lg hover:underline'>
+              {webtoon.webtoonName}
+            </p>
+          </Link>
           <span className='text-chaintoon inline-block translate-y-[1px] transform'>
-            {formatUploadDate(webtoon.lastUploadDate)}
+            {webtoon.lastUploadDate !== ''
+              ? formatUploadDate(webtoon.lastUploadDate)
+              : ''}
           </span>
         </div>
       </div>

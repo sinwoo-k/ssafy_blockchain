@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getFavoriteWebtoon } from '../../api/webtoonAPI'
 import FavoriteWebtoonCard from '../../components/webtoon/FavoriteWebtoonCard'
 
@@ -6,12 +7,15 @@ import FavoriteWebtoonCard from '../../components/webtoon/FavoriteWebtoonCard'
 import ErrorIcon from '@mui/icons-material/Error'
 
 const FavoriteWebtoon = () => {
+  const navigate = useNavigate()
+
   const [webtoons, setWebtoons] = useState([])
   const getData = async () => {
     try {
       const result = await getFavoriteWebtoon()
       setWebtoons(result)
     } catch (error) {
+      navigate('/error', { state: { message: error.response.data.message } })
       console.error('관심 웹툰 조회 실패: ', error)
     }
   }
