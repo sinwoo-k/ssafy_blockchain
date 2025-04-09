@@ -18,13 +18,13 @@ const StoreMain = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [totalElements, setTotalElements] = useState(0)
 
-  useEffect(() => {
-    if (activeFilters.genre && activeFilters.genre.length > 0) {
-      setSelectedGenres(activeFilters.genre)
-    } else {
-      setSelectedGenres([])
-    }
-  }, [activeFilters.genre])
+  // useEffect(() => {
+  //   if (activeFilters.genre && activeFilters.genre.length > 0) {
+  //     setSelectedGenres(activeFilters.genre)
+  //   } else {
+  //     setSelectedGenres([])
+  //   }
+  // }, [activeFilters.genre])
   
   // ✅ 상품 불러오기 (selectedGenres 변경될 때 작동)
   useEffect(() => {
@@ -36,7 +36,7 @@ const StoreMain = () => {
         let totalItemCount = 0
   
         const getGenreParams = () => {
-          return selectedGenres.length > 0 ? { genres: selectedGenres } : {}
+          return activeFilters.genre?.length > 0 ? { genres: activeFilters.genre } : {}
         }
   
         if (activeCategory === '웹툰') {
@@ -129,7 +129,7 @@ const StoreMain = () => {
     }
   
     fetchProducts()
-  }, [activeCategory, page, pageSize, orderBy, selectedGenres])
+  }, [activeCategory, page, pageSize, orderBy, JSON.stringify(activeFilters.genre)])
 
   
   // 가격 형식 포맷팅 함수 (불필요한 0 제거)
@@ -175,6 +175,7 @@ const StoreMain = () => {
   // 필터 변경 핸들러
   const handleFilterChange = (groupId, filterId) => {
     if (groupId === 'genre') {
+      console.log('장르 필터 변경:', filterId); // 디버깅용
       setActiveFilters(prev => {
         const newFilters = { ...prev }
   
@@ -190,7 +191,14 @@ const StoreMain = () => {
         }
   
         // ✅ 바로 장르 반영
-        setSelectedGenres(newFilters.genre || [])
+        const updatedGenres = newFilters.genre || [];
+        console.log('업데이트된 장르 목록:', updatedGenres); // 디버깅용
+
+      // 중요: setTimeout을 사용하여 상태 업데이트 타이밍 분리
+      setTimeout(() => {
+        setSelectedGenres(updatedGenres);
+        console.log('selectedGenres 상태 업데이트됨'); // 디버깅용
+      }, 0);
   
         return newFilters
       })
