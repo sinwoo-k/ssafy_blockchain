@@ -34,7 +34,7 @@ const StoreMain = () => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true)
-        
+  
         // 정렬 파라미터 설정
         let orderByParam = 'latest'
         if (orderBy === 'priceLow') {
@@ -46,37 +46,38 @@ const StoreMain = () => {
         } else if (orderBy === 'view') {
           orderByParam = 'viewCount,desc'
         }
-        
+  
         let fetchedProducts = []
         let totalPageCount = 0
         let totalItemCount = 0
-        
-        // 카테고리에 따라 다른 API 호출
+  
         if (activeCategory === '웹툰') {
-          // 웹툰 목록 불러오기
-          let webtoons = []
-          
-          // 선택된 장르가 있는 경우, 각 장르별로 API 호출
-          if (selectedGenres.length > 0) {
-            for (const genre of selectedGenres) {
-              const response = await getwebtoonAuctions(page, pageSize, orderBy, genre)
-              webtoons = [...webtoons, ...response]
-            }
-          } else {
-            webtoons = await getwebtoonAuctions(page, pageSize, orderBy)
+          // ✅ params 객체 기반 요청
+          const params = {
+            page: page - 1,
+            size: pageSize,
+            sort: orderByParam,
           }
-          
-          // 중복 제거 (장르별로 불러올 때 중복될 수 있음)
-          webtoons = webtoons.filter((webtoon, index, self) => 
-            index === self.findIndex((w) => w.webtoonId === webtoon.webtoonId)
+  
+          if (selectedGenres.length > 0) {
+            params.genres = selectedGenres
+          }
+  
+          const response = await getwebtoonAuctions(params)
+  
+          const webtoons = Array.isArray(response) ? response : []
+  
+          // 중복 제거
+          const uniqueWebtoons = webtoons.filter(
+            (webtoon, index, self) =>
+              index === self.findIndex((w) => w.webtoonId === webtoon.webtoonId)
           )
-          
-          // 웹툰 데이터 구성
-          fetchedProducts = webtoons.map(w => ({
+  
+          fetchedProducts = uniqueWebtoons.map((w) => ({
             id: w.webtoonId,
             title: w.webtoonName,
             image: w.garoThumbnail,
-            price: 0, // 웹툰 자체는 가격이 없으므로 0으로 설정
+            price: 0,
             category: '웹툰',
             genre: w.genre || '',
             status: w.episodeCount > 0 ? 'sell' : 'notsell',
@@ -87,37 +88,29 @@ const StoreMain = () => {
             episodeCount: w.episodeCount,
             viewCount: w.viewCount
           }))
-          
-          // 웹툰 카테고리 수 업데이트
-          setCategoryProductCounts(prev => ({
+  
+          setCategoryProductCounts((prev) => ({
             ...prev,
             웹툰: fetchedProducts.length
           }))
-          
+  
           totalPageCount = Math.ceil(fetchedProducts.length / pageSize)
           totalItemCount = fetchedProducts.length
         } 
         else if (activeCategory === '굿즈') {
-          // 굿즈 경매 목록 불러오기
           const params = {
             page: page - 1,
             size: pageSize,
-            sort: orderByParam
+            sort: orderByParam,
           }
-          
-          let goodsResponse
-          
-          // 선택된 장르가 있으면 추가
+  
           if (selectedGenres.length > 0) {
-            // 여러 장르 선택 시 쿼리 파라미터 구성
             params.genres = selectedGenres
-            goodsResponse = await getGoodsAuctions('', '', params)
-          } else {
-            goodsResponse = await getGoodsAuctions('', '', params)
           }
-          
-          // 굿즈 데이터 구성
-          const goodsProducts = (goodsResponse?.content || []).map(auction => ({
+  
+          const goodsResponse = await getGoodsAuctions(params)
+  
+          const goodsProducts = (goodsResponse?.content || []).map((auction) => ({
             id: auction.auctionItemId,
             auctionItemId: auction.auctionItemId,
             title: auction.itemName || '굿즈',
@@ -134,38 +127,30 @@ const StoreMain = () => {
             startTime: auction.startTime,
             ended: auction.ended
           }))
-          
+  
           fetchedProducts = goodsProducts
           totalPageCount = goodsResponse?.totalPages || 1
           totalItemCount = goodsResponse?.totalElements || 0
-          
-          // 굿즈 카테고리 수 업데이트
-          setCategoryProductCounts(prev => ({
+  
+          setCategoryProductCounts((prev) => ({
             ...prev,
             굿즈: goodsResponse?.totalElements || 0
           }))
         } 
         else if (activeCategory === '팬아트') {
-          // 팬아트 경매 목록 불러오기
           const params = {
             page: page - 1,
             size: pageSize,
-            sort: orderByParam
+            sort: orderByParam,
           }
-          
-          let fanartResponse
-          
-          // 선택된 장르가 있으면 추가
+  
           if (selectedGenres.length > 0) {
-            // 여러 장르 선택 시 쿼리 파라미터 구성
             params.genres = selectedGenres
-            fanartResponse = await getFanartAuctions(params)
-          } else {
-            fanartResponse = await getFanartAuctions('', '', params)
           }
-          
-          // 팬아트 데이터 구성
-          const fanartProducts = (fanartResponse?.content || []).map(auction => ({
+  
+          const fanartResponse = await getFanartAuctions(params)
+  
+          const fanartProducts = (fanartResponse?.content || []).map((auction) => ({
             id: auction.auctionItemId,
             auctionItemId: auction.auctionItemId,
             title: auction.itemName || '팬아트',
@@ -182,36 +167,31 @@ const StoreMain = () => {
             startTime: auction.startTime,
             ended: auction.ended
           }))
-          
+  
           fetchedProducts = fanartProducts
           totalPageCount = fanartResponse?.totalPages || 1
           totalItemCount = fanartResponse?.totalElements || 0
-          
-          // 팬아트 카테고리 수 업데이트
-          setCategoryProductCounts(prev => ({
+  
+          setCategoryProductCounts((prev) => ({
             ...prev,
             팬아트: fanartResponse?.totalElements || 0
           }))
         }
-        
-        // 전체 데이터 상태 업데이트
+  
         setProducts(fetchedProducts)
         setFilteredProducts(fetchedProducts)
-        
-        // 페이지 정보 업데이트
         setTotalPages(totalPageCount || 1)
         setTotalElements(totalItemCount)
-        
       } catch (err) {
         console.error('스토어 상품 API 에러:', err)
       } finally {
         setIsLoading(false)
       }
     }
-
+  
     fetchProducts()
-  }, [activeCategory, page, pageSize, orderBy, selectedGenres]) // selectedGenres 의존성 추가
-
+  }, [activeCategory, page, pageSize, orderBy, selectedGenres])
+  
   // 가격 형식 포맷팅 함수 (불필요한 0 제거)
   const formatPrice = (price) => {
     if (!price) return '0'
