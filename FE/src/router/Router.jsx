@@ -106,11 +106,17 @@ const router = createBrowserRouter([
       },
       {
         path: '/webtoon/myfavorite',
-        element: (
-          <Suspense fallback={<Loader />}>
-            <FavoriteWebtoon />
-          </Suspense>
-        ),
+        element: <PrivateRoute />,
+        children: [
+          {
+            path: '',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <FavoriteWebtoon />
+              </Suspense>
+            ),
+          },
+        ],
       },
       // 내 작품 목록 section
       {
