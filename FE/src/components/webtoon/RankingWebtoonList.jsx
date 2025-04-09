@@ -33,7 +33,7 @@ const RankingWebtoonList = ({ type }) => {
     if (type === 'rating') getRatingData()
   }, [type])
   return (
-    <div className='py-3'>
+    <div className='min-w-[200px] py-3'>
       <h1 className='mb-3 border-b pb-2'>
         {type === 'view' ? '조회 수' : '별점'} 랭킹
       </h1>

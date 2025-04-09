@@ -1,12 +1,8 @@
 package com.c109.chaintoon.domain.user.controller;
 
-import com.c109.chaintoon.common.jwt.JwtTokenProvider;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
-import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
+import com.c109.chaintoon.domain.user.dto.response.*;
 import com.c109.chaintoon.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -117,20 +113,22 @@ public class UserController {
     // 팔로우 조회
     @GetMapping("/following/{userId}")
     public ResponseEntity<?> getFollowingList(
+            @AuthenticationPrincipal Integer loginId,
             @PathVariable Integer userId,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
-        List<FollowingResponseDto> followingList = userService.getFollowingList(userId, page, pageSize);
+        List<FollowingResponseDto> followingList = userService.getFollowingList(loginId, userId, page, pageSize);
         return new ResponseEntity<>(followingList, HttpStatus.OK);
     }
 
     // 팔로워 조회
     @GetMapping("/followers/{userId}")
     public ResponseEntity<?> getFollowerList(
+            @AuthenticationPrincipal Integer loginId,
             @PathVariable Integer userId,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
-        List<FollowingResponseDto> followerList = userService.getFollowerList(userId, page, pageSize);
+        List<FollowingResponseDto> followerList = userService.getFollowerList(loginId, userId, page, pageSize);
         return new ResponseEntity<>(followerList, HttpStatus.OK);
     }
 

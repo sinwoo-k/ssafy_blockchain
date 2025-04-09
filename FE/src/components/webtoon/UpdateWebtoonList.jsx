@@ -26,7 +26,7 @@ const UpdateWebtoonList = () => {
   }, [])
   return (
     <div className='flex h-full w-full justify-center'>
-      <div className='flex h-full w-full flex-col'>
+      <div className='flex h-full w-full min-w-[700px] flex-col'>
         <h2 className='mb-5 text-xl'>🔥 최신 업데이트 웹툰</h2>
         {webtoons.length === 0 ? (
           <div className='flex h-[166px] w-full flex-col items-center justify-center gap-3'>

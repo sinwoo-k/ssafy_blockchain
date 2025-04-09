@@ -181,10 +181,6 @@ public class BlockchainService {
                             .title(nftMetadata.getTitle())
                             .description(nftMetadata.getDescription())
                             .image(nftMetadata.getImage())
-                            .originalCreatorWallet(nftMetadata.getWallets().getOriginalCreator())
-                            .originalCreatorUserId(walletRepository.findUserIdByWalletAddress(nftMetadata.getWallets().getOriginalCreator()).orElse(null))
-                            .ownerWallet(nftMetadata.getWallets().getOwner())
-                            .ownerWalletUserId(walletRepository.findUserIdByWalletAddress(nftMetadata.getWallets().getOwner()).orElse(null))
                             .build();
                 })
                 .onErrorResume(e -> Mono.error(new ServerException("NFT 조회 중 오류가 발생했습니다: " + e.getMessage())));
@@ -220,10 +216,6 @@ public class BlockchainService {
                             .title(item.getMetadata().getTitle())
                             .description(item.getMetadata().getDescription())
                             .image(item.getMetadata().getImage())
-                            .originalCreatorWallet(item.getMetadata().getWallets().getOriginalCreator())
-                            .originalCreatorUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOriginalCreator()).orElse(null))
-                            .ownerWallet(item.getMetadata().getWallets().getOwner())
-                            .ownerWalletUserId(walletRepository.findUserIdByWalletAddress(item.getMetadata().getWallets().getOwner()).orElse(null))
                             .onSale(item.getOnSale())
                             .salePrice(item.getSalePrice())
                             .build();

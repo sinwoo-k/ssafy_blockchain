@@ -17,7 +17,7 @@ const SingleSearchBar = ({ type }) => {
   return (
     <div
       className='bg-text/30 flex h-[50px]
-      w-[800px] items-center rounded-full border px-6'
+      min-w-[800px] items-center rounded-full border px-6'
     >
       <input
         type='text'
@@ -25,7 +25,7 @@ const SingleSearchBar = ({ type }) => {
         onKeyDown={(event) => {
           if (event.key === 'Enter') goSearchResult()
         }}
-        placeholder={`${type === 'webtoon' ? '웹툰을' : ''} ${type === 'fanart' ? '팬아트를' : ''} 검색하세요`}
+        placeholder={`${type === 'webtoon' ? '웹툰을' : ''} ${type === 'fanart' ? '팬아트를' : ''}검색하세요.`}
         value={keyword}
         maxLength={20}
         onChange={(event) => setKeyword(event.target.value)}
