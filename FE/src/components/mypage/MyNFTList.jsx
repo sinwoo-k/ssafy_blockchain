@@ -87,7 +87,7 @@ const MyNFTList = () => {
       setTransactions(prev => 
         prev.map(item => 
           item.nftId === selectedNft.nftId 
-            ? { ...item, isOnSale: true } 
+            ? { ...item, onSale: true } 
             : item
         )
       );
@@ -179,13 +179,12 @@ const MyNFTList = () => {
               </div>
               <div className="col-span-3"></div> {/* 빈 칸 공간 */}
               <div className="text-center">
-                {item.isOnSale ? (
-                  <span className="text-xs text-[#3cc3ec] px-3 py-1">판매 중</span>
+                {item.onSale ? (
+                  <span className="bg-red-600 text-white px-2 py-1 rounded text-xs">입찰 중</span>
                 ) : (
                   <button 
                     className="bg-[#3cc3ec] text-black px-3 py-1 rounded-md text-xs"
                     onClick={() => handleSellClick(item)}
-                    disabled={item.isOnSale}
                   >
                     판매
                   </button>

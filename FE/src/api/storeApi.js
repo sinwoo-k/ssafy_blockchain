@@ -1,3 +1,4 @@
+// storeApi.js 수정
 import API from './API'
 
 //** NFT 조회 **//
@@ -18,41 +19,45 @@ export const getNFTInfo = async (nftId) => {
 
 /** 에피소드 경매 목록 조회 */
 export const getEpisodeAuctions = async (webtoonId, ended = 'N') => {
-  if (!webtoonId) {
-    throw new Error('웹툰 ID는 필수 파라미터입니다.');
-  }
-  
   const response = await API.get(`/auctions/episodes?webtoonId=${webtoonId}&ended=${ended}`);
   return response.data;
 };
 
-/** 굿즈 경매 목록 조회 */
-export const getGoodsAuctions = async (webtoonId, ended = '') => {
-  if (!webtoonId) {
-    throw new Error('웹툰 ID는 필수 파라미터입니다.');
-  }
-  
-  let url = `/auctions/goods?webtoonId=${webtoonId}`;
-  if (ended) {
-    url += `&ended=${ended}`;
-  }
-  
-  const response = await API.get(url);
+// 공통 쿼리 파라미터 생성 함수 수정
+const buildQueryString = (params) => {
+  return Object.entries(params)
+    .filter(([_, value]) => value !== undefined && value !== '')
+    .flatMap(([key, value]) => {
+      if (Array.isArray(value)) {
+        // 배열인 경우 같은 키를 여러 번 반복
+        return value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
+      } else {
+        // 일반 값인 경우
+        return [`${encodeURIComponent(key)}=${encodeURIComponent(value)}`];
+      }
+    })
+    .join('&');
+};
+
+export const getwebtoonAuctions = async (params = {}) => {
+  // buildQueryString 함수 사용해 쿼리 문자열 생성
+  const queryString = buildQueryString(params);
+  // URL 형식 수정 ('?' 뒤에 바로 쿼리 스트링 붙이기)
+  const response = await API.get(queryString ? `/webtoons?${queryString}` : '/webtoons');
   return response.data;
 };
 
-/** 팬아트 경매 목록 조회 */
-export const getFanartAuctions = async (webtoonId, ended = '') => {
-  if (!webtoonId) {
-    throw new Error('웹툰 ID는 필수 파라미터입니다.');
-  }
-  
-  let url = `/auctions/fanarts?webtoonId=${webtoonId}`;
-  if (ended) {
-    url += `&ended=${ended}`;
-  }
-  
-  const response = await API.get(url);
+export const getFanartAuctions = async (params = {}) => {
+  const queryString = buildQueryString(params);
+  // URL 형식 수정
+  const response = await API.get(queryString ? `/auctions/fanarts?${queryString}` : '/auctions/fanarts');
+  return response.data;
+};
+
+export const getGoodsAuctions = async (params = {}) => {
+  const queryString = buildQueryString(params);
+  // URL 형식 수정
+  const response = await API.get(queryString ? `/auctions/goods?${queryString}` : '/auctions/goods');
   return response.data;
 };
 
@@ -93,5 +98,6 @@ export default {
   getAuctionDetail,
   placeBid,
   buyNow,
-  getNFTInfo 
+  getNFTInfo,
+  getwebtoonAuctions
 };

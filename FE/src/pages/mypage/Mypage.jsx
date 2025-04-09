@@ -22,7 +22,7 @@ const MyPage = () => {
     <div className="min-h-screen bg-black text-white pt-[80px] relative">
       
       {/* 전체 컨테이너 */}
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         {/* 사용자 프로필 */}
         <UserProfile />
         

@@ -96,7 +96,8 @@ const UserProfile = () => {
     try {
       setFollowersLoading(true);
       const followersData = await userService.getFollowers(user.id);
-      setFollowers(followersData.list || []);
+      // 응답 데이터를 그대로 설정
+      setFollowers(followersData || []);
       setFollowersLoading(false);
     } catch (err) {
       console.error('팔로워 목록 로드 오류:', err);
@@ -107,17 +108,17 @@ const UserProfile = () => {
   // 팔로잉 목록
   const fetchFollowing = async () => {
     if (!user?.id) return;
-    try {
-      setFollowingLoading(true);
-      const followingData = await userService.getFollowing(user.id);
-      setFollowing(followingData.list || []);
-      setFollowingLoading(false);
-    } catch (err) {
-      console.error('팔로잉 목록 로드 오류:', err);
-      setFollowingLoading(false);
-    }
+      try {
+        setFollowingLoading(true);
+        const followingData = await userService.getFollowing(user.id);
+        // 응답 데이터를 그대로 설정
+        setFollowing(followingData || []);
+        setFollowingLoading(false);
+      } catch (err) {
+        console.error('팔로잉 목록 로드 오류:', err);
+        setFollowingLoading(false);
+      }
   };
-
   // 배경 이미지 업로드
   const handleBackgroundImageChange = () => {
     const input = document.createElement('input');
@@ -265,7 +266,8 @@ const UserProfile = () => {
   const handleUnfollow = async (targetUserId) => {
     try {
       await userService.unfollowUser(targetUserId);
-      const updatedFollowing = following.filter(x => x.id !== targetUserId);
+      // userId로 필터링하도록 수정
+      const updatedFollowing = following.filter(x => x.userId !== targetUserId);
       setFollowing(updatedFollowing);
       if (user?.id) {
         const updatedUser = await userService.getUserInfo(user.id);
@@ -277,7 +279,6 @@ const UserProfile = () => {
       showNotification('언팔로우에 실패했습니다.', 'error');
     }
   };
-
   // 인증 안됨
   if (!isAuthenticated) {
     return (
