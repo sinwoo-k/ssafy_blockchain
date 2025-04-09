@@ -75,7 +75,7 @@ const NavBar = () => {
     <>
       <div
         className={`border-text text-text ${scroll && 'bg-black'} 
-      fixed top-0 z-20 flex h-[60px] w-full justify-between border-b`}
+      fixed top-0 z-20 flex h-[60px] w-full min-w-[1000px] justify-between border-b`}
       >
         <div className='flex'>
           {/* 로고 */}
@@ -88,7 +88,7 @@ const NavBar = () => {
           <div className='flex h-full w-[80px] items-center justify-center'>
             <Link
               to={'/'}
-              className='hover:text-chaintoon text-lg hover:text-xl'
+              className='hover:text-chaintoon text-xl hover:text-2xl'
             >
               웹툰
             </Link>
@@ -96,7 +96,7 @@ const NavBar = () => {
           <div className='flex h-full w-[80px] items-center justify-center'>
             <Link
               to='/store'
-              className='hover:text-chaintoon text-lg hover:text-xl'
+              className='hover:text-chaintoon text-xl hover:text-2xl'
             >
               스토어
             </Link>
@@ -104,7 +104,7 @@ const NavBar = () => {
           <div className='flex h-full w-[80px] items-center justify-center'>
             <Link
               to={'/fanart'}
-              className='hover:text-chaintoon text-lg hover:text-xl'
+              className='hover:text-chaintoon text-xl hover:text-2xl'
             >
               팬아트
             </Link>

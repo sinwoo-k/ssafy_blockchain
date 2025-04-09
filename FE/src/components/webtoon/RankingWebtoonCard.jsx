@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 
 const RankingWebtoonCard = ({ webtoon, rank }) => {
   return (
-    <div className='flex items-center gap-2'>
+    <div className='flex min-w-[200px] items-center gap-2'>
       <h1 className='text-chaintoon text-2xl'>{rank}</h1>
       <Link
         to={`/webtoon/${webtoon.webtoonId}`}
-        className=' overflow-hidden rounded-lg '
+        className=' min-h-[55px] w-[100px] overflow-hidden rounded-lg'
       >
         <img
           src={webtoon.garoThumbnail}
