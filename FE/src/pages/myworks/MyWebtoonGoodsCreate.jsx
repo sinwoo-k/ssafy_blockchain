@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import Loader from '../../components/common/Loader'
+import { createGoods } from '../../api/goodsAPI'
+import { getWebtoon } from '../../api/webtoonAPI'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
-import { createGoods } from '../../api/goodsAPI'
-import { getWebtoon } from '../../api/webtoonAPI'
 
 const MyWebtoonGoodsCreate = () => {
   const params = useParams()
@@ -16,6 +17,8 @@ const MyWebtoonGoodsCreate = () => {
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
   const [goodsName, setGoodsName] = useState('') // 굿즈명
   const [goodsDescription, setGoodsDescription] = useState('') // 굿즈 설명
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 드래그 & 드랍 관련 이벤트 함수
   const [dragOver, setDragOver] = useState(false)
@@ -94,12 +97,15 @@ const MyWebtoonGoodsCreate = () => {
       goodsName: goodsName,
       description: goodsDescription,
     }
+    setIsLoading(true)
     try {
       const result = await createGoods(payload, goodsImage)
       navigate(`/myworks/webtoon/${params.webtoonId}/goods`)
     } catch (error) {
       console.error('굿즈 등록 실패: ', error)
       alert('굿즈 등록에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -234,6 +240,7 @@ const MyWebtoonGoodsCreate = () => {
           등록하기
         </button>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

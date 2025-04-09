@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
@@ -382,6 +383,7 @@ const MyWebtoonCreate = () => {
           </div>
         </div>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

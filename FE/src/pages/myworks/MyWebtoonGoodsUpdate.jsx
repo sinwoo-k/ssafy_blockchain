@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
@@ -16,6 +17,8 @@ const MyWebtoonGoodsUpdate = () => {
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
   const [goodsName, setGoodsName] = useState('') // 굿즈명
   const [goodsDescription, setGoodsDescription] = useState('') // 굿즈 설명
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 드래그 & 드랍 관련 이벤트 함수
   const [dragOver, setDragOver] = useState(false)
@@ -98,6 +101,7 @@ const MyWebtoonGoodsUpdate = () => {
       goodsName: goodsName,
       description: goodsDescription,
     }
+    setIsLoading(true)
     try {
       const result = await patchGoods(params.goodsId, payload, goodsImage)
       console.log(result)
@@ -105,6 +109,8 @@ const MyWebtoonGoodsUpdate = () => {
     } catch (error) {
       console.error('굿즈 수정 실패: ', error)
       alert('굿즈 정보 수정에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -239,6 +245,7 @@ const MyWebtoonGoodsUpdate = () => {
           수정하기
         </button>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

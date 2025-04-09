@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
 import MyWebtoonEpisodePreview from '../../components/myworks/MyWebtoonEpisodePreview'
+import Loader from '../../components/common/Loader'
 import IconButton from '../../components/common/IconButton'
 import { checkWidthSize } from '../../utils/image/limiteSize'
 import { createEpisode } from '../../api/webtoonAPI'
@@ -28,6 +29,7 @@ const MyWebtoonEpisodeCreate = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [writerComment, setWriterComment] = useState('') // 작가의 말
   const [commentable, setCommentable] = useState(false) // 댓글 허용 여부
+  const [isLoading, setIsLoading] = useState(false)
 
   // 썸네일 관련 함수
   // 이미지 파일 선택시
@@ -115,13 +117,15 @@ const MyWebtoonEpisodeCreate = () => {
       writerComment: writerComment,
       commentable: commentable ? 'Y' : 'N',
     }
-
+    setIsLoading(true)
     try {
       const result = await createEpisode(payload, thumbnail, episodeImages)
       navigate(`/myworks/webtoon/${params.webtoonId}`)
     } catch (error) {
       console.error('회차 등록 실패: ', error)
       alert('회차 등록에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
   return (
@@ -337,6 +341,7 @@ const MyWebtoonEpisodeCreate = () => {
           </div>
         </div>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

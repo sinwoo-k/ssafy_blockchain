@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
@@ -16,6 +17,8 @@ const MyFanartUpdate = () => {
   const [webtoonId, setWebtoonId] = useState(null) // 웹툰id
   const [fanartName, setFanartName] = useState('') // 팬아트명
   const [fanartDescription, setFanartDescription] = useState('') // 팬아트 설명
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 드래그 & 드랍 관련 이벤트 함수
   const [dragOver, setDragOver] = useState(false)
@@ -98,13 +101,15 @@ const MyFanartUpdate = () => {
       fanartName: fanartName,
       description: fanartDescription,
     }
-
+    setIsLoading(true)
     try {
       const result = await patchFanart(params.fanartId, payload, fanartImage)
       navigate('/myworks/fanart')
     } catch (error) {
       console.error('팬아트 수정 실패: ', error)
       alert('팬아트 정보 수정에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -239,6 +244,7 @@ const MyFanartUpdate = () => {
           수정하기
         </button>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }
