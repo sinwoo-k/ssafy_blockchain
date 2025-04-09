@@ -26,8 +26,6 @@ import com.c109.chaintoon.domain.nft.repository.*;
 import com.c109.chaintoon.domain.nft.specification.AuctionItemSpecification;
 import com.c109.chaintoon.domain.user.service.NoticeService;
 import com.c109.chaintoon.domain.webtoon.entity.Episode;
-import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
-import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.EpisodeRepository;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import jakarta.persistence.OptimisticLockException;
@@ -57,7 +55,6 @@ public class AuctionItemService {
     private final BlockchainService blockchainService;
     private final SchedulingService schedulingService;
     private final NoticeService noticeService;
-    private final WebtoonRepository webtoonRepository;
     private final EpisodeRepository episodeRepository;
     private final FanartRepository fanartRepository;
     private final GoodsRepository goodsRepository;
