@@ -9,6 +9,7 @@ import com.c109.chaintoon.domain.goods.entity.Goods;
 import com.c109.chaintoon.domain.goods.exception.GoodsNotFoundException;
 import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
 import com.c109.chaintoon.domain.goods.specification.GoodsSpecification;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.search.code.SearchType;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -37,6 +38,7 @@ public class GoodsService {
     private final GoodsRepository goodsRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final NftRepository nftRepository;
 
     private GoodsResponseDto toGoodsResponseDto(Goods goods) {
         Webtoon webtoon = webtoonRepository
@@ -175,6 +177,10 @@ public class GoodsService {
         // 삭제할 굿즈 조회
         Goods goods = goodsRepository.findById(goodsId)
                 .orElseThrow(() -> new GoodsNotFoundException(goodsId)); // GoodsNotFoundException은 별도로 정의
+
+        if (nftRepository.existsByTypeIdAndType(goodsId, "goods")) {
+            throw new IllegalArgumentException("NFT가 발행된 굿즈는 삭제할 수 없습니다.");
+        }
 
         // 요청한 사용자가 등록한 사용자와 일치해야 함
         if (!goods.getUserId().equals(userId)) {

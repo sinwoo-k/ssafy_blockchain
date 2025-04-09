@@ -3,6 +3,7 @@ package com.c109.chaintoon.domain.webtoon.service;
 import com.c109.chaintoon.common.exception.NotFoundException;
 import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
 import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.EpisodeRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.request.ImageRequestDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.EpisodeListResponseDto;
@@ -37,6 +38,7 @@ public class EpisodeService {
     private final WebtoonRepository webtoonRepository;
     private final RatingRepository ratingRepository;
     private final S3Service s3Service;
+    private final NftRepository nftRepository;
 
     // 조회수 증가
     private void increaseViewCount(Integer webtoonId) {
@@ -322,6 +324,10 @@ public class EpisodeService {
         // 기존 에피소드 조회
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(() -> new EpisodeNotFoundException(episodeId));
+
+        if (nftRepository.existsByTypeIdAndType(episodeId, "episode")) {
+            throw new IllegalArgumentException("NFT가 발행된 에피소드는 삭제할 수 없습니다.");
+        }
 
         // 삭제 권한 확인
         Webtoon webtoon = webtoonRepository.findById(episode.getWebtoonId())
