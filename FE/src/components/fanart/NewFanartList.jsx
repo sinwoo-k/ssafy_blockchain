@@ -17,7 +17,7 @@ const NewFanartList = () => {
   // carousel setting
   const setting = {
     dots: false,
-    infinite: true,
+    infinite: fanarts.length > 1,
     speed: 1500,
     slidesToShow: 5,
     slidesToScroll: 1,

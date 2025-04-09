@@ -6,12 +6,12 @@ const UpdateWebtoonCard = ({ webtoon }) => {
   return (
     <div className='mx-5 w-[200px]'>
       {/* 웹툰 대표이미지 */}
-      <div className='border-chaintoon mb-3 w-full overflow-hidden rounded-xl border'>
+      <div className='shadow-text/30 mb-3 w-full overflow-hidden rounded-xl'>
         <Link to={`/webtoon/${webtoon.webtoonId}`}>
           <img
             src={webtoon.seroThumbnail}
             alt={`${webtoon.webtoonName} 대표 이미지`}
-            className='h-[250px] w-[200px] rounded-xl object-cover
+            className='min-h-[250px] w-[200px] rounded-xl object-cover
             transition-transform duration-150 ease-in-out hover:scale-105'
           />
         </Link>

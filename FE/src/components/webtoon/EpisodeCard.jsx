@@ -10,7 +10,7 @@ const EpisodeCard = ({ episode }) => {
         <img
           src={episode.thumbnail}
           alt=''
-          className='h-[80px] w-[150px] rounded-lg object-cover'
+          className='min-h-[80px] w-[150px] rounded-lg object-cover'
           onError={(event) =>
             (event.target.src = `https://placehold.co/200x100?text=episode${episode.episodeId}`)
           }

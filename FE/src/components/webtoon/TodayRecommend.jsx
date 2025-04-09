@@ -47,7 +47,7 @@ const TodayRecommend = () => {
   // carousel setting
   const setting = {
     dots: false,
-    infinite: true,
+    infinite: webtoons.length > 1,
     speed: 2000,
     slidesToShow: 1,
     slidesToScroll: 1,

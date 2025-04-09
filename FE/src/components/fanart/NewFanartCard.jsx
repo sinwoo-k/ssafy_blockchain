@@ -32,7 +32,7 @@ const NewFanartCard = ({ fanart }) => {
       onMouseMove={handleMouseMove}
     >
       <Link to={`/fanart/${fanart.fanartId}`} onClick={handleClick}>
-        <div className='border-chaintoon overflow-hidden rounded-lg border'>
+        <div className='overflow-hidden rounded-lg border border-black/50'>
           <img
             src={fanart.fanartImage}
             alt='팬아트 이미지'

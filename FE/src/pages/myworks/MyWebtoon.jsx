@@ -32,7 +32,7 @@ const MyWebtoon = () => {
     return () => {}
   }, [])
   return (
-    <div className='flex justify-center pt-[60px]'>
+    <div className='flex min-h-[70vh] justify-center pt-[60px]'>
       <div className='w-[1000px] py-10'>
         <div className='mb-10 flex items-center gap-3'>
           <h1 className='text-chaintoon text-2xl'>내 웹툰</h1>
@@ -55,14 +55,16 @@ const MyWebtoon = () => {
               <p className='text-xl'>등록된 웹툰이 없습니다.</p>
             </div>
           ) : (
-            webtoons.map((webtoon) => (
-              <Link
-                key={webtoon.webtoonId}
-                to={`/myworks/webtoon/${webtoon.webtoonId}`}
-              >
-                <MyWebtoonCard webtoon={webtoon} />
-              </Link>
-            ))
+            <div className='mt-5 grid grid-cols-2 gap-3 px-3'>
+              {webtoons.map((webtoon) => (
+                <Link
+                  key={webtoon.webtoonId}
+                  to={`/myworks/webtoon/${webtoon.webtoonId}`}
+                >
+                  <MyWebtoonCard webtoon={webtoon} />
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </div>
