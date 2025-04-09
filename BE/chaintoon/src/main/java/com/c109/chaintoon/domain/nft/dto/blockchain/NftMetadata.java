@@ -12,28 +12,5 @@ public class NftMetadata {
     private String title;
     private String description;
     private String image;
-    private Wallets wallets;
-    private RevenueDistribution revenueDistribution;
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class Wallets {
-        private String originalCreator;
-        private String owner;
-        private String adminWallet;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class RevenueDistribution {
-        private String originalCreator;
-        private String owner;
-        private String adminWallet;
-    }
 }

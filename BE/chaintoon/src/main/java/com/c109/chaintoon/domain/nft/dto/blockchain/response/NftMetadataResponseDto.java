@@ -12,9 +12,5 @@ public class NftMetadataResponseDto {
     String title;
     String description;
     String image;
-    String originalCreatorWallet;
-    Integer originalCreatorUserId;
-    String ownerWallet;
-    Integer ownerWalletUserId;
     String contractAddress;
 }
