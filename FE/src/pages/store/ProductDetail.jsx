@@ -12,7 +12,6 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import StarIcon from '@mui/icons-material/Star'
-import BookmarkIcon from '@mui/icons-material/Bookmark'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 
 const ProductDetail = () => {
@@ -173,7 +172,7 @@ const ProductDetail = () => {
           
           // 초기 입찰가 설정 (현재 입찰가 또는 시작가)
           const currentBid = processedAuction.biddingPrice;
-          setBidPrice(parseFloat(currentBid) + 0.01); // 현재 가격보다 0.01 ETH 높게 설정
+          setBidPrice(parseFloat(currentBid) + 0.0001); // 현재 가격보다 0.0001 ETH 높게 설정
           
           // 입찰 기록 API 호출
           try {
@@ -200,24 +199,26 @@ const ProductDetail = () => {
 
   // 입찰가 변경 함수
   const handleBidChange = (e) => {
-    const value = parseFloat(e.target.value)
-    if (!isNaN(value) && value > 0) {
-      setBidPrice(value)
+    const value = e.target.value
+    // 소수점 5자리까지만 허용
+    const regex = /^\d+(\.\d{0,5})?$/
+    if (regex.test(value)) {
+      setBidPrice(parseFloat(value) || 0)
     }
   }
 
   // 입찰가 증가 함수
   const increaseBid = () => {
-    const bidIncrement =.01 // 최소 입찰 단위
-    setBidPrice((prev) => parseFloat((prev + bidIncrement).toFixed(2)))
+    const bidIncrement = 0.0001 // 최소 입찰 단위를 0.0001로 변경
+    setBidPrice((prev) => parseFloat((prev + bidIncrement).toFixed(5))) // 소수점 5자리까지 표시
   }
 
   // 입찰가 감소 함수
   const decreaseBid = () => {
-    const bidIncrement = .01
-    const minBid = parseFloat(auction?.biddingPrice || 0) + .01
+    const bidIncrement = 0.0001 // 최소 입찰 단위를 0.0001로 변경
+    const minBid = parseFloat(auction?.biddingPrice || 0) + 0.0001
     if (bidPrice > minBid) {
-      setBidPrice((prev) => parseFloat((prev - bidIncrement).toFixed(2)))
+      setBidPrice((prev) => parseFloat((prev - bidIncrement).toFixed(5))) // 소수점 5자리까지 표시
     }
   }
 
@@ -228,9 +229,24 @@ const ProductDetail = () => {
       return
     }
     
-    const minBid = parseFloat(auction?.biddingPrice || 0) + 0.01
+    const minBid = parseFloat(auction?.biddingPrice || 0) + 0.0001 // 최소 입찰가를 0.0001 단위로 설정
     if (bidPrice < minBid) {
       alert(`현재 입찰가(${auction.biddingPrice} ETH)보다 높은 금액을 입력해주세요.`)
+      return
+    }
+    
+    // 소수점 자릿수 검증
+    const bidDecimalPlaces = bidPrice.toString().split('.')[1]?.length || 0
+    if (bidDecimalPlaces > 5) { // 소수점 5자리 이상 입력 방지
+      alert('입찰 금액은 소수점 5자리까지만 입력 가능합니다.')
+      return
+    }
+    
+    // 입찰 단위 검증 (0.0001 단위로만 입찰 가능)
+    const bidUnit = 0.0001
+    const remainder = (bidPrice * 10000) % 1
+    if (remainder !== 0) {
+      alert(`입찰 금액은 ${bidUnit} ETH 단위로만 입력 가능합니다.`)
       return
     }
     
@@ -251,7 +267,18 @@ const ProductDetail = () => {
       
     } catch (err) {
       console.error('입찰 처리 중 오류:', err)
-      alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+      // 백엔드에서 오는 오류 메시지 처리 개선
+      if (err.response && err.response.data) {
+        const errorData = err.response.data;
+        if (errorData.message) {
+          // 서버에서 제공하는 오류 메시지 표시
+          alert(errorData.message);
+        } else {
+          alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+      } else {
+        alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsProcessing(false)
     }
@@ -371,8 +398,18 @@ const ProductDetail = () => {
 
   // 가격 형식 포맷팅
   const formatPrice = (price) => {
-    if (!price) return '0.00'
-    return parseFloat(price).toFixed(2)
+    if (!price) return '0'
+    
+    // 문자열로 변환 후 소수점 이하 불필요한 0 제거
+    const parsedPrice = parseFloat(price)
+    
+    // 정수인 경우
+    if (parsedPrice % 1 === 0) {
+      return parsedPrice.toString()
+    }
+    
+    // 소수인 경우, 불필요한 0 제거
+    return parsedPrice.toString().replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
   }
   
   // USD 가치 계산 (예시 - 실제 환율 적용 필요)
@@ -459,7 +496,7 @@ const ProductDetail = () => {
               <div className='mb-4 flex items-center justify-between'>
                 <div className='text-lg font-medium'>거래 기록</div>
                 <div className='flex items-center'>
-                  <span className='mr-2'>거래내역 조회</span>
+                  <span className='mr-2'>거래내역</span>
                   <button 
                     onClick={handleToggleBidHistoryModal}
                     className='text-[#3cc3ec] hover:text-[#2aabda]'
@@ -473,7 +510,7 @@ const ProductDetail = () => {
               <div className='mb-4'>
                 <div className='mb-2 text-sm text-gray-400'>입찰 단위</div>
                 <div className='bg-gray-700 px-3 py-2 rounded text-sm inline-block'>
-                  0.01 ETH
+                  0.0001 ETH
                 </div>
               </div>
               
@@ -496,8 +533,8 @@ const ProductDetail = () => {
                     type='number'
                     value={bidPrice}
                     onChange={handleBidChange}
-                    step={0.01}
-                    min={parseFloat(auction.biddingPrice) + 0.01}
+                    step={0.0001}
+                    min={parseFloat(auction.biddingPrice) + 0.0001}
                     className='h-10 w-full border-y border-gray-700 bg-gray-900 px-3 text-center'
                     disabled={isAuctionEnded || isProcessing}
                   />
@@ -517,7 +554,7 @@ const ProductDetail = () => {
               <span>최종 입찰가</span>
               <div className='flex items-center'>
                 <button 
-                  onClick={() => setBidPrice(parseFloat(auction.biddingPrice) + 0.01)}
+                  onClick={() => setBidPrice(parseFloat(auction.biddingPrice) + 0.0001)}
                   className='mr-2 rounded bg-gray-700 px-2 py-1 text-xs'
                   disabled={isAuctionEnded || isProcessing}
                 >
@@ -527,6 +564,8 @@ const ProductDetail = () => {
                   type='number'
                   value={bidPrice}
                   onChange={handleBidChange}
+                  step={0.0001}
+                  min={parseFloat(auction.biddingPrice) + 0.0001}
                   className='w-24 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-right'
                   disabled={isAuctionEnded || isProcessing}
                 />
@@ -534,16 +573,8 @@ const ProductDetail = () => {
               </div>
             </div>
             
-            {/* 입찰/찜 버튼 */}
+            {/* 입찰하기/즉시 구매 버튼 */}
             <div className='flex gap-3'>
-              <button 
-                className='flex-1 rounded-md bg-gray-700 py-3 px-6 text-lg font-medium hover:bg-gray-600'
-                onClick={handleAddToWishlist}
-                disabled={isAuctionEnded || isProcessing}
-              >
-                <BookmarkIcon className='mr-2' />
-                찜하기
-              </button>
               <button 
                 className={`flex-1 rounded-md py-3 px-6 text-lg font-medium ${
                   isAuctionEnded || isProcessing
@@ -562,31 +593,22 @@ const ProductDetail = () => {
                   <span>입찰하기</span>
                 )}
               </button>
+              {auction.buyNowPrice && (
+                <button 
+                  className={`flex-1 rounded-md py-3 px-6 text-lg font-medium ${
+                    isAuctionEnded || isProcessing
+                      ? 'cursor-not-allowed bg-gray-500' 
+                      : 'bg-blue-500 hover:bg-blue-400'
+                  }`}
+                  onClick={handleImmediatePurchase}
+                  disabled={isAuctionEnded || isProcessing}
+                >
+                  <ShoppingCartIcon className='mr-2' />
+                  즉시 구매
+                </button>
+              )}
             </div>
-            
-            {/* 즉시 구매 버튼 */}
-            {auction.buyNowPrice && (
-              <button 
-                className={`mt-3 w-full rounded-md py-3 px-6 text-lg font-medium ${
-                  isAuctionEnded || isProcessing
-                    ? 'cursor-not-allowed bg-gray-500' 
-                    : 'bg-blue-500 hover:bg-blue-400'
-                }`}
-                onClick={handleImmediatePurchase}
-                disabled={isAuctionEnded || isProcessing}
-              >
-                <ShoppingCartIcon className='mr-2' />
-                {isProcessing ? (
-                  <span className="flex items-center justify-center">
-                    <span className="h-5 w-5 mr-2 animate-spin rounded-full border-2 border-t-transparent border-white"></span>
-                    처리 중...
-                  </span>
-                ) : (
-                  <span>{formatPrice(auction.buyNowPrice)} ETH 에 즉시 구매하기</span>
-                )}
-              </button>
-            )}
-          </div>
+        </div>
         </div>
         
         {/* 상품 상세 정보 탭 */}

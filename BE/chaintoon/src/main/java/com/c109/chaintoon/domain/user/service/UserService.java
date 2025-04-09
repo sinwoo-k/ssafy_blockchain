@@ -102,6 +102,7 @@ public class UserService {
                 .following(user.getFollowing())
                 .url(user.getUrl())
                 .joinDate(user.getJoinDate())
+                .ssoType(user.getSsoType())
                 .build();
     }
 

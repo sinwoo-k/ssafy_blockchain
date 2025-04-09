@@ -1,4 +1,4 @@
-// CollectionDetailInfo.jsx
+// CollectionDetailInfo.jsx 수정
 import React from 'react'
 import { Link } from 'react-router-dom'
 // 아이콘
@@ -46,19 +46,19 @@ const CollectionDetailInfo = ({ collection, tags }) => {
               <div className='flex items-center gap-1'>
                 <FavoriteIcon sx={{ fontSize: 25, color: '#ff1919' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  {collection.likes || 109}
+                  {collection.likes}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <VisibilityIcon sx={{ fontSize: 30, color: '#3cc3ec' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  {collection.views || '109K'}
+                  {collection.views}
                 </span>
               </div>
               <div className='flex items-center gap-1'>
                 <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  {collection.rating || 4.56}
+                  {collection.rating?.toFixed(2) || '0.00'}
                 </span>
               </div>
             </div>
@@ -70,24 +70,18 @@ const CollectionDetailInfo = ({ collection, tags }) => {
               <p className='text-2xl'>{collection.title}</p>
               <p className='text-xl text-[#b9b9b9]'>
                 {collection.category === '웹툰' ? '작가: ' : '제작: '}
-                {collection.author || '체인툰 스튜디오'}
+                {/* 작가 이름에 링크 추가 */}
+                <Link 
+                  to={`/user/${collection.authorId}`} 
+                  className="hover:text-[#3cc3ec] hover:underline"
+                >
+                  {collection.author || '체인툰 스튜디오'}
+                </Link>
               </p>
               <p className='text-xl text-[#b9b9b9]'>장르: {collection.genre}</p>
               <div className='text-xl'>
                 {collection.description || `"${collection.title}"은(는) ${collection.genre} 장르의 작품으로, 다양한 회차와 관련 상품을 제공합니다.`}
               </div>
-              
-              {/* 가격 정보 */}
-              {/* <div className='text-xl font-bold'>
-                가격: {collection.price} ETH
-              </div> */}
-              
-              {/* 판매 상태 */}
-              {/* {collection.status === 'notsell' && (
-                <div className='mt-2 mb-5 rounded bg-red-500 p-2 text-center text-white'>
-                  현재 판매하지 않는 상품입니다.
-                </div>
-              )} */}
             </div>
             
             {/* 태그 */}

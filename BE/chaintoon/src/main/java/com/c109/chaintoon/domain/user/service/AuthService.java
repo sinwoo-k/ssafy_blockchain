@@ -15,8 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Random;
 
@@ -138,6 +136,7 @@ public class AuthService {
 
             // 사용자 저장
             newUser = this.userRepository.save(newUser);
+            blockchainService.createWalletAsync(newUser.getId());
 
             return newUser.getId(); // 새로 생성된 사용자의 이메일 반환
         }
