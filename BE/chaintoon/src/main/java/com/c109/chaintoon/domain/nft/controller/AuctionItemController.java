@@ -1,6 +1,7 @@
 package com.c109.chaintoon.domain.nft.controller;
 
 
+import com.c109.chaintoon.domain.nft.dto.metamask.response.MetamaskRequestResponseDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -36,6 +37,20 @@ public class AuctionItemController {
         return ResponseEntity.ok(response);
     }
 
+    // 메타마스크용 경매 등록
+    @PostMapping("/metamask")
+    public ResponseEntity<MetamaskRequestResponseDto> createAuctionItemMetamask(
+            @AuthenticationPrincipal Integer userId,
+            @RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
+        return ResponseEntity.ok(auctionItemService.createAuctionItemMetamask(userId, auctionCreateRequestDto));
+    }
+    @PostMapping("/{auctionItemId}/update-status")
+    public ResponseEntity<AuctionCreateResponseDto> updateAuctionStatus(
+            @PathVariable Integer auctionItemId,
+            @RequestParam String status) {
+        AuctionCreateResponseDto response = auctionItemService.updateAuctionStatus(auctionItemId, status);
+        return ResponseEntity.ok(response);
+    }
     // 에피소드 경매 목록 조회
     @GetMapping("/episodes")
     public ResponseEntity<?> getEpisodeAuctions(

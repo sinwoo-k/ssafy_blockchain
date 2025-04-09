@@ -1,11 +1,14 @@
 package com.c109.chaintoon.domain.nft.controller;
 
+import com.c109.chaintoon.domain.nft.dto.blockchain.NftRecordDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.WalletBalance;
 import com.c109.chaintoon.domain.nft.dto.blockchain.request.NftMintRequestDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataItemResponseDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.NftMetadataResponseDto;
 import com.c109.chaintoon.domain.nft.dto.blockchain.response.TransactionItemResponseDto;
+import com.c109.chaintoon.domain.nft.entity.Nft;
 import com.c109.chaintoon.domain.nft.service.BlockchainService;
+import com.c109.chaintoon.domain.user.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,7 +27,7 @@ import java.util.Map;
 public class BlockchainController {
 
     private final BlockchainService blockchainService;
-
+    private final NoticeService noticeService;
     @GetMapping("/nft-detail/{tokenId}")
     public ResponseEntity<NftMetadataResponseDto> getNftMetadataDetail(@PathVariable Integer tokenId) {
         NftMetadataResponseDto dto = blockchainService.getNftMetadata(tokenId)
@@ -64,4 +67,22 @@ public class BlockchainController {
         response.put("nonce", nonce);
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/record-mint")
+    public ResponseEntity<?> recordMint(
+            @RequestBody NftRecordDto dto
+    ) {
+        if (dto.getUserId() == null || dto.getWebtoonId() == null ||
+                dto.getType() == null || dto.getTypeId() == null || dto.getTokenId() == null) {
+            return ResponseEntity.badRequest().body("필수 파라미터가 누락되었습니다.");
+        }
+        try {
+            Nft savedNft = blockchainService.recordMint(dto);
+            noticeService.addBlockchainNetworkSuccessNotice(dto.getUserId(), "NFT 민팅이 성공적으로 완료되었습니다.");
+            return ResponseEntity.ok(savedNft);
+        } catch (Exception e) {
+            noticeService.addBlockchainNetworkFailNotice(dto.getUserId(), "NFT 민팅 실패하였습니다. 관리자에게 문의해주세요 ");
+            return ResponseEntity.badRequest().body("NFT 기록 실패: " + e.getMessage());
+        }
+    }
+
 }

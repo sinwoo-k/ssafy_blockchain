@@ -16,7 +16,9 @@ import com.c109.chaintoon.domain.nft.dto.blockchain.response.*;
 import com.c109.chaintoon.domain.nft.dto.blockchain.wrapper.NftMetadataListWrapper;
 import com.c109.chaintoon.domain.nft.dto.blockchain.wrapper.NftMetadataWrapper;
 import com.c109.chaintoon.domain.nft.dto.blockchain.wrapper.TransactionListWrapper;
+import com.c109.chaintoon.domain.nft.entity.Nft;
 import com.c109.chaintoon.domain.nft.exception.NFTMetadataNotfoundException;
+import com.c109.chaintoon.domain.nft.exception.WalletBalanceException;
 import com.c109.chaintoon.domain.nft.exception.WalletBalanceNotFoundException;
 import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.repository.WalletRepository;
@@ -68,7 +70,7 @@ public class BlockchainService {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, clientResponse ->
                         clientResponse.bodyToMono(String.class)
-                                .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
+                                .flatMap(errorBody -> Mono.error(new WalletBalanceException("Express API 에러: " + errorBody)))
                 )
                 .bodyToMono(BlockchainSaleResponseDto.class)
                 .doOnSuccess(response -> log.info("NFT 판매 등록 성공: {}", response))
@@ -85,7 +87,7 @@ public class BlockchainService {
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
-                                    .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
+                                    .flatMap(errorBody -> Mono.error(new WalletBalanceException("Express API 에러: " + errorBody)))
                     )
                     .bodyToMono(BlockchainBuyResponseDto.class)  // 응답 DTO 매핑
                     .block();
@@ -122,11 +124,8 @@ public class BlockchainService {
         // walletInfo의 balances 맵에서 "eth" 키에 해당하는 값 가져오기
         String ethBalanceStr = walletInfo.getBalances().get("eth");
 
-        System.out.println(ethBalanceStr);
         double balance = Double.parseDouble(ethBalanceStr.replace("ETH", "").trim());
         String walletAddress = walletInfo.getWalletAddress();
-
-        System.out.println("balance = " + balance);
 
         return new WalletBalance(walletAddress, balance);
     }
@@ -304,7 +303,7 @@ public class BlockchainService {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, clientResponse ->
                         clientResponse.bodyToMono(String.class)
-                                .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
+                                .flatMap(errorBody -> Mono.error(new WalletBalanceException("Express API 에러: " + errorBody)))
                 )
                 .bodyToMono(NftMintResponseDto.class)
                 .doOnSuccess(response -> {
@@ -407,7 +406,19 @@ public class BlockchainService {
                         Mono.error(new ServerException("Metamask 지갑연동중 오류가 발생했습니다: "))
                 );
     }
-
+    public Nft recordMint(NftRecordDto dto) {
+        Nft nft = Nft.builder()
+                .webtoonId(dto.getWebtoonId())
+                .tokenId(dto.getTokenId())
+                .userId(dto.getUserId())
+                .type(dto.getType())
+                .typeId(dto.getTypeId())
+                .contractAddress(dto.getContractAddress())
+                .imageUrl(dto.getImageUrl())
+                .metadataUri(dto.getMetadataUri())
+                .build();
+        return nftRepository.save(nft);
+    }
 
     private TransactionItemResponseDto toTransactionItemResponseDto(TransactionItem item) {
         // 숫자값들을 BigInteger를 사용해 십진수 문자열로 변환하고, 단위 붙이기
