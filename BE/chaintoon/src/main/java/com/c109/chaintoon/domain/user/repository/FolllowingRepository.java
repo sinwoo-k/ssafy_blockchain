@@ -20,4 +20,7 @@ public interface FolllowingRepository extends JpaRepository<Following, Following
     @Query("SELECT f.id.followerId FROM Following f WHERE f.id.followeeId=:userId")
     List<Integer> findFollowersById(@Param("userId") Integer id);
 
+    boolean existsById_FollowerIdAndId_FolloweeId(Integer followerId, Integer followeeId);
+
+
 }

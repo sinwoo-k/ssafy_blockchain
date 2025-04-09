@@ -11,4 +11,5 @@ public class FollowingResponseDto {
     private Integer userId;
     private String nickname;
     private String profile;
+    private String followd;
 }
