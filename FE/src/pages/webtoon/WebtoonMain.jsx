@@ -28,7 +28,7 @@ const WebtoonMain = () => {
       <div className='relative -top-8 mb-10 flex justify-center'>
         <SingleSearchBar type={'webtoon'} />
       </div>
-      <div className='mb-10 flex justify-center'>
+      <div className='mb-20 flex justify-center'>
         <div className='w-[1000px]'>
           {/* 장르별 웹툰 */}
           <div className='flex gap-3'>

@@ -28,7 +28,7 @@ const UserProfile = () => {
   return (
     <div className='py-[60px]'>
       <UserProfileInfo user={userData} patchData={getData} />
-      <div className='flex justify-center py-5'>
+      <div className='flex justify-center'>
         <div className='flex w-[1000px] border-b'>
           <button
             className={`${active === 'webtoon' && 'bg-chaintoon text-black'}

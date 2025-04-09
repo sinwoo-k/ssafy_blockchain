@@ -7,12 +7,12 @@ const UserProfileWebtoonCard = ({ webtoon }) => {
     <div className='flex justify-center'>
       <div>
         {/* 웹툰 대표이미지 */}
-        <div className='border-chaintoon mb-3 w-[200px] rounded-xl border'>
+        <div className='mb-3 w-[200px] rounded-xl'>
           <Link to={`/webtoon/${webtoon.webtoonId}`}>
             <img
               src={webtoon.seroThumbnail}
               alt={`${webtoon.webtoonName} 대표 이미지`}
-              className='h-[250px] w-[200px] rounded-xl object-cover'
+              className='min-h-[250px] w-[200px] rounded-xl object-cover'
             />
           </Link>
         </div>

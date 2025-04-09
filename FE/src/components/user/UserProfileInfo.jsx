@@ -50,14 +50,14 @@ const UserProfileInfo = ({ user, patchData }) => {
   }, [user])
 
   return (
-    <>
+    <div className='relative flex h-[400px] flex-col items-center'>
       {/* 배경 이미지 */}
-      <div className='relative h-48 w-full overflow-hidden'>
+      <div className='relative h-[250px] w-full overflow-hidden'>
         {user.backgroundImage ? (
           <img
             src={user.backgroundImage}
             alt='배경'
-            className='absolute inset-0 z-0 h-full w-full object-cover'
+            className='absolute inset-0 z-0 h-[250px] w-full object-cover'
           />
         ) : (
           <div className='absolute inset-0 z-0 bg-gradient-to-r from-gray-700 to-gray-900' />
@@ -65,7 +65,7 @@ const UserProfileInfo = ({ user, patchData }) => {
       </div>
 
       {/* 사용자 정보 */}
-      <div className='relative border-b border-gray-800 py-3'>
+      <div className='relative -top-10 w-[1000px] py-3'>
         <div className='mb-5 flex items-start'>
           {/* 프로필 이미지 */}
           <div className='group relative mt-1 mr-4'>
@@ -175,7 +175,7 @@ const UserProfileInfo = ({ user, patchData }) => {
           {notification.message}
         </div>
       )}
-    </>
+    </div>
   )
 }
 
