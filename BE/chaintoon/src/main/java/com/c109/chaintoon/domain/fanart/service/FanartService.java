@@ -10,6 +10,7 @@ import com.c109.chaintoon.domain.fanart.entity.FanartPreference;
 import com.c109.chaintoon.domain.fanart.exception.FanartPreferenceNotFoundException;
 import com.c109.chaintoon.domain.fanart.repository.FanartPreferenceRepository;
 import com.c109.chaintoon.domain.fanart.specification.FanartSpecification;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.search.code.SearchType;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -46,6 +47,7 @@ public class FanartService {
     private final FanartPreferenceRepository fanartPreferenceRepository;
     private final S3Service s3Service;
     private final NoticeService noticeService;
+    private final NftRepository nftRepository;
 
     private String uploadFanartImage(Integer fanartId, MultipartFile file) {
         return s3Service.uploadFile(file, "fanart/" + fanartId + "/image");
@@ -244,6 +246,11 @@ public class FanartService {
         // 팬아트 조회
         Fanart fanart = fanartRepository.findById(fanartId)
                 .orElseThrow(() -> new FanartNotFoundException(fanartId));
+
+        // NFT 조회
+        if (nftRepository.existsByTypeIdAndType(fanartId, "fanart")) {
+            throw new IllegalArgumentException("NFT가 발행된 팬아트는 삭제할 수 없습니다.");
+        }
 
         // 이미 삭제된 팬아트라면 예외 발생
         if ("Y".equalsIgnoreCase(fanart.getDeleted())) {
