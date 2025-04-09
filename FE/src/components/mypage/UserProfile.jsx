@@ -90,35 +90,7 @@ const UserProfile = () => {
     }, 3000);
   };
 
-  // 팔로워 목록
-  const fetchFollowers = async () => {
-    if (!user?.id) return;
-    try {
-      setFollowersLoading(true);
-      const followersData = await userService.getFollowers(user.id);
-      // 응답 데이터를 그대로 설정
-      setFollowers(followersData || []);
-      setFollowersLoading(false);
-    } catch (err) {
-      console.error('팔로워 목록 로드 오류:', err);
-      setFollowersLoading(false);
-    }
-  };
 
-  // 팔로잉 목록
-  const fetchFollowing = async () => {
-    if (!user?.id) return;
-      try {
-        setFollowingLoading(true);
-        const followingData = await userService.getFollowing(user.id);
-        // 응답 데이터를 그대로 설정
-        setFollowing(followingData || []);
-        setFollowingLoading(false);
-      } catch (err) {
-        console.error('팔로잉 목록 로드 오류:', err);
-        setFollowingLoading(false);
-      }
-  };
   // 배경 이미지 업로드
   const handleBackgroundImageChange = () => {
     const input = document.createElement('input');
@@ -207,7 +179,6 @@ const UserProfile = () => {
       const updateData = {
         nickname: updatedFields.nickname || '',
         introduction: updatedFields.bio || '',
-        // email: updatedFields.email || '',
         url: updatedFields.url || ''
       };
 
@@ -245,40 +216,8 @@ const UserProfile = () => {
     fetchFollowing();
     setShowFollowingModal(true);
   };
-
-  // 팔로우
-  const handleFollow = async (targetUserId) => {
-    try {
-      await userService.followUser(targetUserId);
-      fetchFollowing();
-      if (user?.id) {
-        const updatedUser = await userService.getUserInfo(user.id);
-        setUser(updatedUser);
-      }
-      showNotification('팔로우했습니다.');
-    } catch (err) {
-      console.error('팔로우 오류:', err);
-      showNotification('팔로우에 실패했습니다.', 'error');
-    }
-  };
-
-  // 언팔로우
-  const handleUnfollow = async (targetUserId) => {
-    try {
-      await userService.unfollowUser(targetUserId);
-      // userId로 필터링하도록 수정
-      const updatedFollowing = following.filter(x => x.userId !== targetUserId);
-      setFollowing(updatedFollowing);
-      if (user?.id) {
-        const updatedUser = await userService.getUserInfo(user.id);
-        setUser(updatedUser);
-      }
-      showNotification('언팔로우했습니다.');
-    } catch (err) {
-      console.error('언팔로우 오류:', err);
-      showNotification('언팔로우에 실패했습니다.', 'error');
-    }
-  };
+  
+  
   // 인증 안됨
   if (!isAuthenticated) {
     return (
@@ -336,13 +275,6 @@ const UserProfile = () => {
         ) : (
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-gray-700 to-gray-900" />
         )}
-
-        {/* hover 시에만 블러 처리 */}
-        {/* <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="w-full h-full transition duration-200 group-hover:backdrop-blur-sm group-hover:bg-black/40" />
-        </div> */}
-
-        {/* hover 시에만 버튼 표시 */}
         <div className="absolute inset-0 z-20 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition space-x-2">
             <button
@@ -388,8 +320,8 @@ const UserProfile = () => {
           </div>
 
             {/* 사용자 정보 */}
-            <div className="flex flex-col items-center mt-6 text-center">
-              {/* 프로필 정보 묶음 */}
+            <div className='flex-grow mt-7'>
+            {/* 프로필 정보 묶음 */}
               <div className="space-y-2">
                 {/* 이름과 아이콘들 */}
                 <div className="flex items-center justify-center space-x-2">
@@ -483,7 +415,7 @@ const UserProfile = () => {
             </div>
 
             {/* 소개/이메일 */}
-            <p className="text-gray-300 text-sm">
+            <p className='mb-1 text-sm text-gray-400'>
             {user.bio || user.introduction || '안녕하세요'}
             </p>
             {user.email && (
@@ -498,41 +430,21 @@ const UserProfile = () => {
         <div className="flex space-x-3 mb-1 ml-3">
           <button
             className="text-[#3cc3ec] hover:underline flex items-center"
-            onClick={handleFollowersClick}
+            onClick={() => setShowFollowersModal(true)}
           >
             <span>팔로워 {user.follower || 0}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 ml-1"
-              fill="none" viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
+            <svg className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           <span className="text-gray-400">|</span>
           <button
             className="text-[#3cc3ec] hover:underline flex items-center"
-            onClick={handleFollowingClick}
+            onClick={() => setShowFollowingModal(true)}
           >
             <span>팔로잉 {user.following || 0}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 ml-1"
-              fill="none" viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
+            <svg className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
         </div>
@@ -566,29 +478,21 @@ const UserProfile = () => {
         user={user}
       />
 
-      {/* 팔로워 모달 */}
-      <FollowModal
-        isOpen={showFollowersModal}
-        onClose={() => setShowFollowersModal(false)}
-        title="팔로워"
-        users={followers}
-        onFollow={handleFollow}
-        onUnfollow={handleUnfollow}
-        isFollowingList={false}
-        isLoading={followersLoading}
-      />
+        <FollowModal
+          isOpen={showFollowersModal}
+          onClose={() => setShowFollowersModal(false)}
+          isFollowingList={false}
+          userId={user.id}
+          onNotify={showNotification}
+        />
 
-      {/* 팔로잉 모달 */}
-      <FollowModal
-        isOpen={showFollowingModal}
-        onClose={() => setShowFollowingModal(false)}
-        title="팔로잉"
-        users={following}
-        onFollow={handleFollow}
-        onUnfollow={handleUnfollow}
-        isFollowingList={true}
-        isLoading={followingLoading}
-      />
+        <FollowModal
+          isOpen={showFollowingModal}
+          onClose={() => setShowFollowingModal(false)}
+          isFollowingList={true}
+          userId={user.id}
+          onNotify={showNotification}
+        />
     </div>
     </>
   );

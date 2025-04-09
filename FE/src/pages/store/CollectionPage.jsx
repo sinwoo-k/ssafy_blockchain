@@ -50,7 +50,7 @@ const CollectionPage = () => {
             genre: webtoonData.genre || '',
             price: 0,
             status: 'sell',
-            image: webtoonData.garoThumbnail,
+            image: webtoonData.seroThumbnail,
             author: webtoonData.writer,
             description: webtoonData.summary,
             authorId: webtoonData.userId, 
@@ -268,6 +268,7 @@ const CollectionPage = () => {
 
   return (
     <div className='min-h-screen bg-black pt-[80px] pb-10 text-text/85'>
+
       {/* 컬렉션 디테일 정보 컴포넌트 사용 */}
       <CollectionDetailInfo collection={collection} tags={tags} />
         

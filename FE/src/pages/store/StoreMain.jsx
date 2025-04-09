@@ -40,33 +40,51 @@ const StoreMain = () => {
         }
   
         if (activeCategory === '웹툰') {
-          let webtoons = []
-          const params = getGenreParams()
-          webtoons = await getwebtoonAuctions(params)
-  
-          webtoons = webtoons.filter((webtoon, index, self) =>
-            index === self.findIndex((w) => w.webtoonId === webtoon.webtoonId)
-          )
-  
-          fetchedProducts = webtoons.map((w) => ({
-            id: w.webtoonId,
-            title: w.webtoonName,
-            image: w.garoThumbnail,
-            price: 0,
-            category: '웹툰',
-            genre: w.genre || '',
-            status: w.episodeCount > 0 ? 'sell' : 'notsell',
-            rating: w.rating,
-            writer: w.writer,
-            description: w.summary,
-            webtoonId: w.webtoonId,
-            episodeCount: w.episodeCount,
-            viewCount: w.viewCount,
-          }))
-  
-          setCategoryProductCounts((prev) => ({ ...prev, 웹툰: fetchedProducts.length }))
-          totalPageCount = Math.ceil(fetchedProducts.length / pageSize)
-          totalItemCount = fetchedProducts.length
+          const params = {
+            ...getGenreParams(),
+            page,
+            pageSize: pageSize
+          };
+          
+          console.log('웹툰 API 요청 파라미터:', params);
+          const webtoons = await getwebtoonAuctions(params);
+          console.log('API 응답 데이터 타입:', typeof webtoons, Array.isArray(webtoons));
+          console.log('API 응답 데이터:', webtoons);
+          
+          // 안전하게 데이터 변환
+          if (Array.isArray(webtoons) && webtoons.length > 0) {
+            const fetched = webtoons.map((w) => ({
+              id: w.webtoonId,
+              title: w.webtoonName || '제목 없음',
+              image: w.garoThumbnail || 'https://via.placeholder.com/280x280?text=이미지+없음',
+              category: '웹툰',
+              genre: w.genre || '',
+              status: (w.episodeCount && w.episodeCount > 0) ? 'sell' : 'notsell',
+              rating: w.rating || 0,
+              writer: w.writer || '',
+              description: w.summary || '',
+              webtoonId: w.webtoonId,
+              episodeCount: w.episodeCount || 0,
+              viewCount: w.viewCount || 0,
+              lastUploadDate : w.lastUploadDate || 0
+            }));
+            
+            console.log('변환된 데이터 길이:', fetched.length);
+            console.log('변환된 데이터 샘플:', fetched[0]);
+            
+            fetchedProducts = fetched;
+            totalPageCount = Math.ceil(webtoons.length / pageSize) || 1;
+            totalItemCount = webtoons.length;
+            
+            setCategoryProductCounts((prev) => ({ ...prev, 웹툰: webtoons.length }));
+          } else {
+            console.warn('웹툰 데이터가 비어있거나 배열이 아닙니다:', webtoons);
+            fetchedProducts = [];
+            totalPageCount = 5;
+            totalItemCount = 0;
+          }
+
+
         } else if (activeCategory === '굿즈') {
           const genreParams = getGenreParams()
           const goodsResponse = await getGoodsAuctions(genreParams)
@@ -91,6 +109,8 @@ const StoreMain = () => {
           totalPageCount = goodsResponse?.totalPages || 1
           totalItemCount = goodsResponse?.totalElements || goodsProducts.length
           setCategoryProductCounts((prev) => ({ ...prev, 굿즈: totalItemCount }))
+
+
         } else if (activeCategory === '팬아트') {
           const genreParams = getGenreParams()
           const fanartResponse = await getFanartAuctions(genreParams)
@@ -119,7 +139,7 @@ const StoreMain = () => {
   
         setProducts(fetchedProducts)
         setFilteredProducts(fetchedProducts)
-        setTotalPages(totalPageCount || 1)
+        setTotalPages(totalPageCount || 0)
         setTotalElements(totalItemCount)
       } catch (err) {
         console.error('스토어 상품 API 에러:', err)
@@ -258,6 +278,17 @@ const StoreMain = () => {
     setFilteredProducts(searchResult)
   }
 
+  // 페이지 변경 핸들러 추가
+  const handlePageChange = (newPage) => {
+    console.log(`페이지 변경 시도: ${page} -> ${newPage}`);
+    if (newPage < 1 || newPage > totalPages) {
+      console.warn(`유효하지 않은 페이지 번호: ${newPage}`);
+      return;
+    }
+    setPage(newPage);
+    console.log(`페이지 상태 업데이트: ${newPage}`);
+  }
+
   // 정렬 변경 핸들러
   const handleSort = (e) => {
     const newOrderBy = e.target.value
@@ -338,11 +369,9 @@ const StoreMain = () => {
                     onChange={handleSort}
                     value={orderBy}
                   >
-                    <option value="latest">최신순</option>
-                    <option value="priceLow">가격 낮은순</option>
-                    <option value="priceHigh">가격 높은순</option>
+                    <option value="lastUploadDate">최신순</option>
                     <option value="rating">평점순</option>
-                    <option value="view">조회수순</option>
+                    <option value="viewCount">조회수순</option>
                   </select>
                 </div>
               </div>
@@ -359,23 +388,24 @@ const StoreMain = () => {
               )}
               
               {/* 페이지 네비게이션 - 페이지 정보 추가 */}
-              <div className='mt-8 flex justify-center'>
-                <div className='flex items-center'>
-                  <button 
-                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                    disabled={page === 1}
-                    className={`mx-1 rounded px-3 py-1 ${page === 1 ? 'bg-gray-700 text-gray-400' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
-                  >
-                    이전
-                  </button>
-                  <span className='mx-2 text-gray-300'>페이지 {page} / {totalPages}</span>
-                  <button 
-                    onClick={() => setPage(prev => prev < totalPages ? prev + 1 : prev)}
-                    disabled={page >= totalPages}
-                    className={`mx-1 rounded px-3 py-1 text-white hover:bg-gray-600 ${page >= totalPages ? 'bg-gray-700 text-gray-400' : 'bg-gray-700'}`}
-                  >
-                    다음
-                  </button>
+              <div className="mt-8 flex justify-center">
+                <div className="flex items-center space-x-2">
+                  {/* 페이지 번호 직접 선택 방식 */}
+                  {[...Array(totalPages).keys()].map(i => (
+                    <button
+                      key={i + 1}
+                      onClick={() => {
+                        const newPage = i + 1;
+                        console.log(`페이지 ${newPage}로 이동`);
+                        setPage(newPage);
+                      }}
+                      className={`h-8 w-8 rounded-full ${
+                        page === i + 1 ? 'bg-blue-500' : 'bg-gray-700'
+                      } text-white flex items-center justify-center`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
                   
                   <select 
                     value={pageSize}
