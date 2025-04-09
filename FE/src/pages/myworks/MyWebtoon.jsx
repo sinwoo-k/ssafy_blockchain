@@ -32,7 +32,7 @@ const MyWebtoon = () => {
     return () => {}
   }, [])
   return (
-    <div className='flex justify-center pt-[60px]'>
+    <div className='flex min-h-[70vh] justify-center pt-[60px]'>
       <div className='w-[1000px] py-10'>
         <div className='mb-10 flex items-center gap-3'>
           <h1 className='text-chaintoon text-2xl'>내 웹툰</h1>
