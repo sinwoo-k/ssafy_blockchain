@@ -94,6 +94,11 @@ public class NoticeService {
     }
 
     @Transactional
+    public void deleteAllNotices(Integer userId) {
+        noticeRepository.deleteAllByUserId(userId);
+    }
+
+    @Transactional
     public void readNotice(Integer userId, Integer noticeId) {
         // 알림 조회
         Notice notice = noticeRepository.findByNoticeIdAndDeleted(noticeId, "N")
@@ -146,13 +151,10 @@ public class NoticeService {
     }
 
     // 계약 체결 시 호출
-    public void addAuctionCompleteNotice(TradingHistory tradingHistory, Webtoon webtoon) {
+    public void addAuctionCompleteNotice(TradingHistory tradingHistory, Double revenue) {
         addNftPurchaseNotice(tradingHistory);
-        addNftSoldNotice(tradingHistory);
+        addNftSoldNotice(tradingHistory, revenue);
 
-        if (webtoon != null && !webtoon.getUserId().equals(tradingHistory.getSellerId())) {
-            addSecondaryCreationNftSoldNotice(tradingHistory, webtoon);
-        }
     }
 
     // 구매자에게 구매 알림
@@ -165,23 +167,23 @@ public class NoticeService {
     }
 
     // 판매자에게 판매 알림
-    private void addNftSoldNotice(TradingHistory tradingHistory) {
+    private void addNftSoldNotice(TradingHistory tradingHistory, Double revenue) {
         Map<String, Object> metadata = Map.of(
                 "nftId", tradingHistory.getNftId(),
                 "tradingValue", tradingHistory.getTradingValue(),
-                "revenue", 0.0D
+                "revenue", revenue
         );
         createAndSendNotice(tradingHistory.getSellerId(), NoticeType.NFT_SOLD, metadata);
     }
 
     // 2차 창작물 판매 시 원작자에게 알림
-    public void addSecondaryCreationNftSoldNotice(TradingHistory tradingHistory, Webtoon webtoon) {
+    public void addSecondaryCreationNftSoldNotice(Integer userId, Integer nftId, Double tradingValue, Double copyrightFee) {
         Map<String, Object> metadata = Map.of(
-                "nftId", tradingHistory.getNftId(),
-                "tradingValue", tradingHistory.getTradingValue(),
-                "copyrightFee", 0.0D
+                "nftId", nftId,
+                "tradingValue", tradingValue,
+                "copyrightFee", copyrightFee
         );
-        createAndSendNotice(webtoon.getUserId(), NoticeType.SECONDARY_CREATION_NFT_SOLD, metadata);
+        createAndSendNotice(userId, NoticeType.SECONDARY_CREATION_NFT_SOLD, metadata);
     }
 
     public void addBlockchainNetworkSuccessNotice(Integer userId, String message) {

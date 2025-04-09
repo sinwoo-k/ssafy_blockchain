@@ -76,22 +76,22 @@ public class BlockchainService {
     }
 
     // 구매 요청 매서드
-    public void registerBuy(BlockchainBuyRequestDto buyRequestDto) {
+    public BlockchainBuyResponseDto registerBuy(BlockchainBuyRequestDto buyRequestDto) {
         try {
-            webClient.post()
-                    .uri("nft/buy-nft")
+            // 블록체인 서버(Express) POST 호출
+            return webClient.post()
+                    .uri("nft/buy-nft") // 예: BASE_URL + "/nft/buy-nft"
                     .bodyValue(buyRequestDto)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
                                     .flatMap(errorBody -> Mono.error(new ServerException("Express API 에러: " + errorBody)))
                     )
-                    .bodyToMono(Void.class)
-                    .onErrorResume(e -> Mono.error(new ServerException(" 조회 중 오류가 발생했습니다: " + e.getMessage())))
+                    .bodyToMono(BlockchainBuyResponseDto.class)  // 응답 DTO 매핑
                     .block();
-            log.info("블록체인 구매 요청 성공: {}", buyRequestDto);
         } catch (Exception e) {
             log.error("블록체인 구매 요청 실패: {}", e.getMessage());
+            throw new ServerException("구매 요청 실패: " + e.getMessage());
         }
     }
 
@@ -331,15 +331,15 @@ public class BlockchainService {
                 .onErrorResume(e -> {
                     // 에러 발생 시 추가적인 실패 처리(필요시 상태 업데이트 등)를 진행할 수 있습니다.
                     log.error("NFT 민팅 처리 중 오류 발생: {}", e.getMessage());
-                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: " + e.getMessage()));
+                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: "));
                 })
                 .onErrorResume(e -> {
                     // 9. 실패 알림 전송: 소유자(owner)는 항상 실패 알림 전송
                     walletRepository.findUserIdByWalletAddress(ownerAddress)
                             .ifPresent(ownerUserId ->
-                                    noticeService.addBlockchainNetworkFailNotice(ownerUserId, "NFT 민팅 실패: " + e.getMessage())
+                                    noticeService.addBlockchainNetworkFailNotice(ownerUserId, "NFT 민팅 실패하였습니다. 관리자에게 문의해주세요 ")
                             );
-                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: " + e.getMessage()));
+                    return Mono.error(new ServerException("NFT 등록중 오류가 발생했습니다: "));
                 })
                 .then()
                 .toFuture();
@@ -369,7 +369,7 @@ public class BlockchainService {
                     }
                 })
                 .onErrorResume(e ->
-                        Mono.error(new ServerException("논스값 조회중 오류가 발생했습니다: " + e.getMessage()))
+                        Mono.error(new ServerException("논스값 조회중 오류가 발생했습니다: "))
                 );
     }
     @Async
@@ -412,7 +412,7 @@ public class BlockchainService {
                     System.out.println("Received Wallet Response: " + response);
                 })
                 .onErrorResume(e ->
-                        Mono.error(new ServerException("Metamask 지갑연동중 오류가 발생했습니다: " + e.getMessage()))
+                        Mono.error(new ServerException("Metamask 지갑연동중 오류가 발생했습니다: "))
                 );
     }
 

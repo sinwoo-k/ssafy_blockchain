@@ -6,7 +6,7 @@ import {
   syncNewTransactionsService,
   getTransactionDetailsService,
   getSaleTransactionsService,
-  getNftTransfersService
+  getNftTransfersService,
 } from '../services/transactionService.js';
 import { NFT_MARKETPLACE_ADDRESS } from '../config/contract.js';
 

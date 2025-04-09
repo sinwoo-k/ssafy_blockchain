@@ -4,7 +4,7 @@ import { NFT_MARKETPLACE_ADDRESS } from '../layer/config/contract.js';
 
 // 환경 변수나 별도 설정으로 동기화할 컨트랙트 주소를 지정합니다.
 if (!NFT_MARKETPLACE_ADDRESS) {
-  console.error("환경 변수 NFT_MARKETPLACE_ADDRESS가가 설정되지 않았습니다.");
+  console.error("환경 변수 NFT_MARKETPLACE_ADDRESS가 설정되지 않았습니다.");
   process.exit(1);
 }
 

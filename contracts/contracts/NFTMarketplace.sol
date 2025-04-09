@@ -38,7 +38,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // 이벤트 정의
     event Minted(address indexed to, uint256 tokenId, string tokenURI);
     event NFTListed(uint256 tokenId, address seller, uint256 price);
-    event NFTSold(uint256 tokenId, address buyer, uint256 price);
+    event NFTSold(uint256 tokenId, address buyer, address seller, uint256 price);
 
     constructor() ERC721("Chaintoon", "Chaintoon") {}
 
@@ -47,7 +47,6 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @param to 민팅된 NFT의 소유자 주소
      * @param _tokenURI NFT 메타데이터 URI
      * @param originalCreator 원작자 지갑 주소
-     * @param ownerShare 소유자자 지갑 주소
      * @param adminWallet 관리자 지갑 주소
      * @return newTokenId 발행된 NFT의 tokenId
      */
@@ -55,7 +54,6 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         address to,
         string memory _tokenURI,
         address originalCreator,
-        address ownerShare,
         address adminWallet
     ) public returns (uint256) {
         require(bytes(_tokenURI).length > 0, "Token URI cannot be empty");
@@ -70,7 +68,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // 로열티 정보 저장
         royaltyInfoByToken[newTokenId] = RoyaltyInfo({
             originalCreator: originalCreator,
-            ownerShare: ownerShare,
+            ownerShare: msg.sender,
             adminWallet: adminWallet
         });
 
@@ -146,7 +144,7 @@ contract NFTMarketplace is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             purchaseTime: block.timestamp
         });
 
-        emit NFTSold(tokenId, msg.sender, salePrice);
+        emit NFTSold(tokenId, msg.sender, listing.seller, salePrice);
     }
     // 아래는 ERC721Enumerable 및 ERC721URIStorage를 함께 사용할 때 필수로 오버라이드 해야하는 함수들입니다.
 
