@@ -39,7 +39,7 @@ const FanartWebtoonList = () => {
             <p className='text-xl'>등록된 웹툰이 없습니다.</p>
           </div>
         ) : (
-          <div className='grid grid-cols-4 gap-3 gap-y-7'>
+          <div className='grid min-w-[1000px] grid-cols-4 gap-3 gap-y-7'>
             {webtoons.map((webtoon) => (
               <FanartWebtoonCard
                 key={`fanart-${webtoon.webtoonId}`}

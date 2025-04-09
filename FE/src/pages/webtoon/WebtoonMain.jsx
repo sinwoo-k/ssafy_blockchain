@@ -54,7 +54,7 @@ const WebtoonMain = () => {
         </div>
       </div>
       <div className='flex justify-center'>
-        <div className='flex w-[1000px] gap-15'>
+        <div className='flex min-w-[1000px] gap-15'>
           <div className='grow'>
             {/* <WebtoonList /> */}
             <UpdateWebtoonList />

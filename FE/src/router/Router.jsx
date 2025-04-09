@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import RootPage from '../pages/RootPage'
 import Loader from '../components/common/Loader'
 import Page404 from '../pages/error/Page404'
+import PrivateRoute from './PrivateRoute'
 import CollectionPage from '../pages/store/CollectionPage'
 
 // Sso Callback
@@ -105,145 +106,163 @@ const router = createBrowserRouter([
       },
       {
         path: '/webtoon/myfavorite',
-        element: (
-          <Suspense fallback={<Loader />}>
-            <FavoriteWebtoon />
-          </Suspense>
-        ),
+        element: <PrivateRoute />,
+        children: [
+          {
+            path: '',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <FavoriteWebtoon />
+              </Suspense>
+            ),
+          },
+        ],
       },
       // 내 작품 목록 section
       {
         path: '/myworks',
-        element: (
-          <Suspense fallback={<Loader />}>
-            <MyWorks />
-          </Suspense>
-        ),
+        element: <PrivateRoute />,
         children: [
-          { index: true, element: <Navigate to={'webtoon'} replace /> },
           {
-            path: 'webtoon',
+            path: '',
             element: (
               <Suspense fallback={<Loader />}>
-                <MyWebtoon />
+                <MyWorks />
               </Suspense>
             ),
-          },
-          {
-            path: 'webtoon/create',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonCreate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/:webtoonId',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonDetail />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/:webtoonId/update',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonUpdate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/:webtoonId/episode/create',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonEpisodeCreate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/episode/:episodeId/update',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonEpisodeUpdate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/:webtoonId/goods',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonGoods />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/:webtoonId/goods/create',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonGoodsCreate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'webtoon/goods/update/:goodsId',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyWebtoonGoodsUpdate />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'fanart',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyFanart />
-              </Suspense>
-            ),
-          },
-          {
-            path: 'fanart/:fanartId/update',
-            element: (
-              <Suspense fallback={<Loader />}>
-                <MyFanartUpdate />
-              </Suspense>
-            ),
+            children: [
+              { index: true, element: <Navigate to={'webtoon'} replace /> },
+              {
+                path: 'webtoon',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoon />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/create',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonCreate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/:webtoonId',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonDetail />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/:webtoonId/update',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonUpdate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/:webtoonId/episode/create',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonEpisodeCreate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/episode/:episodeId/update',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonEpisodeUpdate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/:webtoonId/goods',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonGoods />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/:webtoonId/goods/create',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonGoodsCreate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'webtoon/goods/update/:goodsId',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyWebtoonGoodsUpdate />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'fanart',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyFanart />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'fanart/:fanartId/update',
+                element: (
+                  <Suspense fallback={<Loader />}>
+                    <MyFanartUpdate />
+                  </Suspense>
+                ),
+              },
+            ],
           },
         ],
       },
       // 마이페이지 section
       {
         path: 'mypage',
-        element: (
-          <Suspense fallback={<Loader />}>
-            <MyPage />
-          </Suspense>
-        ),
+        element: <PrivateRoute />,
+        children: [
+          {
+            path: '',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <MyPage />
+              </Suspense>
+            ),
+          },
+        ],
       },
       // store section
       {
-        path : '/store',
-        element:(
+        path: '/store',
+        element: (
           <Suspense fallback={<Loader />}>
             <StoreMain />
           </Suspense>
-        )
+        ),
       },
       {
-        path : '/store/product/:productId',
-        element:(
+        path: '/store/product/:productId',
+        element: (
           <Suspense fallback={<Loader />}>
             <ProductDetail />
           </Suspense>
-        )
+        ),
       },
       {
-        path : '/store/collection/:collectionId',
-        element:(
+        path: '/store/collection/:collectionId',
+        element: (
           <Suspense fallback={<Loader />}>
             <CollectionPage />
           </Suspense>
-        )
+        ),
       },
       // 팬아트 section
       {
@@ -263,7 +282,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/fanart/webtoon/:webtoonId/',
+        path: '/fanart/webtoon/:webtoonId',
         element: (
           <Suspense fallback={<Loader />}>
             <FanartWebtoon />
@@ -272,11 +291,17 @@ const router = createBrowserRouter([
       },
       {
         path: 'fanart/webtoon/:webtoonId/create',
-        element: (
-          <Suspense fallback={<Loader />}>
-            <FanartCreate />
-          </Suspense>
-        ),
+        element: <PrivateRoute />,
+        children: [
+          {
+            path: '',
+            element: (
+              <Suspense fallback={<Loader />}>
+                <FanartCreate />
+              </Suspense>
+            ),
+          },
+        ],
       },
       // 검색 section
       {
