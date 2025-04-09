@@ -46,7 +46,7 @@ const RecommendWebtoonCard = ({ webtoonId }) => {
         {webtoon?.tags.map((tag, index) => (
           <span
             key={`recommend-${index + 1}`}
-            className='bg-chaintoon rounded-lg px-2 py-1'
+            className='bg-chaintoon/75  rounded-lg px-2 py-1'
           >
             # {tag}
           </span>

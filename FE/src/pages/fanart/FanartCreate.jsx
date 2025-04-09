@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import Loader from '../../components/common/Loader'
+import { createFanart } from '../../api/fanartAPI'
+import { getWebtoon } from '../../api/webtoonAPI'
+import { checkImage } from '../../utils/image/limiteSize'
 
 // 아이콘
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import ClearIcon from '@mui/icons-material/Clear'
-import { createFanart } from '../../api/fanartAPI'
-import { getWebtoon } from '../../api/webtoonAPI'
-import { checkImage } from '../../utils/image/limiteSize'
 
 const FanartCreate = () => {
   const params = useParams()
@@ -17,6 +18,8 @@ const FanartCreate = () => {
   const [webtoonName, setWeboonName] = useState('') // 웹툰명
   const [fanartName, setFanartName] = useState('') // 팬아트명
   const [fanartDescription, setFanartDescription] = useState('') // 팬아트 설명
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 드래그 & 드랍 관련 이벤트 함수
   const [dragOver, setDragOver] = useState(false)
@@ -95,12 +98,15 @@ const FanartCreate = () => {
       fanartName: fanartName,
       description: fanartDescription,
     }
+    setIsLoading(true)
     try {
       const result = await createFanart(payload, fanartImage)
       navigate(`/fanart/webtoon/${params.webtoonId}`)
     } catch (error) {
       console.error('팬아트 등록 실패: ', error)
       alert('팬아트 등록에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -235,6 +241,7 @@ const FanartCreate = () => {
           등록하기
         </button>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }

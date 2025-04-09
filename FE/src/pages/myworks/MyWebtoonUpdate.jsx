@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MyWebtoonImageCropModal from '../../components/myworks/MyWebtoonImageCropModal'
+import Loader from '../../components/common/Loader'
 
 // 아이콘
 import CloseIcon from '@mui/icons-material/Close'
@@ -38,6 +39,8 @@ const MyWebtoonUpdate = () => {
   const [seroImageUrl, setSeroImageUrl] = useState('')
   const [showSeroImageModal, setShowSeroImageModal] = useState(false)
   const [adaptable, setAdaptable] = useState(false) // 팬아트 허용
+
+  const [isLoading, setIsLoading] = useState(false)
 
   // 태그 등록 함수
   const handleTags = (event) => {
@@ -108,7 +111,7 @@ const MyWebtoonUpdate = () => {
       summary,
       adaptable: adaptable ? 'Y' : 'N',
     }
-
+    setIsLoading(true)
     try {
       const result = await patchWebtoon(
         params.webtoonId,
@@ -120,6 +123,8 @@ const MyWebtoonUpdate = () => {
     } catch (error) {
       console.error('웹툰 등록 중 에러 발생:', error)
       alert('웹툰 등록에 실패하였습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -389,6 +394,7 @@ const MyWebtoonUpdate = () => {
           </div>
         </div>
       </div>
+      {isLoading && <Loader />}
     </div>
   )
 }
