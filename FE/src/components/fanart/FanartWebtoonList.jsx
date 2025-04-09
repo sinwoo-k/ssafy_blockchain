@@ -31,7 +31,7 @@ const FanartWebtoonList = () => {
     <div className='flex h-full w-full justify-center'>
       <div className='flex h-full w-[1000px] flex-col'>
         <h2 className='mb-5 text-xl'>
-          🌟 최신 웹툰 업데이트! 팬아트도 함께 감상해요!
+          🌟 최신 웹툰 업데이트! 팬아트도 즐겨봐요!
         </h2>
         {webtoons.length === 0 ? (
           <div className='flex h-[166px] w-full flex-col items-center justify-center gap-3'>
