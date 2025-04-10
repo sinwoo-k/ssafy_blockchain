@@ -62,7 +62,7 @@ public class SecurityConfig {
                         "/api/fanarts/**",
                         "/api/nfts",
                         "/api/nfts/{nftId}",
-                        "/api/auctions",
+                        "/api/auctions/**",
                         "/api/blockchain/nonce/{walletAddress}"
                 ).permitAll()
                 .requestMatchers(
