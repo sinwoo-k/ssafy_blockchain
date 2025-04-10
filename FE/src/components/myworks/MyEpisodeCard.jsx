@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import IconButton from '../common/IconButton'
 import MintNFT from '../common/MintNFT'
 
-
 // 아이콘
 import StarIcon from '@mui/icons-material/Star'
 import EditIcon from '@mui/icons-material/Edit'
@@ -36,10 +35,7 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
             </span>
           </div>
           <div className='flex items-center gap-3'>
-            <MintNFT
-              item={episode}
-              type="episode"
-            />
+            <MintNFT item={episode} type='episode' />
             <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
               <IconButton
                 Icon={EditIcon}
@@ -47,7 +43,10 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
                 style={{ color: '#2599ff' }}
               />
             </Link>
-            <div onClick={() => deleteData(episode.episodeId)}>
+            <div
+              className='translate-y-[1px] transform'
+              onClick={() => deleteData(episode.episodeId)}
+            >
               <IconButton
                 Icon={DeleteIcon}
                 tooltip={'삭제하기'}

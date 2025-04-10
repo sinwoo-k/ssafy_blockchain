@@ -84,7 +84,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
             typeId: payload.typeId,
             tokenId: mintedTokenId,
             contractAddress: confirmRes.contractAddress || '', // confirmRes 또는 상수 사용
-            imageUrl: confirmRes.imageUrl || item.imageUrl || "",       // 우선 confirmRes에서, 없으면 item에서
+            imageUrl: confirmRes.imageUrl || item.imageUrl || '', // 우선 confirmRes에서, 없으면 item에서
             metadataUri: confirmRes.metadataUri || '', // 반드시 저장되어 있어야 함
           }
           await nftService.recordMintToDb(dbPayload)
@@ -106,14 +106,14 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
       {/* 민팅 진행 중 로딩 화면 표시 */}
       {loading || timerActive ? (
         <button
-          className='text-chaintoon border-chaintoon rounded border px-4 py-1 bg-chaintoon text-white cursor-not-allowed'
+          className='border-chaintoon bg-chaintoon cursor-not-allowed rounded border px-2 py-1 text-white'
           disabled={loading}
         >
           NFT 발행 중...
         </button>
       ) : (
         <button
-          className='text-chaintoon border-chaintoon rounded border px-4 py-1 hover:text-white'
+          className='text-chaintoon border-chaintoon cursor-pointer rounded border px-2 py-1 hover:text-white'
           onClick={handleMint}
           disabled={loading}
         >

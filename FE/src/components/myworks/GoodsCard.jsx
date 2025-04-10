@@ -31,16 +31,19 @@ const GoodsCard = ({ goods, patchData }) => {
             className='h-[200px] w-[180px] rounded-lg object-cover'
           />
         </div>
-        <div className='flex justify-between'>
+        <div className='flex items-end justify-between'>
           <MintNFT item={goods} type='goods' afterMint={patchData} />
-          <div className='flex gap-3'>
+          <div className='flex gap-2'>
             <Link
               to={`/myworks/webtoon/goods/update/${goods.goodsId}`}
               className='text-blue-500'
             >
               <IconButton Icon={EditIcon} tooltip={'수정하기'} />
             </Link>
-            <div className='text-red-500' onClick={deleteData}>
+            <div
+              className='translate-y-[1px] transform text-red-500'
+              onClick={deleteData}
+            >
               <IconButton Icon={DeleteIcon} tooltip={'삭제하기'} />
             </div>
           </div>

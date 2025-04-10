@@ -53,16 +53,19 @@ const MyFanartCard = ({ fanart, patchData }) => {
             />
           </Link>
         </div>
-        <div className='flex justify-between gap-2'>
+        <div className='flex items-center justify-between'>
           <MintNFT item={fanart} type='fanart' afterMint={patchData} />
-          <div className='flex items-center gap-1'>
+          <div className='flex items-center gap-2'>
             <Link
               to={`/myworks/fanart/${fanart.fanartId}/update`}
               className='text-blue-500'
             >
               <IconButton Icon={EditIcon} tooltip={'수정하기'} />
             </Link>
-            <div className='text-red-500' onClick={deleteData}>
+            <div
+              className='translate-y-[1px] transform text-red-500'
+              onClick={deleteData}
+            >
               <IconButton Icon={DeleteIcon} tooltip={'삭제하기'} />
             </div>
           </div>
