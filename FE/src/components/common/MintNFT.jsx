@@ -106,7 +106,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
       {/* 민팅 진행 중 로딩 화면 표시 */}
       {loading || timerActive ? (
         <button
-          className='text-chaintoon border-chaintoon rounded border px-4 py-1 hover:text-white'
+          className='text-chaintoon border-chaintoon rounded border px-4 py-1 bg-chaintoon text-white cursor-not-allowed'
           disabled={loading}
         >
           NFT 발행 중...

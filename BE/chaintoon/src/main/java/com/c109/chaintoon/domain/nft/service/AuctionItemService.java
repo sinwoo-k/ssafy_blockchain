@@ -14,6 +14,7 @@ import com.c109.chaintoon.domain.nft.dto.blockchain.response.BlockchainBuyRespon
 import com.c109.chaintoon.domain.nft.dto.metamask.request.MetamaskBuyRequestDto;
 import com.c109.chaintoon.domain.nft.dto.metamask.request.MetamaskSellRequestDto;
 import com.c109.chaintoon.domain.nft.dto.metamask.response.MetamaskRequestResponseDto;
+import com.c109.chaintoon.domain.nft.dto.metamask.response.MetamaskSellRequestResponseDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -160,7 +161,27 @@ public class AuctionItemService {
             return Sort.by(Sort.Direction.DESC, "biddingPrice");
         }
     }
+    /**
+     * 메타마스크 판매 등록 요청 DTO 생성 헬퍼 메서드
+     */
+    private MetamaskSellRequestDto createMetamaskSellRequestDto(Nft nft, String priceStr) {
+        MetamaskSellRequestDto dto = new MetamaskSellRequestDto();
+        dto.setTokenId(nft.getTokenId());
+        dto.setPrice(priceStr);
+        dto.setUserId(nft.getUserId());
+        return dto;
+    }
 
+    /**
+     * 메타마스크 판매 등록 응답 DTO 매핑 헬퍼 메서드
+     */
+    private MetamaskSellRequestResponseDto createMetamaskSellResponseDto(Integer auctionItemId, MetamaskRequestResponseDto metaResponseDto) {
+        MetamaskSellRequestResponseDto responseDto = new MetamaskSellRequestResponseDto();
+        responseDto.setAuctionItemId(auctionItemId);
+        responseDto.setNeedSignature(metaResponseDto.isNeedSignature());
+        responseDto.setMessageToSign(metaResponseDto.getMessageToSign());
+        return responseDto;
+    }
     // 판매 등록
     @Transactional
     public AuctionCreateResponseDto createAuctionItem(Integer userId, AuctionCreateRequestDto auctionCreateRequestDto) {
@@ -306,7 +327,7 @@ public class AuctionItemService {
     }
     // 메타마스크용 경매 등록 (판매 등록)
     @Transactional
-    public MetamaskRequestResponseDto createAuctionItemMetamask(Integer userId, AuctionCreateRequestDto dto) {
+    public MetamaskSellRequestResponseDto createAuctionItemMetamask(Integer userId, AuctionCreateRequestDto dto) {
         log.debug("메타마스크 경매 등록 요청: {}", dto);
         Nft nft = nftRepository.findById(dto.getNftId())
                 .orElseThrow(() -> new NftNotFoundException(dto.getNftId()));
@@ -334,12 +355,12 @@ public class AuctionItemService {
 
         // 메타마스크용 판매 등록 요청: 별도의 MetamaskSellRequestDto 생성 후 호출
         String priceStr = (saved.getBiddingPrice() != null) ? saved.getBiddingPrice().toString() : "0.0";
-        MetamaskSellRequestDto metaSellDto = new MetamaskSellRequestDto();
-        metaSellDto.setTokenId(nft.getTokenId());
-        metaSellDto.setPrice(priceStr);
-        metaSellDto.setUserId(nft.getUserId());
+        MetamaskSellRequestDto metaSellDto = createMetamaskSellRequestDto(nft, priceStr);
 
-        return metamaskService.sellRequest(metaSellDto).block();
+        // 메타마스크 판매 등록 요청 호출 및 응답 매핑
+        MetamaskRequestResponseDto metaResponseDto = metamaskService.sellRequest(metaSellDto).block();
+        return createMetamaskSellResponseDto(saved.getAuctionItemId(), metaResponseDto);
+
     }
     // 입찰 목록 조회
     @Transactional

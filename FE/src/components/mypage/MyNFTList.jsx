@@ -109,7 +109,7 @@ const MyNFTList = () => {
           confirmRes.metamaskPayload,
         )
         
-        await nftService.updateAuctionStatus(selectedNft.auctionItemId, "SUCCESS");
+        await nftService.updateAuctionStatus(requestRes.auctionItemId, "SUCCESS");
       } else {
         // 내부 지갑 사용자: 기존 API 호출
         await nftService.sellNFT(sellData)

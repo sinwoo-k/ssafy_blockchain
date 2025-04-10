@@ -2,6 +2,7 @@ package com.c109.chaintoon.domain.nft.controller;
 
 
 import com.c109.chaintoon.domain.nft.dto.metamask.response.MetamaskRequestResponseDto;
+import com.c109.chaintoon.domain.nft.dto.metamask.response.MetamaskSellRequestResponseDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBidRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionBuyNowRequestDto;
 import com.c109.chaintoon.domain.nft.dto.request.AuctionCreateRequestDto;
@@ -39,7 +40,7 @@ public class AuctionItemController {
 
     // 메타마스크용 경매 등록
     @PostMapping("/metamask")
-    public ResponseEntity<MetamaskRequestResponseDto> createAuctionItemMetamask(
+    public ResponseEntity<MetamaskSellRequestResponseDto> createAuctionItemMetamask(
             @AuthenticationPrincipal Integer userId,
             @RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
         return ResponseEntity.ok(auctionItemService.createAuctionItemMetamask(userId, auctionCreateRequestDto));
