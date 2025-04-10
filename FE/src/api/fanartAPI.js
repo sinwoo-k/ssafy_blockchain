@@ -7,8 +7,10 @@ export const getLatestFanarts = async () => {
 }
 
 /** 웹툰별 팬아트 조회  */
-export const getWebtoonFanarts = async (webtoonId) => {
-  const response = await API.get(`/fanarts/webtoons/${webtoonId}`)
+export const getWebtoonFanarts = async (webtoonId, page = 1, pageSize = 30) => {
+  const response = await API.get(
+    `/fanarts/webtoons/${webtoonId}?page=${page}&pageSize=${pageSize}`,
+  )
   return response.data
 }
 

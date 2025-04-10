@@ -11,30 +11,6 @@ import IconButton from './IconButton'
 const NoticeCard = ({ notice }) => {
   const dispatch = useDispatch()
 
-  // type에 따라 제목을 반환하는 헬퍼 함수
-  const getNoticeTitle = (notice) => {
-    switch (notice.type) {
-      case 'NTC_SECONDARY_CREATION':
-        return '2차 창작 등록'
-      case 'NTC_OVERBID':
-        return '상위 입찰 갱신'
-      case 'NTC_NFT_PURCHASE':
-        return 'NFT 구매'
-      case 'NTC_NFT_SOLD':
-        return 'NFT 판매'
-      case 'NTC_SECONDARY_CREATION_NFT_SOLD':
-        return '2차 창작 NFT 판매'
-      case 'NTC_BLOCKCHAIN_NETWORK_SUCCESS':
-        return 'NFT 발행 성공'
-      case 'NTC_BLOCKCHAIN_NETWORK_FAIL':
-        return 'NFT 발행 실패'
-      case 'NTC_SECONDARY_CREATION_NFT_MINT':
-        return '2차 창작 NFT 발행'
-      default:
-        return '알림'
-    }
-  }
-
   // type과 metadata에 따라 상세 메시지를 반환하는 헬퍼 함수
   const getNoticeMessage = (notice) => {
     switch (notice?.type) {
@@ -109,7 +85,7 @@ const NoticeCard = ({ notice }) => {
         className={`mb-4 rounded-lg bg-black p-4 shadow ${notice.checked === 'N' ? 'border-chaintoon border-l-4' : ''}`}
       >
         <div className='flex items-center justify-between'>
-          <h3 className='text-lg font-bold'>{getNoticeTitle(notice)}</h3>
+          <h3 className='text-lg font-bold'>알림이 도착했습니다.</h3>
           <div className='hover:text-red-500' onClick={deleteData}>
             <IconButton Icon={CloseIcon} tooltip={'알림 삭제'} />
           </div>

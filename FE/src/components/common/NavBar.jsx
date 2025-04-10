@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { userReducerActions } from '../../redux/reducers/userSlice'
 import { logoutAction } from '../../redux/actions/authActions'
-import { getRandomColor } from '../../utils/randomColor'
 
 // 컴포넌트
 import LoginModal from '../Auth/LoginModal'
@@ -27,9 +26,6 @@ const NavBar = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
   const dispatch = useDispatch()
-
-  // 프로필 랜덤 컬러
-  const [randomColor, setRandomColor] = useState(getRandomColor())
 
   // 로그인 모달 상태
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -143,7 +139,7 @@ const NavBar = () => {
                       : userProfileImage
                   }
                   tooltip={`${userData.nickname}님`}
-                  style={{ fontSize: 32, color: randomColor }}
+                  style={{ fontSize: 32, color: '#3cc3ec' }}
                 />
               </div>
               <div className='hover:text-chaintoon' onClick={handleLogout}>
