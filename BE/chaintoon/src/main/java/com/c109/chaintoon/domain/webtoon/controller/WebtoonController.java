@@ -2,6 +2,7 @@ package com.c109.chaintoon.domain.webtoon.controller;
 
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
+import com.c109.chaintoon.domain.webtoon.dto.response.PaginatedWebtoonListResponse;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.service.WebtoonService;
@@ -41,6 +42,21 @@ public class WebtoonController {
         List<WebtoonListResponseDto> webtoonList = webtoonService.getWebtoonList(
                 page, pageSize, orderBy, genreList, adaptable, writerId);
         return new ResponseEntity<>(webtoonList, HttpStatus.OK);
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<PaginatedWebtoonListResponse> getPaginatedWebtoonList(
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize,
+            @RequestParam(required = false, defaultValue = "latest") String orderBy,
+            @RequestParam(required = false) List<String> genres,
+            @RequestParam(required = false) String adaptable,
+            @RequestParam(required = false) Integer writerId
+    ) {
+        PaginatedWebtoonListResponse response = webtoonService.getPaginatedWebtoonList(
+                page, pageSize, orderBy, genres, adaptable, writerId
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
