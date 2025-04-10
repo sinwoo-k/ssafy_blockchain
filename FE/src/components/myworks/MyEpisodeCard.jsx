@@ -36,22 +36,17 @@ const MyEpisodeCard = ({ episode, deleteData }) => {
           </div>
           <div className='flex items-center gap-3'>
             <MintNFT item={episode} type='episode' />
-            <Link to={`/myworks/webtoon/episode/${episode.episodeId}/update`}>
-              <IconButton
-                Icon={EditIcon}
-                tooltip={'수정하기'}
-                style={{ color: '#2599ff' }}
-              />
+            <Link
+              to={`/myworks/webtoon/episode/${episode.episodeId}/update`}
+              className='text-text/75 hover:text-blue-500'
+            >
+              <IconButton Icon={EditIcon} tooltip={'수정하기'} />
             </Link>
             <div
-              className='translate-y-[1px] transform'
+              className='text-text/75 translate-y-[1px] transform hover:text-red-500'
               onClick={() => deleteData(episode.episodeId)}
             >
-              <IconButton
-                Icon={DeleteIcon}
-                tooltip={'삭제하기'}
-                style={{ color: '#ff5050' }}
-              />
+              <IconButton Icon={DeleteIcon} tooltip={'삭제하기'} />
             </div>
           </div>
         </div>

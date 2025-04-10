@@ -36,12 +36,12 @@ const GoodsCard = ({ goods, patchData }) => {
           <div className='flex gap-2'>
             <Link
               to={`/myworks/webtoon/goods/update/${goods.goodsId}`}
-              className='text-blue-500'
+              className='text-text/75 hover:text-blue-500'
             >
               <IconButton Icon={EditIcon} tooltip={'수정하기'} />
             </Link>
             <div
-              className='translate-y-[1px] transform text-red-500'
+              className='text-text/75 translate-y-[1px] transform hover:text-red-500'
               onClick={deleteData}
             >
               <IconButton Icon={DeleteIcon} tooltip={'삭제하기'} />

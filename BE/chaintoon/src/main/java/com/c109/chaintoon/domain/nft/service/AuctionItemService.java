@@ -67,11 +67,6 @@ public class AuctionItemService {
     private final MetamaskService metamaskService;
     private final UserRepository userRepository;
 
-    private boolean isMetamaskUser(Integer userId) {
-        return userRepository.findById(userId)
-                .map(ssoType -> "METAMASK".equalsIgnoreCase(String.valueOf(ssoType)))
-                .orElse(false);
-    }
     private AuctionItem getOrThrowAuctionItem(Integer auctionItemId) {
         return auctionItemRepository.findById(auctionItemId)
                 .orElseThrow(() -> new AuctionItemNotFoundException(auctionItemId));
@@ -181,6 +176,54 @@ public class AuctionItemService {
         responseDto.setNeedSignature(metaResponseDto.isNeedSignature());
         responseDto.setMessageToSign(metaResponseDto.getMessageToSign());
         return responseDto;
+    }
+    private TradingHistory buildTradingHistory(AuctionItem savedItem, Nft nft, Integer buyerId, Double buyNowPrice, LocalDateTime now) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        String tradingDate = now.format(dateFormatter);
+        String tradingTime = now.format(timeFormatter);
+
+        return TradingHistory.builder()
+                .auctionItemId(savedItem.getAuctionItemId())
+                .nftId(savedItem.getNftId())
+                .buyerId(buyerId)
+                .sellerId(nft.getUserId())
+                .tradingValue(buyNowPrice)
+                .tradingDate(tradingDate)
+                .tradingTime(tradingTime)
+                .build();
+    }
+    private AuctionItem updateAuctionItemForImmediateBuy(AuctionItem auctionItem, Double buyNowPrice, LocalDateTime now) {
+        auctionItem.setBiddingPrice(buyNowPrice);
+        auctionItem.setEnded("Y");
+        auctionItem.setSuccess("Y");
+        auctionItem.setEndTime(now);
+        return auctionItemRepository.save(auctionItem);
+    }
+
+    private AuctionItem validateCommonBuyNow(Integer userId, AuctionBuyNowRequestDto dto) {
+        // 경매 아이템 조회 및 존재 여부 확인
+        AuctionItem auctionItem = getOrThrowAuctionItem(dto.getAuctionItemId());
+
+        // 경매 종료 여부 검증
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(auctionItem.getEndTime()) || "Y".equals(auctionItem.getEnded())) {
+            throw new AuctionEndedException("이미 종료된 경매입니다.");
+        }
+
+        // 즉시 구매가 검증
+        Double buyNowPrice = auctionItem.getBuyNowPrice();
+        if (buyNowPrice == null) {
+            throw new InvalidBuyNowPriceException("즉시 구매가가 설정되어 있지 않습니다.");
+        }
+
+        Nft nft = getOrThrowNft(auctionItem.getNftId());
+
+        // 자신의 상품은 구매할 수 없음
+        if (nft.getUserId().equals(userId)) {
+            throw new InvalidBidPriceException("자신이 등록한 상품은 즉시 구매할 수 없습니다.");
+        }
+        return auctionItem;
     }
     // 판매 등록
     @Transactional
@@ -383,145 +426,88 @@ public class AuctionItemService {
     @Transactional
     public AuctionBuyNowResponseDto buyNow(Integer userId, AuctionBuyNowRequestDto buyNowRequestDto) {
         // 경매 아이템 조회
-        AuctionItem auctionItem = getOrThrowAuctionItem(buyNowRequestDto.getAuctionItemId());
-
-        // 경매 종료 여부 검증
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(auctionItem.getEndTime()) || "Y".equals(auctionItem.getEnded())) {
-            throw new AuctionEndedException("이미 종료된 경매입니다.");
-        }
-
-        // 즉시 구매가 검증
-        Double buyNowPrice = auctionItem.getBuyNowPrice();
-        if (buyNowPrice == null) {
-            throw new InvalidBuyNowPriceException("즉시 구매가가 설정되어 있지 않습니다.");
-        }
-
+        AuctionItem auctionItem = validateCommonBuyNow(userId, buyNowRequestDto);
         Nft nft = getOrThrowNft(auctionItem.getNftId());
+        Double buyNowPrice = auctionItem.getBuyNowPrice();
 
-        // 자신이 등록한 nft인지 확인
-        if (nft.getUserId().equals(userId)) {
-            throw new InvalidBidPriceException("자신이 등록한 상품은 즉시 구매할 수 없습니다.");
+        // 구매자 지갑 잔액 확인
+        WalletBalance walletBalance = blockchainService.getWalletBalance(userId);
+        log.info("구매자 {}의 잔액: {}", userId, walletBalance.getAmount());
+
+        // 구매자 잔액이 즉시 구매 가격보다 부족하면 구매 불가 처리
+        if (walletBalance.getAmount() < buyNowPrice) {
+            throw new InsufficientWalletBalanceException("구매자 지갑 잔액이 부족합니다.");
         }
 
-        // 내부지갑 vs 메타마스크
-        boolean metamaskUser = isMetamaskUser(userId);
-        if (!metamaskUser) {
-            // ========== 내부 지갑 ==========
+        // 블록체인에 구매 요청 보내기
+        BlockchainBuyRequestDto buyRequestDto = BlockchainBuyRequestDto.builder()
+                .tokenId(nft.getTokenId())
+                .price(buyNowPrice)
+                .userId(userId)
+                .build();
 
-            // 구매자 지갑 잔액 확인
-            WalletBalance walletBalance = blockchainService.getWalletBalance(userId);
-            log.info("구매자 {}의 잔액: {}", userId, walletBalance.getAmount());
-            if (walletBalance.getAmount() < buyNowPrice) {
-                throw new InsufficientWalletBalanceException("구매자 지갑 잔액이 부족합니다.");
-            }
+        BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
 
-            // 블록체인에 구매 요청
-            BlockchainBuyRequestDto buyRequestDto = BlockchainBuyRequestDto.builder()
-                    .tokenId(nft.getTokenId())
-                    .price(buyNowPrice)
-                    .userId(userId)
-                    .build();
+        LocalDateTime now = LocalDateTime.now();
 
-            // 실제 트랜잭션 발생
-            BlockchainBuyResponseDto blockchainBuyResponseDto = blockchainService.registerBuy(buyRequestDto);
+        // 경매 아이템 업데이트 및 저장 (헬퍼 메서드)
+        AuctionItem savedItem = updateAuctionItemForImmediateBuy(auctionItem, buyNowPrice, now);
 
-            // 경매 아이템 업데이트
-            auctionItem.setBiddingPrice(buyNowPrice);
-            auctionItem.setEnded("Y");
-            auctionItem.setSuccess("Y");
-            auctionItem.setEndTime(now);
-            auctionItem.setBlockchainStatus("SUCCESS");
+        // TradingHistory 객체 생성 및 저장 (헬퍼 메서드)
+        TradingHistory tradingHistory = buildTradingHistory(savedItem, nft, userId, buyNowPrice, now);
+        tradingHistoryRepository.save(tradingHistory);
 
-            AuctionItem savedItem = auctionItemRepository.save(auctionItem);
+        noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
+        Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
+        Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
 
-            // 거래 내역 추가
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            String tradingDate = now.format(dateFormatter);
-            String tradingTime = now.format(timeFormatter);
-
-            TradingHistory tradingHistory = TradingHistory.builder()
-                    .auctionItemId(savedItem.getAuctionItemId())
-                    .nftId(savedItem.getNftId())
-                    .buyerId(userId)
-                    .sellerId(nft.getUserId())
-                    .tradingValue(buyNowPrice)
-                    .tradingDate(tradingDate)
-                    .tradingTime(tradingTime)
-                    .build();
-
-            tradingHistoryRepository.save(tradingHistory);
-
-            noticeService.addAuctionCompleteNotice(tradingHistory, Double.valueOf(blockchainBuyResponseDto.getPrevOwnerShareEther()));
-
-            Integer originalCreator = walletRepository.findUserIdByWalletAddress(blockchainBuyResponseDto.getOriginalCreator()).orElse(null);
-            Integer nftId = nftRepository.findNftIdByTokenId(nft.getTokenId()).orElse(null);
-
-            if (originalCreator != null && !originalCreator.equals(nft.getUserId())) {
-                noticeService.addSecondaryCreationNftSoldNotice(
-                        originalCreator,
-                        nftId,
-                        Double.valueOf(blockchainBuyResponseDto.getSoldPriceEther()),
-                        Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
-                );
-            }
-
-            // 비동기로 구매 후 잔액 다시 조회
-            blockchainService.getWalletBalanceAsync(userId).subscribe(remainingBalance -> {
-                log.info("구매 후 남은 잔액(내부지갑): {}", remainingBalance.getAmount());
-            }, error -> {
-                log.error("구매 후 잔액 조회 실패(내부지갑): {}", error.getMessage());
-            });
-
-            return toAuctionBuyNowResponseDto(savedItem, buyNowPrice, userId);
-
-        } else {
-            // ========== 메타마스크 ==========
-
-            // (선택) 지갑 잔액을 여기서 미리 체크 (원하면)
-            WalletBalance walletBalance = blockchainService.getWalletBalance(userId);
-            log.info("구매자 {}의 잔액(메타마스크): {}", userId, walletBalance.getAmount());
-            if (walletBalance.getAmount() < buyNowPrice) {
-                throw new InsufficientWalletBalanceException("구매자 지갑 잔액이 부족합니다 (메타마스크).");
-            }
-
-            // 1) "buy-request"를 보내 nonce/message 발급 → Express Redis에 저장
-            String priceStr = buyNowPrice.toString();
-            MetamaskBuyRequestDto metamaskBuyRequestDto = new MetamaskBuyRequestDto();
-            metamaskBuyRequestDto.setTokenId(nft.getTokenId());
-            metamaskBuyRequestDto.setPrice(priceStr);
-            metamaskBuyRequestDto.setUserId(userId);
-
-            metamaskService.buyRequest(metamaskBuyRequestDto)
-                    .doOnSuccess(resp -> {
-                        log.info("[메타마스크] 즉시구매 1단계 요청 성공 - nonce: {}", resp.getMessageToSign());
-                        // 실제 트랜잭션은 confirm-signature 시점에
-                        auctionItem.setBlockchainStatus("WAITING_SIGNATURE");
-                        auctionItemRepository.save(auctionItem);
-
-                        noticeService.addBlockchainNetworkSuccessNotice(
-                                userId,
-                                "메타마스크 즉시구매 요청이 접수되었습니다. 서명을 진행하세요."
-                        );
-                    })
-                    .doOnError(e -> {
-                        log.error("[메타마스크] 즉시구매 1단계 요청 실패: {}", e.getMessage());
-                        auctionItem.setBlockchainStatus("FAILED");
-                        auctionItemRepository.save(auctionItem);
-                        noticeService.addBlockchainNetworkFailNotice(
-                                userId, "메타마스크 즉시구매 요청 실패"
-                        );
-                    })
-                    .subscribe();
-
-            // 주의: 아직 트랜잭션 미발생이므로, AuctionItem을 '종료' 처리하면 안 됨.
-            // 프론트/Express에서 서명 후, 트랜잭션 성공 시점에 AuctionItem을 종료+낙찰 처리해야 함.
-            // 여기서는 임시 응답
-            return toAuctionBuyNowResponseDto(auctionItem, buyNowPrice, userId);
+        if(originalCreator != null && !originalCreator.equals(nft.getUserId())) {
+            noticeService.addSecondaryCreationNftSoldNotice(
+                    originalCreator,
+                    nftId,
+                    Double.valueOf(blockchainBuyResponseDto.getSoldPriceEther()),
+                    Double.parseDouble(blockchainBuyResponseDto.getOriginalCreatorShareEther())
+            );
         }
+        // 비동기적으로 구매 후 지갑 잔액 조회해서 로그 출력
+        blockchainService.getWalletBalanceAsync(userId)
+                .subscribe(remainingBalance -> {
+                    log.info("구매 후 남은 잔액: {}", remainingBalance.getAmount());
+                }, error -> {
+                    log.error("구매 후 잔액 조회 실해: {}", error.getMessage());
+                });
+
+        // 반환
+        return toAuctionBuyNowResponseDto(savedItem, buyNowPrice, userId);
     }
+    /**
+     * 메타마스크 즉시 구매 API
+     */
+    @Transactional
+    public MetamaskRequestResponseDto buyNowMetamask(Integer userId, AuctionBuyNowRequestDto dto) {
+        // 공통 검증 처리
+        AuctionItem auctionItem = validateCommonBuyNow(userId, dto);
+        Nft nft = getOrThrowNft(auctionItem.getNftId());
+        Double buyNowPrice = auctionItem.getBuyNowPrice();
 
+        // (옵션) 메타마스크 사용자의 잔액 확인
+        WalletBalance walletBalance = blockchainService.getWalletBalance(userId);
+        log.info("구매자 {}의 잔액(메타마스크): {}", userId, walletBalance.getAmount());
+        if (walletBalance.getAmount() < buyNowPrice) {
+            throw new InsufficientWalletBalanceException("구매자 지갑 잔액이 부족합니다 (메타마스크).");
+        }
+
+        // 메타마스크 구매 요청: nonce 및 서명 메시지 발급
+        String priceStr = buyNowPrice.toString();
+        MetamaskBuyRequestDto metamaskBuyRequestDto = new MetamaskBuyRequestDto();
+        metamaskBuyRequestDto.setTokenId(nft.getTokenId());
+        metamaskBuyRequestDto.setPrice(priceStr);
+        metamaskBuyRequestDto.setUserId(userId);
+
+        // 아직 실제 거래는 서명 및 후속 처리 시점에 이루어지므로 임시 응답 반환
+        return metamaskService.buyRequest(metamaskBuyRequestDto).block();
+    }
+    // 경매 아이템 상태 변경
     @Transactional
     public AuctionCreateResponseDto updateAuctionStatus(Integer auctionItemId, String status) {
         // auction_item 존재 여부 검증
@@ -533,7 +519,32 @@ public class AuctionItemService {
         Nft nft = getOrThrowNft(updated.getNftId());
 
         log.info("AuctionItem({})의 blockchain_status가 {}로 업데이트되었습니다.", auctionItemId, status);
+        noticeService.addBlockchainNetworkSuccessNotice(updated.getNftId(), "NFT 판매 등록 성공.");
         return toAuctionCreateResponseDto(updated, nft);
+    }
+
+    // 메타마스크로 경매 아이템 성사시 trading_history 에 저장하는 메서드
+    @Transactional
+    public TradingHistory saveTradingHistory(Integer userId, AuctionBuyNowRequestDto auctionBuyNowRequestDto) {
+        // 공통 검증 후 경매 아이템과 NFT 조회
+        AuctionItem auctionItem = validateCommonBuyNow(userId, auctionBuyNowRequestDto);
+        Nft nft = getOrThrowNft(auctionItem.getNftId());
+        Double buyNowPrice = auctionItem.getBuyNowPrice();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 경매 아이템 업데이트 및 저장 (헬퍼 메서드)
+        AuctionItem savedItem = updateAuctionItemForImmediateBuy(auctionItem, buyNowPrice, now);
+
+        // TradingHistory 객체 생성 (헬퍼 메서드)
+        TradingHistory tradingHistory = buildTradingHistory(savedItem, nft, userId, buyNowPrice, now);
+        noticeService.addAuctionCompleteNotice(tradingHistory, buyNowPrice);
+
+        Nft changeNft = getOrThrowNft(auctionItem.getNftId());
+        changeNft.setUserId(userId);
+        nftRepository.save(changeNft);
+
+        return tradingHistoryRepository.save(tradingHistory);
     }
     // 낙찰자 선정 메서드 - 비동기ver
     @Transactional

@@ -54,7 +54,7 @@ const FavoriteWebtoonCard = ({ webtoon, patchData }) => {
               : ''}
           </span>
         </div>
-        <div className='text-red-500' onClick={deleteData}>
+        <div className='text-text/75 hover:text-red-500' onClick={deleteData}>
           <IconButton Icon={DeleteIcon} tooltip={'관심 웹툰 취소'} />
         </div>
       </div>

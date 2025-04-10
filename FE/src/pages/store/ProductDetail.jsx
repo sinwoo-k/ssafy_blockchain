@@ -5,7 +5,15 @@ import Loader from '../../components/common/Loader'
 import { useSelector } from 'react-redux'
 import BidHistoryModal from '../../components/store/BidHistoryModal'
 import API from '../../api/API'
-import { getEpisodeAuctions, getGoodsAuctions, getFanartAuctions, getNFTInfo } from '../../api/storeApi'
+import {
+  getEpisodeAuctions,
+  getGoodsAuctions,
+  getFanartAuctions,
+  getNFTInfo,
+  buyNowMetamask,
+  saveTradeHistory
+} from '../../api/storeApi'
+import nftService from '../../api/nftApi'
 
 // 아이콘
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
@@ -25,151 +33,170 @@ const ProductDetail = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
-  
+  const userData = useSelector((state) => state.user.userData)
+
   // 경매 상세 정보 및 입찰 기록 로드
   useEffect(() => {
     const fetchAuctionDetail = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        
-        console.log('상품 ID:', productId);
-        
+
+        console.log('상품 ID:', productId)
+
         // localStorage에서 웹툰 ID 가져오기
-        const currentWebtoonId = localStorage.getItem('currentWebtoonId');
-        console.log('현재 웹툰 ID:', currentWebtoonId);
-        
+        const currentWebtoonId = localStorage.getItem('currentWebtoonId')
+        console.log('현재 웹툰 ID:', currentWebtoonId)
+
         if (!currentWebtoonId) {
-          console.warn('웹툰 ID가 없습니다. 기본값 사용');
+          console.warn('웹툰 ID가 없습니다. 기본값 사용')
         }
-        
-        let auctionData = null;
-        let auctionType = null;
-        
+
+        let auctionData = null
+        let auctionType = null
+
         // 에피소드 경매 조회
         try {
-          console.log('에피소드 경매 조회 시도');
-          const episodeRes = await getEpisodeAuctions(currentWebtoonId || '1');
-          
+          console.log('에피소드 경매 조회 시도')
+          const episodeRes = await getEpisodeAuctions(currentWebtoonId || '1')
+
           if (episodeRes && episodeRes.content) {
             // auctionId 또는 auctionItemId로 매칭 시도
             const foundItem = episodeRes.content.find(
-              item => String(item.auctionId) === String(productId) || String(item.auctionItemId) === String(productId)
-            );
-            
+              (item) =>
+                String(item.auctionId) === String(productId) ||
+                String(item.auctionItemId) === String(productId),
+            )
+
             if (foundItem) {
-              console.log('에피소드 경매 찾음:', foundItem);
-              auctionData = foundItem;
-              auctionType = 'episode';
+              console.log('에피소드 경매 찾음:', foundItem)
+              auctionData = foundItem
+              auctionType = 'episode'
             }
           }
         } catch (episodeErr) {
-          console.error('에피소드 경매 조회 오류:', episodeErr);
+          console.error('에피소드 경매 조회 오류:', episodeErr)
         }
-        
+
         // 굿즈 경매 조회
         if (!auctionData) {
           try {
-            console.log('굿즈 경매 조회 시도');
-            const goodsRes = await getGoodsAuctions(currentWebtoonId || '1');
-            
+            console.log('굿즈 경매 조회 시도')
+            const goodsRes = await getGoodsAuctions(currentWebtoonId || '1')
+
             if (goodsRes && goodsRes.content) {
               const foundItem = goodsRes.content.find(
-                item => String(item.auctionId) === String(productId) || String(item.auctionItemId) === String(productId)
-              );
-              
+                (item) =>
+                  String(item.auctionId) === String(productId) ||
+                  String(item.auctionItemId) === String(productId),
+              )
+
               if (foundItem) {
-                console.log('굿즈 경매 찾음:', foundItem);
-                auctionData = foundItem;
-                auctionType = 'goods';
+                console.log('굿즈 경매 찾음:', foundItem)
+                auctionData = foundItem
+                auctionType = 'goods'
               }
             }
           } catch (goodsErr) {
-            console.error('굿즈 경매 조회 오류:', goodsErr);
+            console.error('굿즈 경매 조회 오류:', goodsErr)
           }
         }
-        
+
         // 팬아트 경매 조회
         if (!auctionData) {
           try {
-            console.log('팬아트 경매 조회 시도');
-            const fanartRes = await getFanartAuctions(currentWebtoonId || '1');
-            
+            console.log('팬아트 경매 조회 시도')
+            const fanartRes = await getFanartAuctions(currentWebtoonId || '1')
+
             if (fanartRes && fanartRes.content) {
               const foundItem = fanartRes.content.find(
-                item => String(item.auctionId) === String(productId) || String(item.auctionItemId) === String(productId)
-              );
-              
+                (item) =>
+                  String(item.auctionId) === String(productId) ||
+                  String(item.auctionItemId) === String(productId),
+              )
+
               if (foundItem) {
-                console.log('팬아트 경매 찾음:', foundItem);
-                auctionData = foundItem;
-                auctionType = 'fanart';
+                console.log('팬아트 경매 찾음:', foundItem)
+                auctionData = foundItem
+                auctionType = 'fanart'
               }
             }
           } catch (fanartErr) {
-            console.error('팬아트 경매 조회 오류:', fanartErr);
+            console.error('팬아트 경매 조회 오류:', fanartErr)
           }
         }
-        
+
         // 다른 API로도 시도 (만약 웹툰 ID가 없거나 다를 경우)
         if (!auctionData) {
           try {
-            console.log('직접 API 호출 시도');
-            const response = await API.get(`/auctions/item/${productId}`);
+            console.log('직접 API 호출 시도')
+            const response = await API.get(`/auctions/item/${productId}`)
             if (response.data) {
-              console.log('직접 API로 경매 찾음:', response.data);
-              auctionData = response.data;
-              
+              console.log('직접 API로 경매 찾음:', response.data)
+              auctionData = response.data
+
               // 응답 데이터에서 타입 추론
               if (auctionData.episodeId || auctionData.episodeNumber) {
-                auctionType = 'episode';
+                auctionType = 'episode'
               } else if (auctionData.goodsId) {
-                auctionType = 'goods';
+                auctionType = 'goods'
               } else if (auctionData.fanartId) {
-                auctionType = 'fanart';
+                auctionType = 'fanart'
               }
             }
           } catch (directErr) {
-            console.error('직접 API 호출 오류:', directErr);
+            console.error('직접 API 호출 오류:', directErr)
           }
         }
-        
+
         // 경매 데이터 확인
         if (auctionData) {
-          console.log('최종 경매 데이터:', auctionData, '타입:', auctionType);
-          
+          console.log('최종 경매 데이터:', auctionData, '타입:', auctionType)
+
           // NFT 정보 조회 (있는 경우)
           if (auctionData.nftId) {
             try {
-              const nftInfo = await getNFTInfo(auctionData.nftId);
+              const nftInfo = await getNFTInfo(auctionData.nftId)
               if (nftInfo) {
                 // NFT 정보 병합
                 auctionData = {
                   ...auctionData,
                   title: nftInfo.title || auctionData.title,
                   description: nftInfo.description,
-                  image: nftInfo.image
-                };
+                  image: nftInfo.image,
+                }
               }
             } catch (nftErr) {
-              console.error('NFT 정보 조회 오류:', nftErr);
+              console.error('NFT 정보 조회 오류:', nftErr)
             }
           }
-          
+
           // 기본 필드 확인 및 설정
           const processedAuction = {
             ...auctionData,
             type: auctionType,
-            imageUrl: auctionData.imageUrl || auctionData.thumbnailUrl || auctionData.image,
-            biddingPrice: auctionData.biddingPrice || auctionData.currentPrice || auctionData.startingPrice || 0,
-            buyNowPrice: auctionData.buyNowPrice || auctionData.immediatePrice || 0,
-            title: auctionData.title || (auctionType === 'episode' ? `${auctionData.episodeNumber || ''}화` : '상품'),
+            imageUrl:
+              auctionData.imageUrl ||
+              auctionData.thumbnailUrl ||
+              auctionData.image,
+            biddingPrice:
+              auctionData.biddingPrice ||
+              auctionData.currentPrice ||
+              auctionData.startingPrice ||
+              0,
+            buyNowPrice:
+              auctionData.buyNowPrice || auctionData.immediatePrice || 0,
+            title:
+              auctionData.title ||
+              (auctionType === 'episode'
+                ? `${auctionData.episodeNumber || ''}화`
+                : '상품'),
             genre: auctionData.genre || '기타',
-            webtoonId: auctionData.webtoonId || currentWebtoonId || '1'
-          };
-          
-          setAuction(processedAuction);
-          
+            webtoonId: auctionData.webtoonId || currentWebtoonId || '1',
+          }
+
+          setAuction(processedAuction)
+
           // 초기 입찰가 설정 (현재 입찰가 또는 시작가)
 const currentBid = processedAuction.biddingPrice;
 // 정밀도 문제 해결을 위해 toFixed(5) 사용
@@ -179,26 +206,28 @@ setBidPrice(parseFloat(initialBid));
           
           // 입찰 기록 API 호출
           try {
-            const historyResponse = await API.get(`/auctions/${productId}/bidding-history`);
-            const historyData = historyResponse.data.content || [];
-            setBidHistory(historyData);
+            const historyResponse = await API.get(
+              `/auctions/${productId}/bidding-history`,
+            )
+            const historyData = historyResponse.data.content || []
+            setBidHistory(historyData)
           } catch (historyError) {
-            console.error('입찰 기록 로드 오류:', historyError);
-            setBidHistory([]);
+            console.error('입찰 기록 로드 오류:', historyError)
+            setBidHistory([])
           }
         } else {
-          throw new Error('상품 정보를 찾을 수 없습니다.');
+          throw new Error('상품 정보를 찾을 수 없습니다.')
         }
       } catch (err) {
-        console.error('경매 상세 정보 로드 오류:', err);
-        setError(err.message || '경매 상세 정보를 불러오는 데 실패했습니다.');
+        console.error('경매 상세 정보 로드 오류:', err)
+        setError(err.message || '경매 상세 정보를 불러오는 데 실패했습니다.')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    
-    fetchAuctionDetail();
-  }, [productId]);
+    }
+
+    fetchAuctionDetail()
+  }, [productId])
 
   // 입찰가 변경 함수
   const handleBidChange = (e) => {
@@ -232,20 +261,23 @@ setBidPrice(parseFloat(initialBid));
       alert('로그인이 필요한 서비스입니다.')
       return
     }
-    
+
     const minBid = parseFloat(auction?.biddingPrice || 0) + 0.0001 // 최소 입찰가를 0.0001 단위로 설정
     if (bidPrice < minBid) {
-      alert(`현재 입찰가(${auction.biddingPrice} ETH)보다 높은 금액을 입력해주세요.`)
+      alert(
+        `현재 입찰가(${auction.biddingPrice} ETH)보다 높은 금액을 입력해주세요.`,
+      )
       return
     }
-    
+
     // 소수점 자릿수 검증
     const bidDecimalPlaces = bidPrice.toString().split('.')[1]?.length || 0
-    if (bidDecimalPlaces > 5) { // 소수점 5자리 이상 입력 방지
+    if (bidDecimalPlaces > 5) {
+      // 소수점 5자리 이상 입력 방지
       alert('입찰 금액은 소수점 5자리까지만 입력 가능합니다.')
       return
     }
-    
+
     // 입찰 단위 검증 (0.0001 단위로만 입찰 가능)
     const bidUnit = 0.0001
     const remainder = (bidPrice * 10000) % 1
@@ -253,69 +285,117 @@ setBidPrice(parseFloat(initialBid));
       alert(`입찰 금액은 ${bidUnit} ETH 단위로만 입력 가능합니다.`)
       return
     }
-    
+
     try {
       setIsProcessing(true)
-      
+
       // 입찰 API 호출
-      await API.post('/auctions/bid', { 
+      await API.post('/auctions/bid', {
         auctionItemId: productId,
-        biddingPrice: bidPrice 
+        biddingPrice: bidPrice,
       })
-      
+
       // 입찰 성공 처리
       alert(`${bidPrice} ETH 금액으로 입찰이 완료되었습니다!`)
-      
+
       // 경매 정보 새로고침
-      window.location.reload();
-      
+      window.location.reload()
     } catch (err) {
       console.error('입찰 처리 중 오류:', err)
       // 백엔드에서 오는 오류 메시지 처리 개선
       if (err.response && err.response.data) {
-        const errorData = err.response.data;
+        const errorData = err.response.data
         if (errorData.message) {
           // 서버에서 제공하는 오류 메시지 표시
-          alert(errorData.message);
+          alert(errorData.message)
         } else {
-          alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
         }
       } else {
-        alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        alert('입찰 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
       }
     } finally {
       setIsProcessing(false)
     }
   }
-  
-  // 즉시 구매 함수
+
+  // 즉시 구매 처리 핸들러 (React 예시)
   const handleImmediatePurchase = async () => {
+    // 로그인 여부 체크
     if (!isAuthenticated) {
       alert('로그인이 필요한 서비스입니다.')
       return
     }
-    
-    if (!auction?.buyNowPrice) {
+
+    // 즉시 구매 가격(또는 경매 정보) 검증
+    if (!auction || !auction.buyNowPrice) {
       alert('즉시 구매 가격이 설정되지 않았습니다.')
       return
     }
-    
-    if (!window.confirm(`${auction.buyNowPrice} ETH에 즉시 구매하시겠습니까?`)) {
+
+    // 구매 확인 다이얼로그
+    if (
+      !window.confirm(`${auction.buyNowPrice} ETH에 즉시 구매하시겠습니까?`)
+    ) {
       return
     }
-    
+
     try {
       setIsProcessing(true)
-      
-      // 즉시 구매 API 호출
-      await API.post('/auctions/buy-now', { auctionItemId: productId })
-      
-      // 구매 성공 처리
+
+      // 사용자 종류에 따라 분기: METAMASK vs 내부 지갑
+      if (userData.ssoType === 'METAMASK') {
+        // 메타마스크 사용자: 별도의 즉시 구매 API 호출 및 서명 흐름 진행
+        const response = await buyNowMetamask({
+          auctionItemId: auction.auctionItemId,
+        })
+
+        // needSignature 값이 false라면 요청 실패 처리
+        if (!response.needSignature) {
+          throw new Error(
+            '즉시 구매 요청이 실패했습니다 (needSignature=false).',
+          )
+        }
+
+        // 1) personal_sign: 메타마스크로 서명 요청
+        const signature = await nftService.signMessageWithMetamask(
+          response.messageToSign,
+        )
+        if (!signature) {
+          throw new Error('서명 실패')
+        }
+
+        // 2) confirm-signature: 서명을 확인하여 실제 거래 진행 요청
+        const confirmResponse = await nftService.confirmSignature({
+          userId: userData.userId,
+          signature,
+        })
+        if (!confirmResponse.success) {
+          throw new Error('confirmSignature 실패')
+        }
+
+        // 3) sendTransaction: Metamask를 통한 트랜잭션 전송
+        const receipt = await nftService.sendTransactionWithMetamask(
+          confirmResponse.metamaskPayload,
+        )
+        const tradeData = {
+          auctionItemId: auction.auctionItemId,
+          price: auction.buyNowPrice,
+          buyerId: userData.userId,
+          sellerId: auction.sellerId, // auction 객체에 판매자 정보가 포함되어 있어야 합니다.
+          txHash: receipt.transactionHash, // 거래 해시(트랜잭션 ID)
+          // 필요 시 거래 일시, 기타 정보 추가
+        }
+        await saveTradeHistory({ auctionItemId: auction.auctionItemId })
+
+      } else {
+        // 내부 지갑 사용자: 단순 API 호출을 통해 즉시 구매 처리
+        await nftService.buyNow({ auctionItemId: auction.auctionItemId })
+      }
+
+      // 구매 성공 처리: 성공 메시지 및 컬렉션 페이지로 이동
       alert(`${auction.buyNowPrice} ETH 금액으로 즉시 구매가 완료되었습니다!`)
-      
-      // 구매 후 컬렉션 페이지로 이동
       navigate(`/store/collection/${auction.webtoonId}`)
-      
     } catch (err) {
       console.error('즉시 구매 처리 중 오류:', err)
       
@@ -334,7 +414,6 @@ setBidPrice(parseFloat(initialBid));
       setIsProcessing(false)
     }
   }
-  
   // 입찰 기록 모달 표시/숨김 처리
   const handleToggleBidHistoryModal = () => {
     setShowBidHistoryModal(!showBidHistoryModal);
@@ -343,13 +422,18 @@ setBidPrice(parseFloat(initialBid));
   if (isLoading) {
     return <Loader />
   }
-  
+
   if (error || !auction) {
     return (
-      <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
+      <div className='text-text/85 min-h-screen bg-black pt-[100px] pb-10'>
         <div className='mx-auto w-[1160px] text-center'>
-          <h1 className='text-2xl'>{error || '경매 정보를 찾을 수 없습니다.'}</h1>
-          <Link to="/store" className='mt-4 inline-block rounded bg-blue-600 px-6 py-2'>
+          <h1 className='text-2xl'>
+            {error || '경매 정보를 찾을 수 없습니다.'}
+          </h1>
+          <Link
+            to='/store'
+            className='mt-4 inline-block rounded bg-blue-600 px-6 py-2'
+          >
             스토어로 돌아가기
           </Link>
         </div>
@@ -359,34 +443,36 @@ setBidPrice(parseFloat(initialBid));
 
   // 경매 종료 여부 체크
   const isAuctionEnded = auction.ended === 'Y'
-  
+
   // 경매 남은 시간 계산
   const calculateTimeLeft = () => {
     if (!auction.endTime) return '정보 없음'
-    
+
     const endTime = new Date(auction.endTime)
     const now = new Date()
-    
+
     if (now >= endTime || isAuctionEnded) return '경매 종료'
-    
+
     const diffTime = endTime - now
     const days = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const hours = Math.floor(
+      (diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    )
     const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60))
-    
+
     return `${days}일 ${hours}시간 ${minutes}분`
   }
-  
+
   // 상품 타입에 따른 카테고리 표시
   const getCategory = () => {
     const types = {
-      'episode': '웹툰회차',
-      'goods': '굿즈',
-      'fanart': '팬아트'
+      episode: '웹툰회차',
+      goods: '굿즈',
+      fanart: '팬아트',
     }
     return types[auction.type] || '상품'
   }
-  
+
   // 경매 상품 제목 가져오기
   const getTitle = () => {
     if (auction.type === 'episode') {
@@ -398,19 +484,22 @@ setBidPrice(parseFloat(initialBid));
   // 가격 형식 포맷팅
   const formatPrice = (price) => {
     if (!price) return '0'
-    
+
     // 문자열로 변환 후 소수점 이하 불필요한 0 제거
     const parsedPrice = parseFloat(price)
-    
+
     // 정수인 경우
     if (parsedPrice % 1 === 0) {
       return parsedPrice.toString()
     }
-    
+
     // 소수인 경우, 불필요한 0 제거
-    return parsedPrice.toString().replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+    return parsedPrice
+      .toString()
+      .replace(/(\.\d*?)0+$/, '$1')
+      .replace(/\.$/, '')
   }
-  
+
   // USD 가치 계산 (예시 - 실제 환율 적용 필요)
   const getUSDValue = (ethPrice) => {
     const ethToUsd = 1840 // 예시 환율
@@ -418,17 +507,23 @@ setBidPrice(parseFloat(initialBid));
   }
 
   return (
-    <div className='min-h-screen bg-black pt-[100px] pb-10 text-text/85'>
+    <div className='text-text/85 min-h-screen bg-black pt-[100px] pb-10'>
       <div className='mx-auto w-[1160px]'>
         {/* 뒤로가기 버튼 */}
         <div className='mb-6'>
-          <Link 
-            to={auction.type === 'episode' ? `/store/collection/${auction.webtoonId}` : '/store'} 
+          <Link
+            to={
+              auction.type === 'episode'
+                ? `/store/collection/${auction.webtoonId}`
+                : '/store'
+            }
             className='flex items-center text-gray-400 hover:text-white'
           >
             <ArrowBackIcon />
             <span className='ml-1'>
-              {auction.type === 'episode' ? '웹툰으로 돌아가기' : '스토어로 돌아가기'}
+              {auction.type === 'episode'
+                ? '웹툰으로 돌아가기'
+                : '스토어로 돌아가기'}
             </span>
           </Link>
         </div>
@@ -437,10 +532,10 @@ setBidPrice(parseFloat(initialBid));
         <div className='mb-10 flex gap-10'>
           {/* 상품 이미지 */}
           <div className='w-[400px]'>
-            <img 
-              src={auction.imageUrl || auction.thumbnailUrl || auction.image} 
-              alt={getTitle()} 
-              className='h-[400px] w-full rounded-lg object-cover' 
+            <img
+              src={auction.imageUrl || auction.thumbnailUrl || auction.image}
+              alt={getTitle()}
+              className='h-[400px] w-full rounded-lg object-cover'
             />
             {isAuctionEnded && (
               <div className='mt-4 rounded bg-red-500 p-3 text-center text-white'>
@@ -451,9 +546,11 @@ setBidPrice(parseFloat(initialBid));
 
           {/* 상품 상세 정보 */}
           <div className='flex flex-1 flex-col'>
-            <div className='mb-2 text-gray-400'>{getCategory()} | {auction.genre || '기타'}</div>
+            <div className='mb-2 text-gray-400'>
+              {getCategory()} | {auction.genre || '기타'}
+            </div>
             <h1 className='mb-4 text-3xl font-bold'>{getTitle()}</h1>
-            
+
             {/* 남은 시간 표시 */}
             <div className='mb-4 rounded-lg bg-gray-800 p-3'>
               <div className='flex items-center justify-between'>
@@ -461,18 +558,18 @@ setBidPrice(parseFloat(initialBid));
                 <span className='font-medium'>{calculateTimeLeft()}</span>
               </div>
             </div>
-            
+
             {/* 가격 정보 */}
             <div className='mb-3'>
               <div className='text-xl font-bold'>현재 가격</div>
               <div className='mb-6 text-3xl font-bold'>
-                {formatPrice(auction.biddingPrice)} ETH 
+                {formatPrice(auction.biddingPrice)} ETH
                 <span className='ml-2 text-sm text-gray-400'>
                   ($ {getUSDValue(auction.biddingPrice)})
                 </span>
               </div>
             </div>
-            
+
             {/* 거래기록, 입찰단위, 희망 입찰가 섹션 */}
             <div className='mb-6 rounded-lg bg-gray-800 p-4'>
               {/* 거래 기록 */}
@@ -480,7 +577,7 @@ setBidPrice(parseFloat(initialBid));
                 <div className='text-lg font-medium'>거래 기록</div>
                 <div className='flex items-center'>
                   <span className='mr-2'>거래내역</span>
-                  <button 
+                  <button
                     onClick={handleToggleBidHistoryModal}
                     className='text-[#3cc3ec] hover:text-[#2aabda]cursor-pointer'
                   >
@@ -488,20 +585,20 @@ setBidPrice(parseFloat(initialBid));
                   </button>
                 </div>
               </div>
-              
+
               {/* 입찰 단위 표시 */}
               <div className='mb-4'>
                 <div className='mb-2 text-sm text-gray-400'>입찰 단위</div>
-                <div className='bg-gray-700 px-3 py-2 rounded text-sm inline-block'>
+                <div className='inline-block rounded bg-gray-700 px-3 py-2 text-sm'>
                   0.0001 ETH
                 </div>
               </div>
-              
+
               {/* 희망 입찰가 */}
               <div>
                 <div className='mb-2 text-sm text-gray-400'>희망 입찰가</div>
                 <div className='flex items-center'>
-                  <button 
+                  <button
                     onClick={decreaseBid}
                     className='cursor-pointer flex h-10 w-10 items-center justify-center rounded-l-md border border-gray-700 bg-gray-900'
                     disabled={isAuctionEnded || isProcessing}
@@ -517,7 +614,7 @@ setBidPrice(parseFloat(initialBid));
                     className='h-10 w-full border-y border-gray-700 bg-gray-900 px-3 text-center'
                     disabled={isAuctionEnded || isProcessing}
                   />
-                  <button 
+                  <button
                     onClick={increaseBid}
                     className='cursor-pointer flex h-10 w-10 items-center justify-center rounded-r-md border border-gray-700 bg-gray-900'
                     disabled={isAuctionEnded || isProcessing}
@@ -527,7 +624,7 @@ setBidPrice(parseFloat(initialBid));
                 </div>
               </div>
             </div>
-            
+
             {/* 최종 희망 입찰가 */}
             <div className='mb-6 flex items-center justify-between rounded bg-gray-800 p-3'>
               <span>최종 입찰가</span>
@@ -551,21 +648,21 @@ setBidPrice(parseFloat(initialBid));
                 <span className='ml-1'>ETH</span>
               </div>
             </div>
-            
+
             {/* 입찰하기/즉시 구매 버튼 */}
             <div className='flex gap-3'>
               <button 
                 className={`cursor-pointer flex-1 rounded-md py-3 px-6 text-lg font-medium ${
                   isAuctionEnded || isProcessing
-                    ? 'cursor-not-allowed bg-gray-500' 
+                    ? 'cursor-not-allowed bg-gray-500'
                     : 'bg-[#3cc3ec] hover:bg-[#2aabda]'
                 }`}
                 onClick={handleBid}
                 disabled={isAuctionEnded || isProcessing}
               >
                 {isProcessing ? (
-                  <span className="flex items-center justify-center">
-                    <span className="h-5 w-5 mr-2 animate-spin rounded-full border-2 border-t-transparent border-white"></span>
+                  <span className='flex items-center justify-center'>
+                    <span className='mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent'></span>
                     처리 중...
                   </span>
                 ) : (
@@ -576,7 +673,7 @@ setBidPrice(parseFloat(initialBid));
                 <button 
                   className={`cursor-pointercursor-pointer flex-1 rounded-md py-3 px-6 text-lg font-medium ${
                     isAuctionEnded || isProcessing
-                      ? 'cursor-not-allowed bg-gray-500' 
+                      ? 'cursor-not-allowed bg-gray-500'
                       : 'bg-blue-500 hover:bg-blue-400'
                   }`}
                   onClick={handleImmediatePurchase}
@@ -587,10 +684,10 @@ setBidPrice(parseFloat(initialBid));
                 </button>
               )}
             </div>
-        </div>
+          </div>
         </div>
         {/* 입찰 기록 모달 컴포넌트 */}
-        <BidHistoryModal 
+        <BidHistoryModal
           isOpen={showBidHistoryModal}
           onClose={handleToggleBidHistoryModal}
           auctionItemId={productId}
