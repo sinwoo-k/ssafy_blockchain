@@ -1,7 +1,6 @@
 package com.c109.chaintoon.domain.user.service;
 
 import com.c109.chaintoon.domain.nft.entity.AuctionItem;
-import com.c109.chaintoon.domain.nft.entity.BiddingHistory;
 import com.c109.chaintoon.domain.nft.entity.TradingHistory;
 import com.c109.chaintoon.domain.nft.exception.NftNotFoundException;
 import com.c109.chaintoon.domain.nft.repository.AuctionItemRepository;
@@ -9,6 +8,9 @@ import com.c109.chaintoon.domain.nft.repository.NftRepository;
 import com.c109.chaintoon.domain.nft.repository.TradingHistoryRepository;
 import com.c109.chaintoon.domain.user.dto.response.ActiveTradingResponseDto;
 import com.c109.chaintoon.domain.user.dto.response.TradingHistoryResponseDto;
+import com.c109.chaintoon.domain.user.entity.User;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
 import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
 import jakarta.transaction.Transactional;
@@ -21,7 +23,6 @@ import org.springframework.stereotype.Service;
 import com.c109.chaintoon.domain.nft.entity.Nft;
 
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class TradingHistoryService {
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private final NftRepository nftRepository;
     private final WebtoonRepository webtoonRepository;
+    private final UserRepository userRepository;
 
     private TradingHistoryResponseDto convertToDto(TradingHistory history, String tradeType) {
         Nft nft = nftRepository.findById(history.getNftId())
@@ -50,14 +52,18 @@ public class TradingHistoryService {
 
         String itemImage = nft.getImageUrl();
 
-        String otherParty;
+        Integer otherPartyId;
         if ("sold".equalsIgnoreCase(tradeType)) {
-            otherParty = String.valueOf(history.getBuyerId());
+            otherPartyId = history.getBuyerId();
         } else if ("bought".equalsIgnoreCase(tradeType)) {
-            otherParty = String.valueOf(history.getSellerId());
+            otherPartyId = history.getSellerId();
         } else {
-            otherParty = "";
+            otherPartyId = 0;
         }
+
+        User user = userRepository
+                .findById(otherPartyId)
+                .orElseThrow(() -> new UserIdNotFoundException(otherPartyId));
 
         return TradingHistoryResponseDto.builder()
                 .auctionItemId(history.getAuctionItemId())
@@ -66,7 +72,8 @@ public class TradingHistoryService {
                 .tradingDate(history.getTradingDate())
                 .tradingTime(history.getTradingTime())
                 .tradeType(tradeType.toLowerCase())
-                .otherParty(otherParty)
+                .otherPartyId(otherPartyId)
+                .otherPartyName(user.getNickname())
                 .webtoonName(webtoonName)
                 .itemImage(itemImage)
                 .build();

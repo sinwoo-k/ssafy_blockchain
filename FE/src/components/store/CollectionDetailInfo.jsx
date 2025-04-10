@@ -23,7 +23,7 @@ const CollectionDetailInfo = ({ collection, tags }) => {
       ></div>
       <div className='relative w-[1000px]'>
         {/* 뒤로가기 버튼 */}
-        <div className='mb-4'>
+        <div className='mb-5'>
           <Link to='/store' className='flex items-center text-gray-400 hover:text-white'>
             <ArrowBackIcon />
             <span className='ml-1'>스토어로 돌아가기</span>
@@ -38,7 +38,7 @@ const CollectionDetailInfo = ({ collection, tags }) => {
               <img
                 src={collection.image || collection.cover}
                 alt={`${collection.title} 대표 이미지`}
-                className='h-[300px] w-[250px] rounded-xl'
+                className='min-h-[300px] w-[250px] rounded-xl object-cover'
               />
             </div>
             {/* 정보 관련 아이콘 */}
@@ -58,7 +58,7 @@ const CollectionDetailInfo = ({ collection, tags }) => {
               <div className='flex items-center gap-1'>
                 <StarIcon sx={{ fontSize: 25, color: '#ffff19' }} />
                 <span className='inline-block w-[45px] translate-y-[1px] transform'>
-                  {collection.rating?.toFixed(2) || '0.00'}
+                {collection.rating ? (collection.rating / 2).toFixed(2) : '0.00'}
                 </span>
               </div>
             </div>

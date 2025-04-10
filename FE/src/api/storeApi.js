@@ -18,8 +18,18 @@ export const getNFTInfo = async (nftId) => {
 
 
 /** 에피소드 경매 목록 조회 */
-export const getEpisodeAuctions = async (webtoonId, ended = 'N') => {
-  const response = await API.get(`/auctions/episodes?webtoonId=${webtoonId}&ended=${ended}`);
+export const getEpisodeAuctions = async (webtoonId) => {
+  const response = await API.get(`/auctions/episodes?webtoonId=${webtoonId}`);
+  return response.data;
+};
+
+export const getFanartDetail = async (webtoonId) => {
+  const response = await API.get(`/auctions/fanarts?webtoonId=${webtoonId}`);
+  return response.data;
+};
+
+export const getGoodsDetail = async (webtoonId) => {
+  const response = await API.get(`/auctions/goods?webtoonId=${webtoonId}`);
   return response.data;
 };
 
@@ -40,12 +50,40 @@ const buildQueryString = (params) => {
 };
 
 export const getwebtoonAuctions = async (params = {}) => {
-  // buildQueryString 함수 사용해 쿼리 문자열 생성
-  const queryString = buildQueryString(params);
-  // URL 형식 수정 ('?' 뒤에 바로 쿼리 스트링 붙이기)
-  const response = await API.get(queryString ? `/webtoons?${queryString}` : '/webtoons');
-  return response.data;
+  try {
+    // 파라미터 복사
+    const requestParams = { ...params };
+    
+    // genres 배열 처리 - 다중 선택 지원
+    if (requestParams.genres && Array.isArray(requestParams.genres)) {
+      // 장르 파라미터 구성
+      const genreParams = requestParams.genres.map(genre => `genres=${encodeURIComponent(genre)}`).join('&');
+      
+      // 페이지 및 기타 파라미터 구성
+      const otherParams = Object.entries(requestParams)
+        .filter(([key]) => key !== 'genres')
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+      
+      const queryString = [genreParams, otherParams].filter(Boolean).join('&');
+      const url = `/webtoons/paginated${queryString ? `?${queryString}` : ''}`;
+      
+      console.log('웹툰 요청 URL:', url);
+      const response = await API.get(url);
+      return response.data; // 페이징 정보가 포함된 응답 전체 반환
+    }
+    
+    // 일반적인 경우
+    console.log('웹툰 API 요청 파라미터:', requestParams);
+    const response = await API.get('/webtoons/paginated', { params: requestParams });
+    return response.data; // 페이징 정보가 포함된 응답 전체 반환
+  } catch (error) {
+    console.error('웹툰 목록 조회 실패:', error);
+    console.error('오류 상세:', error.response?.data || error.message);
+    return { totalItems: 0, totalPages: 0, currentPage: 1, webtoons: [] };
+  }
 };
+
 
 export const getFanartAuctions = async (params = {}) => {
   const queryString = buildQueryString(params);
@@ -99,5 +137,7 @@ export default {
   placeBid,
   buyNow,
   getNFTInfo,
-  getwebtoonAuctions
+  getwebtoonAuctions,
+  getGoodsDetail,
+  getFanartDetail
 };
