@@ -6,6 +6,7 @@ import {
   getEpisodeById, getFanartById,
   getGoodsById,
   getNftCountByTypeId,
+  updateNftUserId,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -14,7 +15,7 @@ import { getWalletByAddress, getWalletByUserId } from '../repositories/walletRep
 import { encrypt, decrypt } from '../../cryptoHelper.js';
 import { redisClient } from '../../db/db.js';
 import { NFT_MARKETPLACE_ABI, NFT_MARKETPLACE_ADDRESS, RPC_URL } from '../config/contract.js';
-
+import { getWalletInfoService } from './walletService.js'
 function id(text) {
   return ethers.keccak256(ethers.toUtf8Bytes(text));
 }
@@ -26,7 +27,19 @@ const pinata = new pinataSDK(
   process.env.PINATA_API_KEY,
   process.env.PINATA_SECRET_API_KEY
 );
-
+async function checkWalletBalance(userId, requiredBalance = 0.01) {
+  const walletInfo = await getWalletInfoService({userId});
+  // balances.eth 값이 "0.5 ETH"와 같이 문자열인 경우 처리
+  if (!walletInfo || !walletInfo.balances || !walletInfo.balances.eth) {
+    throw new AppError('지갑 잔액 정보를 가져올 수 없습니다.', 400);
+  }
+  const ethStr = walletInfo.balances.eth.replace(' ETH', '').trim();
+  const balance = parseFloat(ethStr);
+  if (isNaN(balance) || balance < requiredBalance) {
+    throw new AppError('ETH 잔고가 부족합니다.', 400);
+  }
+  return balance;
+}
 export async function setChallenge(userId, challengeData) {
   const key = `Chaintoon::challenge:${userId}`;
   try {
@@ -108,66 +121,79 @@ export async function uploadJSONToPinata(jsonData) {
 }
 
 /**
+ * 민팅 전 DB 검증 & Pinata 업로드 & 메타데이터 생성
+ *  - webtoonId, fanart/goods/episode 여부에 따라 title 추출
+ *  - S3에서 이미지 다운로드 → Pinata 업로드
+ *  - 메타데이터(JSON) Pinata 업로드 → metadataUri 리턴
+ */
+async function validateAndUploadForMint({ webtoonId, type, typeId, userId, s3Url, originalCreator, owner }) {
+  // 1) ownerAddress → DB 지갑 userId 매칭
+  const ownerWallet = await getWalletByAddress(owner);
+  if (!ownerWallet || ownerWallet.user_id !== userId) {
+    throw new AppError('작성자의 지갑 주소와 유저 정보가 일치하지 않습니다.', 403);
+  }
+
+  // 2) 작품/아이템 존재 여부 + 작성자 여부
+  let title;
+  if (type === 'fanart') {
+    const fanart = await getFanartById(typeId);
+    if (!fanart) throw new AppError('해당 펜아트가 존재하지 않습니다.', 404);
+    if (fanart.user_id !== userId) {
+      throw new AppError('펜아트의 작성자만 NFT 등록할 수 있습니다.', 403);
+    }
+    title = fanart.fanart_name;
+  } else if (type === 'goods') {
+    const goods = await getGoodsById(typeId);
+    if (!goods) throw new AppError('해당 굿즈가 존재하지 않습니다.', 404);
+    if (goods.user_id !== userId) {
+      throw new AppError('굿즈의 작성자만 NFT 등록할 수 있습니다.', 403);
+    }
+    title = goods.goods_name;
+  } else if (type === 'episode') {
+    const episode = await getEpisodeById(typeId);
+    if (!episode) throw new AppError('해당 에피소드가 존재하지 않습니다.', 404);
+    // episode는 작성자 체크가 필요없다면 스킵 or if (episode.user_id !== userId) ...
+    title = episode.episode_name;
+  } else {
+    throw new AppError('type은 fanart, goods, episode 중 하나여야 합니다.', 400);
+  }
+
+  const webtoon = await getWebtoonById(webtoonId);
+  if (!webtoon) {
+    throw new AppError('해당 웹툰이 존재하지 않습니다.', 404);
+  }
+
+  // 3) S3 → Pinata
+  const fileBuffer = await downloadFileFromS3(s3Url);
+  const imageUrl = await uploadFileToPinata(fileBuffer, title);
+
+  // 4) 메타데이터 생성
+  const nftNumber = await getNftCountByTypeId(type, typeId);
+  const metadata = {
+    title: `${title} NFT #${nftNumber + 1}`,
+    description: `${webtoon.webtoon_name}에 대한 NFT.`,
+    image: imageUrl,
+  };
+
+  // 5) 메타데이터 JSON → Pinata
+  const metadataUri = await uploadJSONToPinata(metadata);
+
+  return {
+    imageUrl,
+    metadataUri,
+    metadata
+  };
+}
+/**
  * NFT 민팅용 메타데이터를 생성하고, 스마트 컨트랙트를 통해 NFT 민팅을 진행하는 함수
  * @returns {Promise<Object>} 민팅 결과 (토큰 ID 및 메타데이터 URI 포함)
  */
 export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, originalCreator, owner }) {
+
   try {
-    const ownerId = await getWalletByAddress(owner);
-    if (ownerId.user_id != userId) {
-      throw new AppError("작성자의 지갑과 유저의 아이디가 다릅니다.", 403);
-    }
-    let title;
-    if (type === 'fanart') {
-      const fanart = await getFanartById(typeId);
-      if (fanart == null) {
-        throw new AppError("해당하는 펜아트가 없습니다.", 404);
-      }
-      if (fanart?.user_id != userId) {
-        throw new AppError("펜아트의 작성자만 등록 할 수 있습니다.", 403);
-      }
-      title = fanart.fanart_name;
-    } else if (type === 'goods') {
-      const goods = await getGoodsById(typeId);
-      if (goods == null) {
-        throw new AppError("해당하는 굿즈가 없습니다.", 404);
-      }
-      if (goods?.user_id != userId) {
-        throw new AppError("굿즈의 작성자만 등록 할 수 있습니다.", 403);
-      }
-      title = goods.goods_name;
-    } else if (type === 'episode') {
-      const episode = await getEpisodeById(typeId);
-      if (episode == null) {
-        throw new AppError("해당하는 에피소드가 없습니다.", 404);
-      }
-      title = episode.episode_name;
-    } else {
-      throw new AppError('type은 fanart, goods, episode 중 하나여야 합니다.', 400);
-    }
-    let webtoonName = await getWebtoonById(webtoonId);
-    if (webtoonName == null) {
-      throw new AppError("해당하는 웹툰이 없습니다.", 404);
-    }
-    const adminWallet = process.env.ADMIN_WALLET_ADDRESS;
+    await checkWalletBalance(userId, 0.01);
 
-    // 1. 이미지 처리: S3 URL이 있으면 다운로드 후 Pinata에 업로드
-    const fileBuffer = await downloadFileFromS3(s3Url);
-    const imageUrl = await uploadFileToPinata(fileBuffer, title);
-    const nftNumber = await getNftCountByTypeId(type, typeId);
-    // 2. 메타데이터 생성
-    const metadata = {
-      title: `${title} NFT #${nftNumber + 1}`,
-      description: `${webtoonName.webtoon_name}에 대한 NFT.`,
-      image: imageUrl,
-    };
-
-    // 3. 메타데이터 JSON을 Pinata에 업로드
-    const metadataUri = await uploadJSONToPinata(metadata);
-
-    // 4. NFT 민팅 스마트 컨트랙트와 상호작용
-
-
+    const { imageUrl, metadataUri, metadata } = await validateAndUploadForMint({webtoonId, type, typeId, userId, s3Url, originalCreator, owner});
     // 사용자의 지갑 정보
     const userWallet = await getWalletByUserId(userId);
     if (!userWallet) {
@@ -182,16 +208,9 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
         throw new AppError('지갑 복호화에 실패했습니다.', 500);
       }
     } else {
-      // 사용자 서명을 통한 민팅 처리
-      const messageToSign = `${userId}-${Date.now()}`;
-      const challengeData = {
-        message: messageToSign,
-        operation: 'mint',
-        extra: { webtoonId, type, typeId, s3Url, originalCreator, owner, metadataUri }
-      };
-      await setChallenge(userId, challengeData);
-      return { needSignature: true, messageToSign };
+      throw new AppError('지갑 정보가 없습니다.', 404);
     }
+    const adminWallet = process.env.ADMIN_WALLET_ADDRESS;
 
     const nftMarketplace = new ethers.Contract(NFT_MARKETPLACE_ADDRESS, NFT_MARKETPLACE_ABI, wallet);
 
@@ -262,6 +281,8 @@ export async function getNftMetadata(tokenId) {
 
 export async function sellNftService({ tokenId, price, userId }) {
   try {
+    await checkWalletBalance(userId, 0.01);
+
     const priceWei = ethers.parseUnits(price.toString(), 'ether');
 
     const wallet = await getWalletByUserId(userId);
@@ -294,21 +315,7 @@ export async function sellNftService({ tokenId, price, userId }) {
       }
       return { message: 'NFT 판매 등록 성공', tokenId, price: priceWei.toString() };
     } else {
-      const iface = new ethers.Interface(NFT_MARKETPLACE_ABI);
-      const data = iface.encodeFunctionData('listNFT', [tokenId, priceWei]);
-      const metamaskPayload = {
-        to: NFT_MARKETPLACE_ADDRESS,
-        data,
-        value: "0"
-      };
-      const messageToSign = `${userId}-${Date.now()}`;
-      const challengeData = {
-        message: messageToSign,
-        operation: 'sell',
-        extra: { tokenId, price, priceWei: priceWei.toString(), metamaskPayload }
-      };
-      await setChallenge(userId, challengeData);
-      return { needSignature: true, messageToSign };
+      throw new AppError('지갑 정보가 없습니다.', 404);
     }
   } catch (error) {
     console.error(`sellNftService Error: ${error.stack}`);
@@ -318,6 +325,8 @@ export async function sellNftService({ tokenId, price, userId }) {
 
 export async function buyNftService({ tokenId, price, userId }) {
   try {
+    await checkWalletBalance(userId, 0.01);
+
     const priceWei = ethers.parseUnits(price.toString(), 'ether');
 
     const wallet = await getWalletByUserId(userId);
@@ -370,6 +379,8 @@ export async function buyNftService({ tokenId, price, userId }) {
       const prevOwnerShareEther = parseFloat(ethers.formatEther(prevOwnerShareWei)).toFixed(5);
       console.log("soldPriceEther:", soldPriceEther);
       console.log("originalCreatorShareEther:", originalCreatorShareEther);
+      
+      updateNftUserId(soldEvent.tokenId, userId); 
       return {
         message: 'NFT 구매 성공',
         tokenId: soldEvent.tokenId,
@@ -389,14 +400,7 @@ export async function buyNftService({ tokenId, price, userId }) {
         prevOwnerShareEther,
       };
     } else {
-      const messageToSign = `${userId}-${Date.now()}`;
-      const challengeData = {
-        message: messageToSign,
-        operation: 'buy',
-        extra: { tokenId, price, priceWei: priceWei.toString() }
-      };
-      await setChallenge(userId, challengeData);
-      return { needSignature: true, messageToSign };
+      throw new AppError('지갑 정보가 없습니다.', 404);
     }
   } catch (error) {
     console.error(`buyNftService Error: ${error.stack}`);
@@ -425,7 +429,7 @@ export async function confirmSignatureService({ userId, signature }) {
     }
     await deleteChallenge(userId);
 
-    const iface = new ethers.Interface(nftArtifact.abi);
+    const iface = new ethers.Interface(NFT_MARKETPLACE_ABI);
 
     if (operation === 'mint') {
       const metamaskPayload = {
@@ -434,7 +438,6 @@ export async function confirmSignatureService({ userId, signature }) {
           extra.owner,
           extra.metadataUri,
           extra.originalCreator,
-          extra.owner,
           process.env.ADMIN_WALLET_ADDRESS
         ]),
         value: "0"
@@ -444,14 +447,17 @@ export async function confirmSignatureService({ userId, signature }) {
         message: '서명이 확인되었습니다. 민팅 거래를 진행하세요.',
         operation,
         contractAddress: NFT_MARKETPLACE_ADDRESS,
-        metamaskPayload
+        metamaskPayload,
+        imageUrl: extra.imageUrl,       // 추가된 필드
+        metadataUri: extra.metadataUri  // 추가된 필드
       };
     } else if (operation === 'sell') {
+      const priceBigNumber = ethers.parseUnits(extra.price, "ether"); // 변환한 BigNumber
       const metamaskPayload = {
         to: NFT_MARKETPLACE_ADDRESS,
         data: iface.encodeFunctionData('listNFT', [
           extra.tokenId,
-          extra.priceWei
+          priceBigNumber
         ]),
         value: "0"
       };
@@ -463,10 +469,12 @@ export async function confirmSignatureService({ userId, signature }) {
         metamaskPayload
       };
     } else if (operation === 'buy') {
+      // 구매의 경우에도 price 값을 동일하게 변환해서 사용
+      const priceBigNumber = ethers.parseUnits(extra.price, "ether");
       const metamaskPayload = {
         to: NFT_MARKETPLACE_ADDRESS,
         data: iface.encodeFunctionData('buyNFT', [extra.tokenId]),
-        value: extra.priceWei
+        value: priceBigNumber
       };
       return {
         success: true,
@@ -475,18 +483,7 @@ export async function confirmSignatureService({ userId, signature }) {
         contractAddress: NFT_MARKETPLACE_ADDRESS,
         metamaskPayload
       };
-    } else if (operation === 'sendTransaction') {
-      const metamaskPayload = {
-        to: extra.toAddress,
-        value: extra.amountWei,
-      };
-      return {
-        success: true,
-        message: '서명이 확인되었습니다. 송금 거래를 진행하세요.',
-        operation,
-        metamaskPayload
-      };
-    } else {
+    }  else {
       return {
         success: true,
         message: '서명이 확인되었습니다.',
@@ -501,7 +498,75 @@ export async function confirmSignatureService({ userId, signature }) {
   }
 }
 
+// --------------------- 민팅 ---------------------
+export async function mintNftServiceMetamaskRequest({
+  webtoonId, type, userId, typeId, s3Url, originalCreator, owner
+}) {
+  await checkWalletBalance(userId, 0.01);
 
+  // 1) Pinata 업로드 결과 얻기
+  const { imageUrl, metadataUri, metadata } = await validateAndUploadForMint({
+    webtoonId, type, userId, typeId, s3Url, originalCreator, owner
+  });
+
+  // 2) Redis에 nonce/message + meta 정보
+  const messageToSign = `${userId}-${Date.now()}`;
+  const challengeData = {
+    message: messageToSign,
+    operation: 'mint',
+    extra: {
+      webtoonId: webtoonId,          // 웹툰 ID
+      type: type,                    // NFT 타입 (예: fanart, goods, episode)
+      typeId: typeId,                // 실제 아이템 ID
+      s3Url: s3Url,                  // 원본 S3 URL
+      originalCreator: originalCreator,  // 원작자
+      owner: owner,                      // NFT 소유자 (지갑 주소)
+      metadataUri: metadataUri,          // Pinata에 업로드한 메타데이터 URI
+      imageUrl: imageUrl,                // Pinata에 업로드한 이미지 URL
+      title: metadata.title                       // 계산된 title 값
+    }
+  };
+  await setChallenge(userId, challengeData);
+
+  return {
+    needSignature: true,
+    messageToSign
+  };
+}
+
+
+// --------------------- 판매 ---------------------
+export async function sellNftServiceMetamaskRequest({ tokenId, price, userId }) {
+
+  // 1) DB 검증, 소유권 확인
+  // 2) nonce 생성
+  const messageToSign = `${userId}-${Date.now()}`;
+  const challengeData = {
+    message: messageToSign,
+    operation: 'sell',
+    extra: { tokenId, price }
+  };
+  console.log("challengeData:", challengeData);
+  await setChallenge(userId, challengeData);
+  return { needSignature: true, messageToSign };
+}
+
+
+// --------------------- 구매 ---------------------
+export async function buyNftServiceMetamaskRequest({ tokenId, price, userId }) {
+
+  // 1) DB 확인
+  // 2) nonce
+  const messageToSign = `${userId}-${Date.now()}`;
+  const challengeData = {
+    message: messageToSign,
+    operation: 'buy',
+    extra: { tokenId, price }
+  };
+  await setChallenge(userId, challengeData);
+
+  return { needSignature: true, messageToSign };
+}
 export default {
   mintNftService,
   getNftMetadata,
@@ -511,4 +576,7 @@ export default {
   setChallenge,
   uploadFileToPinata,
   uploadJSONToPinata,
+  mintNftServiceMetamaskRequest,
+  sellNftServiceMetamaskRequest,
+  buyNftServiceMetamaskRequest,
 };

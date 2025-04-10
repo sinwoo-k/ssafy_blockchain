@@ -36,7 +36,7 @@ public class SecurityConfig {
                     "https://min9805.github.io"
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-            config.setAllowedHeaders(List.of("Content-Type"));
+            config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-XSRF-TOKEN"));
             config.setAllowCredentials(true); // 쿠키 허용 여부
             config.setExposedHeaders(List.of("Set-Cookie", "X-XSRF-TOKEN")); // 쿠키 관련 헤더
             config.setMaxAge(3600L); // Pre-flight 캐싱 시간
@@ -62,7 +62,7 @@ public class SecurityConfig {
                         "/api/fanarts/**",
                         "/api/nfts",
                         "/api/nfts/{nftId}",
-                        "/api/auctions",
+                        "/api/auctions/**",
                         "/api/blockchain/nonce/{walletAddress}"
                 ).permitAll()
                 .requestMatchers(
@@ -70,8 +70,10 @@ public class SecurityConfig {
                         "/api/search/**",
                         "/api/redis/test",
                         "/api/sso/**",
-                        "/api/metrics"
+                        "/api/metrics",
+                        "/api/blockchain/metamask/**"
                 ).permitAll()
+                .requestMatchers("/api/blockchain/metamask/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         );

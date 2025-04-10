@@ -160,12 +160,8 @@ export async function getWalletInfoService({ userId }) {
     return {
       walletId: wallet.wallet_id,
       walletAddress: wallet.wallet_address,
-      publicKey: wallet.public_key,
-      coinType: wallet.coin_type,
-      isRegistered: result[0],
-      contractPublicKey: result[1],
       balances: {
-        eth: `${ethBalance} ETH`
+        eth: `${formattedEth} ETH`
       }
     };
   } catch (error) {
