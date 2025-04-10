@@ -207,10 +207,16 @@ const CommentCard = ({ comment, patchData }) => {
         {/* 댓글 수정 & 삭제 */}
         {userData && userData?.id === comment.userId && (
           <div className='flex gap-3'>
-            <div className='text-blue-500' onClick={toggleEdit}>
+            <div
+              className='text-text/75 hover:text-blue-500'
+              onClick={toggleEdit}
+            >
               <IconButton Icon={EditIcon} tooltip={'댓글 수정'} />
             </div>
-            <div className='text-red-500' onClick={deleteData}>
+            <div
+              className='text-text/75 hover:text-red-500'
+              onClick={deleteData}
+            >
               <IconButton Icon={DeleteIcon} tooltip={'댓글 삭제'} />
             </div>
           </div>

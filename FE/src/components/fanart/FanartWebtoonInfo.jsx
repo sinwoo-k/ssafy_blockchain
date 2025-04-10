@@ -101,7 +101,9 @@ const FanartWebtoonInfo = ({ webtoonId }) => {
             <div className='flex flex-col gap-5'>
               <p className='text-2xl'>{webtoon.webtoonName}</p>
               <Link to={`/user/${webtoon.userId}`}>
-                <p className='text-lg text-[#b9b9b9]'>{webtoon.writer}</p>
+                <p className='hover:text-chaintoon text-lg text-[#b9b9b9] hover:underline'>
+                  {webtoon.writer}
+                </p>
               </Link>
               <p className='text-lg text-[#b9b9b9]'>{webtoon.genre}</p>
               <div className=''>
