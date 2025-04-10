@@ -53,26 +53,26 @@ export const getwebtoonAuctions = async (params = {}) => {
   try {
     // 파라미터 복사
     const requestParams = { ...params };
-    
+
     // genres 배열 처리 - 다중 선택 지원
     if (requestParams.genres && Array.isArray(requestParams.genres)) {
       // 장르 파라미터 구성
       const genreParams = requestParams.genres.map(genre => `genres=${encodeURIComponent(genre)}`).join('&');
-      
+
       // 페이지 및 기타 파라미터 구성
       const otherParams = Object.entries(requestParams)
         .filter(([key]) => key !== 'genres')
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
-      
+
       const queryString = [genreParams, otherParams].filter(Boolean).join('&');
       const url = `/webtoons/paginated${queryString ? `?${queryString}` : ''}`;
-      
+
       console.log('웹툰 요청 URL:', url);
       const response = await API.get(url);
       return response.data; // 페이징 정보가 포함된 응답 전체 반환
     }
-    
+
     // 일반적인 경우
     console.log('웹툰 API 요청 파라미터:', requestParams);
     const response = await API.get('/webtoons/paginated', { params: requestParams });
@@ -129,6 +129,23 @@ export const buyNow = async (auctionId) => {
   return response.data;
 };
 
+/** 메타마스크 즉시 구매하기 */
+export const buyNowMetamask = async (params) => {
+  if (!params || !params.auctionItemId) {
+    throw new Error('경매 ID는 필수 파라미터입니다.');
+  }
+  const response = await API.post(`/auctions/buy-now/metamask`, params);
+  return response.data;
+};
+
+export const saveTradeHistory = async (tradeData) => {
+  if (!tradeData || !tradeData.auctionItemId) {
+    throw new Error('거래 내역 저장에 필요한 필수 파라미터가 누락되었습니다.');
+  }
+  const response = await API.post(`/auctions/trade-history`, tradeData);
+  return response.data;
+};
+
 export default {
   getEpisodeAuctions,
   getGoodsAuctions,
@@ -139,5 +156,8 @@ export default {
   getNFTInfo,
   getwebtoonAuctions,
   getGoodsDetail,
-  getFanartDetail
+  getFanartDetail,
+  getwebtoonAuctions,
+  buyNowMetamask,
+  saveTradeHistory
 };

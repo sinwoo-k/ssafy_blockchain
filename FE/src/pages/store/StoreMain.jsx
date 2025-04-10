@@ -18,15 +18,57 @@ const StoreMain = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [totalElements, setTotalElements] = useState(0)
 
-  // useEffect(() => {
-  //   if (activeFilters.genre && activeFilters.genre.length > 0) {
-  //     setSelectedGenres(activeFilters.genre)
-  //   } else {
-  //     setSelectedGenres([])
-  //   }
-  // }, [activeFilters.genre])
-  
-  // ✅ 상품 불러오기 (selectedGenres 변경될 때 작동)
+  useEffect(() => {
+    const fetchCategoryCounts = async () => {
+      try {
+        setIsLoading(true);
+        
+        // 모든 카테고리의 총 개수를 가져오기 위한 API 호출
+        const [webtoonRes, goodsRes, fanartRes] = await Promise.all([
+          getwebtoonAuctions({ page: 1, pageSize: 1 }), // 첫 페이지만 요청해서 총 개수만 확인
+          getGoodsAuctions({}),
+          getFanartAuctions({})
+        ]);
+        
+        // 각 카테고리별 총 개수 설정
+        setCategoryProductCounts({
+          웹툰: webtoonRes.totalItems || 0,
+          굿즈: goodsRes?.totalElements || 0,
+          팬아트: fanartRes?.totalElements || 0
+        });
+        
+        // 초기 카테고리 데이터 로딩
+        const fetchedProducts = webtoonRes.webtoons?.map(w => ({
+          id: w.webtoonId,
+          title: w.webtoonName || '제목 없음',
+          image: w.garoThumbnail || 'https://via.placeholder.com/280x280?text=이미지+없음',
+          category: '웹툰',
+          genre: w.genre || '',
+          status: (w.episodeCount && w.episodeCount > 0) ? 'sell' : 'notsell',
+          rating: w.rating || 0,
+          writer: w.writer || '',
+          description: w.summary || '',
+          webtoonId: w.webtoonId,
+          episodeCount: w.episodeCount || 0,
+          viewCount: w.viewCount || 0,
+          lastUploadDate: w.lastUploadDate || 0
+        })) || [];
+        
+        setProducts(fetchedProducts);
+        setFilteredProducts(fetchedProducts);
+        setTotalPages(webtoonRes.totalPages || 1);
+        setTotalElements(webtoonRes.totalItems || 0);
+      } catch (err) {
+        console.error('카테고리 개수 로딩 실패:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // 컴포넌트 마운트 시 한 번만 실행
+    fetchCategoryCounts();
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -349,7 +391,7 @@ const StoreMain = () => {
             <div className='flex-1'>
               <div className='mb-6 flex items-center justify-between'>
                 <h1 className='text-2xl font-bold'>
-                  {activeCategory || '웹툰'} ({totalProductCount})
+                  {activeCategory || '웹툰'}
                 </h1>
                 <div className='flex items-center'>
                   <input

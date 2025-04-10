@@ -118,7 +118,6 @@ public class MetamaskService {
      *   - Express: POST /metamask/sell-request
      */
     public Mono<MetamaskRequestResponseDto> sellRequest(MetamaskSellRequestDto dto) {
-        System.out.println(dto.getUserId());
         return webClient.post()
                 .uri("/nft/metamask/sell-request")
                 .bodyValue(dto)

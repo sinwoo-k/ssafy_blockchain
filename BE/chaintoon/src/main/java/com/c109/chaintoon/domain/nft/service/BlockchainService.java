@@ -154,6 +154,7 @@ public class BlockchainService {
 
     }
 
+
     public Mono<NftMetadataResponseDto> getNftMetadata(Integer nftId) {
         // 로컬 NFT 테이블에서 nft_id에 해당하는 token_id 조회
         Integer tokenId = nftRepository.findTokenIdByNftId(nftId)
@@ -410,6 +411,7 @@ public class BlockchainService {
         Nft nft = Nft.builder()
                 .webtoonId(dto.getWebtoonId())
                 .tokenId(dto.getTokenId())
+                .title(dto.getTitle())
                 .userId(dto.getUserId())
                 .type(dto.getType())
                 .typeId(dto.getTypeId())

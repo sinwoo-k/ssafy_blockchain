@@ -45,6 +45,8 @@ public class AuctionItemController {
             @RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
         return ResponseEntity.ok(auctionItemService.createAuctionItemMetamask(userId, auctionCreateRequestDto));
     }
+
+    // 메타마스크 경매 등록 후 상태 업데이트
     @PostMapping("/{auctionItemId}/update-status")
     public ResponseEntity<AuctionCreateResponseDto> updateAuctionStatus(
             @PathVariable Integer auctionItemId,
@@ -52,6 +54,7 @@ public class AuctionItemController {
         AuctionCreateResponseDto response = auctionItemService.updateAuctionStatus(auctionItemId, status);
         return ResponseEntity.ok(response);
     }
+
     // 에피소드 경매 목록 조회
     @GetMapping("/episodes")
     public ResponseEntity<?> getEpisodeAuctions(
@@ -117,7 +120,7 @@ public class AuctionItemController {
     }
 
     // 즉시 구매
-    @PostMapping("buy-now")
+    @PostMapping("/buy-now")
     public ResponseEntity<?> buyNow (
             @AuthenticationPrincipal Integer userId,
             @RequestBody @Valid AuctionBuyNowRequestDto buyNowRequestDto
@@ -126,6 +129,23 @@ public class AuctionItemController {
         return ResponseEntity.ok(response);
     }
 
+    // 메타마스크 즉시 구매
+    @PostMapping("/buy-now/metamask")
+    public ResponseEntity<MetamaskRequestResponseDto> buyNowMetamask (
+            @AuthenticationPrincipal Integer userId,
+            @RequestBody @Valid AuctionBuyNowRequestDto buyNowRequestDto
+    ) {
+        return ResponseEntity.ok(auctionItemService.buyNowMetamask(userId, buyNowRequestDto));
+    }
+
+    // 메타마스크 즉시 구매시 거래내역 기록
+    @PostMapping("/trade-history")
+    public ResponseEntity<?> tradeHistory (
+            @AuthenticationPrincipal Integer userId,
+            @RequestBody @Valid AuctionBuyNowRequestDto buyNowRequestDto
+    ) {
+        return ResponseEntity.ok(auctionItemService.saveTradingHistory(userId, buyNowRequestDto));
+    }
     // 낙찰자 선정 - 비동기 ver
     @PostMapping("/{auctionItemId}/select-winner")
     public ResponseEntity<?> selectAuctionWinner(

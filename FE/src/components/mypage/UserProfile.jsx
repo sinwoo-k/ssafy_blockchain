@@ -453,7 +453,7 @@ const UserProfile = () => {
         <div className="flex items-center text-xs text-gray-400 mt-4 ml-3">
           <span>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : ''}</span>
           <span className="mx-2">|</span>
-          <span>NFT {nftCount}개</span>
+          {/* <span>NFT {nftCount}개</span> */}
         </div>
       </div>
 

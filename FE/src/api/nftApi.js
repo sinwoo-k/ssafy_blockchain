@@ -46,17 +46,6 @@ export const createAuctionMetamask = async (nftData) => {
   }
 };
 
-const updateAuctionStatus = async (auctionItemId, status) => {
-  try {
-    const response = await API.post(`/auctions/${auctionItemId}/update-status`, null, {
-      params: { status }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('경매 상태 업데이트 오류:', error);
-    throw error;
-  }
-};
 
 // NFT 등록
 const mintNFT = async(payload) => {
@@ -197,6 +186,22 @@ const recordMintToDb = async (mintRecord) => {
   const response = await API.post('/blockchain/record-mint', mintRecord);
   return response.data;
 };
+const updateAuctionStatus = async (auctionItemId, status) => {
+  try {
+    const response = await API.post(`/auctions/${auctionItemId}/update-status`, null, {
+      params: { status }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('경매 상태 업데이트 오류:', error);
+    throw error;
+  }
+};
+const updateAuctionEndes = async (auctionItemId, ended) => {
+  // POST /nft/record-mint
+  const response = await API.post(`/auctions/${auctionItemId}/update-ended`, { ended });
+  return response.data;
+}
 export const NFT_MARKETPLACE_ABI = nftMarketplaceArtifact.abi;
 export const nftService = {
   getMyNFTs,
@@ -213,7 +218,8 @@ export const nftService = {
   signMessageWithMetamask,
   recordMintToDb,
   createAuctionMetamask,
-  updateAuctionStatus
+  updateAuctionStatus,
+  updateAuctionEndes
 };
 
 export default nftService;
