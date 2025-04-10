@@ -76,6 +76,7 @@ public class TradingHistoryService {
                 .otherPartyName(user.getNickname())
                 .webtoonName(webtoonName)
                 .itemImage(itemImage)
+                .title(nft.getTitle())
                 .build();
     }
 
@@ -103,6 +104,7 @@ public class TradingHistoryService {
                 .startTime(item.getStartTime() != null ? item.getStartTime().toString() : null)
                 .endTime(item.getEndTime() != null ? item.getEndTime().toString() : null)
                 .webtoonName(webtoonName)
+                .title(nft.getTitle())
                 .build();
     }
 
