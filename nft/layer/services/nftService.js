@@ -16,6 +16,7 @@ import { encrypt, decrypt } from '../../cryptoHelper.js';
 import { redisClient } from '../../db/db.js';
 import { NFT_MARKETPLACE_ABI, NFT_MARKETPLACE_ADDRESS, RPC_URL } from '../config/contract.js';
 import { getWalletInfoService } from './walletService.js'
+import { title } from 'process';
 function id(text) {
   return ethers.keccak256(ethers.toUtf8Bytes(text));
 }
@@ -239,12 +240,14 @@ export async function mintNftService({ webtoonId, userId, type, typeId, s3Url, o
     if (!tokenId) {
       throw new AppError('Minted 이벤트를 찾을 수 없습니다.', 500);
     }
+    console.log("그냥 민팅 title: ", metadata.title);
     const nftData = await saveNftToDatabase({
       webtoonId,
       userId,
       type,
       typeId,
       tokenId,
+      title: metadata.title,
       imageUrl,
       contractAddress: NFT_MARKETPLACE_ADDRESS,
       metadataUri,
@@ -449,7 +452,8 @@ export async function confirmSignatureService({ userId, signature }) {
         contractAddress: NFT_MARKETPLACE_ADDRESS,
         metamaskPayload,
         imageUrl: extra.imageUrl,       // 추가된 필드
-        metadataUri: extra.metadataUri  // 추가된 필드
+        metadataUri: extra.metadataUri,  // 추가된 필드
+        title: extra.title,         // 추가된 필드
       };
     } else if (operation === 'sell') {
       const priceBigNumber = ethers.parseUnits(extra.price, "ether"); // 변환한 BigNumber
@@ -508,7 +512,6 @@ export async function mintNftServiceMetamaskRequest({
   const { imageUrl, metadataUri, metadata } = await validateAndUploadForMint({
     webtoonId, type, userId, typeId, s3Url, originalCreator, owner
   });
-
   // 2) Redis에 nonce/message + meta 정보
   const messageToSign = `${userId}-${Date.now()}`;
   const challengeData = {
