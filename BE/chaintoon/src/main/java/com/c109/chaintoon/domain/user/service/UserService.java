@@ -311,7 +311,7 @@ public class UserService {
                         .profile(s3Service.getPresignedUrl(user.getProfileImage()))
                         .userId(user.getId())
                         .nickname(user.getNickname())
-                        .followd(String.valueOf(Objects.equals(loginId, user.getId()) ?"":followingRepository.existsById_FollowerIdAndId_FolloweeId(loginId, user.getId())))
+                        .followd(String.valueOf(Objects.equals(loginId, user.getId()) ?"me":followingRepository.existsById_FollowerIdAndId_FolloweeId(loginId, user.getId())))
                         .build())
                 .collect(Collectors.toList());
     }
