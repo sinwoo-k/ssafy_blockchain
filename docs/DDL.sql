@@ -162,6 +162,7 @@ CREATE TABLE `nft` (
   `webtoon_id` int NOT NULL,
   `token_id` int DEFAULT '0',
   `user_id` int NOT NULL,
+  `title` varchar(50) null,
   `type` varchar(50) DEFAULT NULL,
   `type_id` int NOT NULL COMMENT '타입 아이디값',
   `contract_address` varchar(255) DEFAULT '0',
