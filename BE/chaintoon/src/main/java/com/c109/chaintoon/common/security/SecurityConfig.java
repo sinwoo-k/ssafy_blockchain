@@ -72,6 +72,7 @@ public class SecurityConfig {
                         "/api/sso/**",
                         "/api/metrics"
                 ).permitAll()
+                .requestMatchers("/api/blockchain/metamask/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         );
