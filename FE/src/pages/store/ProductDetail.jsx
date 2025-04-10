@@ -171,8 +171,11 @@ const ProductDetail = () => {
           setAuction(processedAuction);
           
           // 초기 입찰가 설정 (현재 입찰가 또는 시작가)
-          const currentBid = processedAuction.biddingPrice;
-          setBidPrice(parseFloat(currentBid) + 0.0001); // 현재 가격보다 0.0001 ETH 높게 설정
+const currentBid = processedAuction.biddingPrice;
+// 정밀도 문제 해결을 위해 toFixed(5) 사용
+const minimumBidIncrement = 0.0001;
+const initialBid = (parseFloat(currentBid) + minimumBidIncrement).toFixed(5);
+setBidPrice(parseFloat(initialBid));
           
           // 입찰 기록 API 호출
           try {
@@ -205,6 +208,7 @@ const ProductDetail = () => {
     if (regex.test(value)) {
       setBidPrice(parseFloat(value) || 0)
     }
+    console.log('타겟정보',e.target.value)
   }
 
   // 입찰가 증가 함수
@@ -314,7 +318,18 @@ const ProductDetail = () => {
       
     } catch (err) {
       console.error('즉시 구매 처리 중 오류:', err)
-      alert('즉시 구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+      
+      // 서버에서 전달된 에러 메시지 표시
+      if (err.response && err.response.data) {
+        const errorData = err.response.data;
+        if (errorData.message) {
+          alert(errorData.message);
+        } else {
+          alert('즉시 구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+      } else {
+        alert('즉시 구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsProcessing(false)
     }
@@ -324,22 +339,6 @@ const ProductDetail = () => {
   const handleToggleBidHistoryModal = () => {
     setShowBidHistoryModal(!showBidHistoryModal);
   };
-  
-  // 찜하기 처리 함수
-  const handleAddToWishlist = async () => {
-    if (!isAuthenticated) {
-      alert('로그인이 필요한 서비스입니다.')
-      return
-    }
-    
-    try {
-      await API.post(`/auctions/${productId}/wishlist`)
-      alert('찜 목록에 추가되었습니다.')
-    } catch (err) {
-      console.error('찜하기 처리 중 오류:', err)
-      alert('찜하기 처리 중 오류가 발생했습니다.')
-    }
-  }
 
   if (isLoading) {
     return <Loader />
@@ -448,22 +447,6 @@ const ProductDetail = () => {
                 현재 판매가 종료된 상품입니다.
               </div>
             )}
-
-            {/* 정보 아이콘들 */}
-            <div className='mt-4 flex items-center justify-evenly rounded bg-gray-800 p-3'>
-              <div className='flex items-center gap-1'>
-                <FavoriteIcon sx={{ fontSize: 20, color: '#ff1919' }} />
-                <span className='text-sm'>{auction.wishlistCount || 0}</span>
-              </div>
-              <div className='flex items-center gap-1'>
-                <VisibilityIcon sx={{ fontSize: 20, color: '#3cc3ec' }} />
-                <span className='text-sm'>{auction.viewCount || 0}</span>
-              </div>
-              <div className='flex items-center gap-1'>
-                <StarIcon sx={{ fontSize: 20, color: '#ffff19' }} />
-                <span className='text-sm'>{auction.rating || 0}</span>
-              </div>
-            </div>
           </div>
 
           {/* 상품 상세 정보 */}
@@ -499,7 +482,7 @@ const ProductDetail = () => {
                   <span className='mr-2'>거래내역</span>
                   <button 
                     onClick={handleToggleBidHistoryModal}
-                    className='text-[#3cc3ec] hover:text-[#2aabda]'
+                    className='text-[#3cc3ec] hover:text-[#2aabda]cursor-pointer'
                   >
                     [기록보기]
                   </button>
@@ -517,14 +500,10 @@ const ProductDetail = () => {
               {/* 희망 입찰가 */}
               <div>
                 <div className='mb-2 text-sm text-gray-400'>희망 입찰가</div>
-                <div className='mb-1 flex items-center justify-between'>
-                  <span className='text-sm text-gray-400'>입찰 가격</span>
-                  <span className='text-sm text-gray-400'>보유 ETH: 0.01</span>
-                </div>
                 <div className='flex items-center'>
                   <button 
                     onClick={decreaseBid}
-                    className='flex h-10 w-10 items-center justify-center rounded-l-md border border-gray-700 bg-gray-900'
+                    className='cursor-pointer flex h-10 w-10 items-center justify-center rounded-l-md border border-gray-700 bg-gray-900'
                     disabled={isAuctionEnded || isProcessing}
                   >
                     -
@@ -540,7 +519,7 @@ const ProductDetail = () => {
                   />
                   <button 
                     onClick={increaseBid}
-                    className='flex h-10 w-10 items-center justify-center rounded-r-md border border-gray-700 bg-gray-900'
+                    className='cursor-pointer flex h-10 w-10 items-center justify-center rounded-r-md border border-gray-700 bg-gray-900'
                     disabled={isAuctionEnded || isProcessing}
                   >
                     +
@@ -555,7 +534,7 @@ const ProductDetail = () => {
               <div className='flex items-center'>
                 <button 
                   onClick={() => setBidPrice(parseFloat(auction.biddingPrice) + 0.0001)}
-                  className='mr-2 rounded bg-gray-700 px-2 py-1 text-xs'
+                  className='cursor-pointer mr-2 rounded bg-gray-700 px-2 py-1 text-xs'
                   disabled={isAuctionEnded || isProcessing}
                 >
                   최소
@@ -576,7 +555,7 @@ const ProductDetail = () => {
             {/* 입찰하기/즉시 구매 버튼 */}
             <div className='flex gap-3'>
               <button 
-                className={`flex-1 rounded-md py-3 px-6 text-lg font-medium ${
+                className={`cursor-pointer flex-1 rounded-md py-3 px-6 text-lg font-medium ${
                   isAuctionEnded || isProcessing
                     ? 'cursor-not-allowed bg-gray-500' 
                     : 'bg-[#3cc3ec] hover:bg-[#2aabda]'
@@ -595,7 +574,7 @@ const ProductDetail = () => {
               </button>
               {auction.buyNowPrice && (
                 <button 
-                  className={`flex-1 rounded-md py-3 px-6 text-lg font-medium ${
+                  className={`cursor-pointercursor-pointer flex-1 rounded-md py-3 px-6 text-lg font-medium ${
                     isAuctionEnded || isProcessing
                       ? 'cursor-not-allowed bg-gray-500' 
                       : 'bg-blue-500 hover:bg-blue-400'
@@ -610,47 +589,6 @@ const ProductDetail = () => {
             </div>
         </div>
         </div>
-        
-        {/* 상품 상세 정보 탭 */}
-        <div className='mb-10'>
-          <div className='mb-4 border-b border-gray-700'>
-            <button className='border-b-2 border-blue-500 py-3 px-6 text-lg font-medium'>
-              상세정보
-            </button>
-          </div>
-          
-          <div className='rounded-lg bg-gray-900 p-6'>
-            <h2 className='mb-4 text-xl font-medium'>상품 정보</h2>
-            <p className='mb-4 text-gray-300'>
-              {auction.description || `이 ${getCategory()}는 NFT로 제작되어 블록체인에 기록되며, 디지털 자산으로서의 가치와 희소성을 지니고 있습니다.`}
-            </p>
-            
-            <div className='mt-4 grid grid-cols-2 gap-4'>
-              <div className='rounded-md bg-gray-800 p-4'>
-                <h3 className='mb-2 text-lg font-medium'>작가 정보</h3>
-                <div className='flex items-center'>
-                  <div className='mr-3 h-12 w-12 rounded-full bg-gray-700'></div>
-                  <div>
-                    <div className='font-medium'>{auction.artist || auction.author || '작가 정보 없음'}</div>
-                    <div className='text-sm text-gray-400'>
-                      {auction.type === 'episode' ? '웹툰 작가' : auction.type === 'fanart' ? '팬아트 작가' : '제작자'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='rounded-md bg-gray-800 p-4'>
-                <h3 className='mb-2 text-lg font-medium'>출시 정보</h3>
-                <div className='text-gray-300'>
-                  <p>등록일: {auction.createdAt ? new Date(auction.createdAt).toLocaleDateString() : '정보 없음'}</p>
-                  <p>NFT ID: {auction.nftId || '정보 없음'}</p>
-                  <p>판매 형태: NFT 경매</p>
-                  <p>판매 플랫폼: 체인툰</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         {/* 입찰 기록 모달 컴포넌트 */}
         <BidHistoryModal 
           isOpen={showBidHistoryModal}

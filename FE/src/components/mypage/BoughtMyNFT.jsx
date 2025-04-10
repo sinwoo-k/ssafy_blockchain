@@ -60,7 +60,7 @@ const BoughtMyNFT = () => {
       <div className="mb-2 grid grid-cols-5 text-xs text-gray-400 border-b border-gray-800 pb-2">
         <div className="pl-2">이미지</div>
         <div>작품명</div>
-        <div className="text-center">구매 가격</div>
+        <div className="text-center">구입 가격</div>
         <div className="text-center">판매자</div>
         <div className="text-center">구매 일자</div>
       </div>
@@ -81,13 +81,13 @@ const BoughtMyNFT = () => {
               </div>
               <div className="text-sm font-medium truncate pr-2">{item.webtoonName || 'NFT 이름'}</div>
               <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[90px]">
-                {item.finalPrice || item.currentBiddingPrice} ETH
+                {item.tradingValue || item.currentBiddingPrice} ETH
               </div>
               <div className="text-sm text-center truncate">
-                {item.sellerName || item.seller || '판매자'}
+                {item.otherPartyName || item.seller || '판매자'}
               </div>
               <div className="text-sm text-center">
-                {formatDate(item.purchaseDate || item.endTime || item.startTime)}
+                {formatDate(item.tradingDate || item.endTime || item.startTime)}
               </div>
             </div>
           ))
