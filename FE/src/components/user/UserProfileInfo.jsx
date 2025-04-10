@@ -291,8 +291,8 @@ const UserProfileInfo = ({ user, patchData }) => {
           <span>
             {user.joinDate ? new Date(user.joinDate).toLocaleDateString() : ''}
           </span>
-          <span className='mx-2'>|</span>
-          <span>NFT {nftCount}개</span>
+          {/* <span className='mx-2'>|</span> */}
+          {/* <span>NFT {nftCount}개</span> */}
         </div>
       </div>
 

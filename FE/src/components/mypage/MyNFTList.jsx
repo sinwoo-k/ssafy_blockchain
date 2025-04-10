@@ -243,7 +243,7 @@ const MyNFTList = () => {
           ))
         ) : (
           <div className='py-8 text-center text-gray-400'>
-            {searchTerm ? '검색 결과가 없습니다.' : 'NFT가 없습니다.'}
+            {searchTerm ? '검색 결과가 없습니다.' : 'NFT가 없습니다.(NFT 발행 시 평균 1 ~ 2분정도 소요됩니다.'}
           </div>
         )}
       </div>
