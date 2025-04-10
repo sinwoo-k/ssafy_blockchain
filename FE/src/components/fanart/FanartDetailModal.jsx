@@ -26,7 +26,7 @@ const FanartDetailModal = ({ isOpen, onClose, fanartImage }) => {
           <img
             src={fanartImage}
             alt='팬아트 이미지'
-            className='w-[690px] rounded-lg'
+            className='h-screen rounded-lg object-cover'
           />
         </div>
         <div className='absolute right-5 bottom-5 mt-2 flex justify-center gap-5'>
