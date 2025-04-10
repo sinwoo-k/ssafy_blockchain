@@ -24,12 +24,12 @@ export const getEpisodeAuctions = async (webtoonId) => {
 };
 
 export const getFanartDetail = async (webtoonId) => {
-  const response = await API.get(`/auctions/fanart?webtoonId=${webtoonId}`);
+  const response = await API.get(`/auctions/fanarts?webtoonId=${webtoonId}`);
   return response.data;
 };
 
 export const getGoodsDetail = async (webtoonId) => {
-  const response = await API.get(`/auctions/fanart?webtoonId=${webtoonId}`);
+  const response = await API.get(`/auctions/goods?webtoonId=${webtoonId}`);
   return response.data;
 };
 
@@ -66,21 +66,21 @@ export const getwebtoonAuctions = async (params = {}) => {
         .join('&');
       
       const queryString = [genreParams, otherParams].filter(Boolean).join('&');
-      const url = `/webtoons${queryString ? `?${queryString}` : ''}`;
+      const url = `/webtoons/paginated${queryString ? `?${queryString}` : ''}`;
       
       console.log('웹툰 요청 URL:', url);
       const response = await API.get(url);
-      return Array.isArray(response.data) ? response.data : [];
+      return response.data; // 페이징 정보가 포함된 응답 전체 반환
     }
     
     // 일반적인 경우
     console.log('웹툰 API 요청 파라미터:', requestParams);
-    const response = await API.get('/webtoons', { params: requestParams });
-    return Array.isArray(response.data) ? response.data : [];
+    const response = await API.get('/webtoons/paginated', { params: requestParams });
+    return response.data; // 페이징 정보가 포함된 응답 전체 반환
   } catch (error) {
     console.error('웹툰 목록 조회 실패:', error);
     console.error('오류 상세:', error.response?.data || error.message);
-    return [];
+    return { totalItems: 0, totalPages: 0, currentPage: 1, webtoons: [] };
   }
 };
 

@@ -43,17 +43,16 @@ const StoreMain = () => {
           const params = {
             ...getGenreParams(),
             page,
-            pageSize: pageSize
+            pageSize
           };
           
           console.log('웹툰 API 요청 파라미터:', params);
-          const webtoons = await getwebtoonAuctions(params);
-          console.log('API 응답 데이터 타입:', typeof webtoons, Array.isArray(webtoons));
-          console.log('API 응답 데이터:', webtoons);
+          const response = await getwebtoonAuctions(params);
+          console.log('웹툰 API 응답:', response);
           
-          // 안전하게 데이터 변환
-          if (Array.isArray(webtoons) && webtoons.length > 0) {
-            const fetched = webtoons.map((w) => ({
+          // 새로운 응답 구조에 맞게 데이터 처리
+          if (response.webtoons && Array.isArray(response.webtoons)) {
+            const fetched = response.webtoons.map((w) => ({
               id: w.webtoonId,
               title: w.webtoonName || '제목 없음',
               image: w.garoThumbnail || 'https://via.placeholder.com/280x280?text=이미지+없음',
@@ -66,25 +65,23 @@ const StoreMain = () => {
               webtoonId: w.webtoonId,
               episodeCount: w.episodeCount || 0,
               viewCount: w.viewCount || 0,
-              lastUploadDate : w.lastUploadDate || 0
+              lastUploadDate: w.lastUploadDate || 0
             }));
             
             console.log('변환된 데이터 길이:', fetched.length);
             console.log('변환된 데이터 샘플:', fetched[0]);
             
             fetchedProducts = fetched;
-            totalPageCount = Math.ceil(webtoons.length / pageSize) || 1;
-            totalItemCount = webtoons.length;
+            totalPageCount = response.totalPages || 1;
+            totalItemCount = response.totalItems || 0;
             
-            setCategoryProductCounts((prev) => ({ ...prev, 웹툰: webtoons.length }));
+            setCategoryProductCounts((prev) => ({ ...prev, 웹툰: response.totalItems || 0 }));
           } else {
-            console.warn('웹툰 데이터가 비어있거나 배열이 아닙니다:', webtoons);
+            console.warn('웹툰 데이터가 비어있거나 배열이 아닙니다:', response);
             fetchedProducts = [];
-            totalPageCount = 5;
+            totalPageCount = 1;
             totalItemCount = 0;
           }
-
-
         } else if (activeCategory === '굿즈') {
           const genreParams = getGenreParams()
           const goodsResponse = await getGoodsAuctions(genreParams)
@@ -109,8 +106,6 @@ const StoreMain = () => {
           totalPageCount = goodsResponse?.totalPages || 1
           totalItemCount = goodsResponse?.totalElements || goodsProducts.length
           setCategoryProductCounts((prev) => ({ ...prev, 굿즈: totalItemCount }))
-
-
         } else if (activeCategory === '팬아트') {
           const genreParams = getGenreParams()
           const fanartResponse = await getFanartAuctions(genreParams)
@@ -150,7 +145,6 @@ const StoreMain = () => {
   
     fetchProducts()
   }, [activeCategory, page, pageSize, orderBy, JSON.stringify(activeFilters.genre)])
-
   
   // 가격 형식 포맷팅 함수 (불필요한 0 제거)
   const formatPrice = (price) => {
@@ -280,11 +274,11 @@ const StoreMain = () => {
 
   // 페이지 변경 핸들러 추가
   const handlePageChange = (newPage) => {
-    console.log(`페이지 변경 시도: ${page} -> ${newPage}`);
     if (newPage < 1 || newPage > totalPages) {
       console.warn(`유효하지 않은 페이지 번호: ${newPage}`);
       return;
     }
+    console.log(`페이지 변경: ${page} -> ${newPage} (전체 페이지: ${totalPages})`);
     setPage(newPage);
     console.log(`페이지 상태 업데이트: ${newPage}`);
   }
@@ -311,7 +305,7 @@ const StoreMain = () => {
           <div className='mb-8 border-b border-gray-700'>
             <div className='flex space-x-6'>
               <button
-                className={`pb-4 text-lg font-medium ${
+                className={`cursor-pointer pb-4 text-lg font-medium ${
                   activeCategory === '웹툰' 
                     ? 'border-b-2 border-blue-500 text-white' 
                     : 'text-gray-400 hover:text-gray-200'
@@ -321,7 +315,7 @@ const StoreMain = () => {
                 웹툰 ({categoryProductCounts.웹툰})
               </button>
               <button
-                className={`pb-4 text-lg font-medium ${
+                className={`cursor-pointer pb-4 text-lg font-medium ${
                   activeCategory === '굿즈' 
                     ? 'border-b-2 border-blue-500 text-white' 
                     : 'text-gray-400 hover:text-gray-200'
@@ -331,7 +325,7 @@ const StoreMain = () => {
                 굿즈 ({categoryProductCounts.굿즈})
               </button>
               <button
-                className={`pb-4 text-lg font-medium ${
+                className={`cursor-pointer pb-4 text-lg font-medium ${
                   activeCategory === '팬아트' 
                     ? 'border-b-2 border-blue-500 text-white' 
                     : 'text-gray-400 hover:text-gray-200'
@@ -401,7 +395,7 @@ const StoreMain = () => {
                       }}
                       className={`h-8 w-8 rounded-full ${
                         page === i + 1 ? 'bg-blue-500' : 'bg-gray-700'
-                      } text-white flex items-center justify-center`}
+                      } text-white flex items-center justify-center cursor-pointer`}
                     >
                       {i + 1}
                     </button>

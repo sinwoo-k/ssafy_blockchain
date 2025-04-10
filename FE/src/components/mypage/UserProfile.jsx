@@ -63,12 +63,12 @@ const UserProfile = () => {
           setUser(userDetails);
           
           // NFT 개수 가져오기
-          try {
-            const nftList = await nftService.getMyNFTs();
-            setNftCount(nftList?.length || 0);
-          } catch (nftErr) {
-            console.error('NFT 정보 로드 오류:', nftErr);
-          }
+          // try {
+          //   const nftList = await nftService.getMyNFTs();
+          //   setNftCount(nftList?.length || 0);
+          // } catch (nftErr) {
+          //   console.error('NFT 정보 로드 오류:', nftErr);
+          // }
         } else {
           setError('사용자 정보를 찾을 수 없습니다.');
         }
@@ -275,7 +275,7 @@ const UserProfile = () => {
         ) : (
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-gray-700 to-gray-900" />
         )}
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
+        <div className="cursor-pointer absolute inset-0 z-20 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition space-x-2">
             <button
               onClick={handleBackgroundImageChange}
@@ -331,7 +331,7 @@ const UserProfile = () => {
                   <div className="flex items-center space-x-2">
                   {/* 정보 수정 */}
                   <button
-                    className="text-gray-300 hover:text-white"
+                    className="cursor-pointer text-gray-300 hover:text-white"
                     onClick={handleOpenEditModal}
                   >
                   <svg
@@ -354,7 +354,7 @@ const UserProfile = () => {
 
                 {/* URL 링크 아이콘 */}
                 <button
-                  className={`text-gray-400 hover:text-white ${!user.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`cursor-pointer text-gray-400 hover:text-white ${!user.url ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title={user.url ? `${user.url}로 이동` : '설정된 URL이 없습니다'}
                   onClick={handleGoToUrl}
                   disabled={!user.url}
@@ -380,7 +380,7 @@ const UserProfile = () => {
 
                 {/* 페이지 주소 복사 */}
                 <button
-                  className="text-gray-400 hover:text-white mb-1.5"
+                  className="cursor-pointer text-gray-400 hover:text-white mb-1.5"
                   onClick={handleCopyPageAddress}
                   title="현재 페이지 주소 복사"
                 >

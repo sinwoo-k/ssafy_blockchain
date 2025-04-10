@@ -79,19 +79,41 @@ const ProductList = ({ products, formatPrice }) => {
                 </div>
                 
                 <button 
-                  className='w-full rounded-md bg-[#3cc3ec] py-2 font-medium hover:bg-blue-500 text-black'
-                  disabled={product.status === 'notsell'}
+                  className='w-full rounded-md bg-[#3cc3ec] py-2 font-medium hover:bg-blue-500 text-black cursor-pointer'
                   onClick={(e) => {
-                    e.stopPropagation();
-                    handleProductClick(product);
+                    e.stopPropagation(); // 이벤트 버블링 중단
+                    
+                    // 자세한 디버깅 로그
+                    console.log("=== 버튼 클릭 ===");
+                    console.log("상품 데이터:", product);
+                    console.log("ID:", product.id);
+                    console.log("카테고리:", product.category);
+                    
+                    // 항상 이동 보장
+                    try {
+                      if (product.category === '웹툰') {
+                        const targetId = product.id || product.webtoonId;
+                        console.log(`웹툰 컬렉션 페이지로 이동 시도: /store/collection/${targetId}`);
+                        if (targetId) {
+                          navigate(`/store/collection/${targetId}`);
+                        } else {
+                          console.error("유효한 ID가 없어 이동할 수 없음");
+                        }
+                      } else {
+                        const itemId = product.auctionItemId || product.id;
+                        console.log(`상품 상세 페이지로 이동 시도: /store/product/${itemId}`);
+                        if (itemId) {
+                          navigate(`/store/product/${itemId}`);
+                        } else {
+                          console.error("유효한 ID가 없어 이동할 수 없음");
+                        }
+                      }
+                    } catch (error) {
+                      console.error("페이지 이동 중 오류:", error);
+                    }
                   }}
                 >
-                  {product.category === '웹툰' 
-                    ? '컬렉션 보기' 
-                    : product.status === 'notsell'
-                      ? '판매 종료' 
-                      : '상세 보기'
-                  }
+                  {product.category === '웹툰' ? '컬렉션 보기' : '상세 보기'}
                 </button>
               </div>
             </div>
@@ -99,9 +121,7 @@ const ProductList = ({ products, formatPrice }) => {
         })
       ) : (
         <div className='col-span-3 py-20 text-center text-gray-400'>
-          <p className='text-lg'>상품이 없거나 로딩 중입니다.</p>
-          <p className='mt-2 text-sm'>데이터 확인: {JSON.stringify(products)?.substring(0, 100)}...</p>
-        </div>
+       </div>
       )}
     </div>
   );

@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import Loader from '../../components/common/Loader'
 import CollectionDetailInfo from '../../components/store/CollectionDetailInfo'
 import { getWebtoon } from '../../api/webtoonAPI'
-import { getEpisodeAuctions, getGoodsAuctions, getFanartAuctions } from '../../api/storeApi'
+import { getEpisodeAuctions, getFanartDetail, getGoodsDetail } from '../../api/storeApi'
 import API from '../../api/API'  // API 직접 가져오기
 
 const CollectionPage = () => {
@@ -86,8 +86,8 @@ const CollectionPage = () => {
             console.log('에피소드 경매 응답:', episodeRes)
             
             // 굿즈 및 팬아트 경매 정보 불러오기
-            const goodsRes = await getGoodsAuctions(collectionId)
-            const fanartRes = await getFanartAuctions(collectionId)
+            const goodsRes = await getGoodsDetail(collectionId)
+            const fanartRes = await getFanartDetail(collectionId)
             
             // content 배열만 사용
             const episodeContent = episodeRes.content || []

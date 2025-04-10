@@ -147,7 +147,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               />
               <button 
                 onClick={handleSendVerificationCode}
-                className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2]"
+                className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2] hover:bg-[#0c85d0] cursor-pointer transition-colors"
                 disabled={isLoading}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -166,11 +166,11 @@ const LoginModal = ({ isOpen, onClose }) => {
             {/* 메타마스크 로그인 버튼 */}
             <button 
               onClick={handleMetaMaskLogin}
-              className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919]"
+              className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919] cursor-pointer"
               disabled={isLoading}
             >
               <div className="flex items-center">
-                <img src={metamasklogo} alt="메타마스크 로고" className="mt-2 mr-3 w-[50px]" />
+                <img src={metamasklogo} alt="메타마스크 로고" className="mt-3 mr-3 w-[60px]" />
                 <span className="mr-1">Meta Mask</span>
               </div>
               <span className="rounded bg-[#2a2a2a] px-2 py-1 text-xs text-gray-400">
@@ -181,11 +181,11 @@ const LoginModal = ({ isOpen, onClose }) => {
             {/* 싸피 로그인 버튼 */}
             <button 
               onClick={handleSaffyLogin}
-              className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919]"
+              className="mb-4 flex w-full items-center justify-between rounded-lg border border-[#222222] bg-[#111111] px-4 py-3 hover:bg-[#191919] cursor-pointer"
               disabled={isLoading}
             >
               <div className="flex items-center">
-                <img src={saffylogo} alt="싸피 로고" className="h-[40px] w-[50px]" />
+                <img src={saffylogo} alt="싸피 로고" className="mb-1 h-[50px] w-[60px]" />
                 <span className="ml-2">SSAFY</span>
               </div>
               <span className="rounded bg-[#2a2a2a] px-2 py-1 text-xs text-gray-400"></span>
@@ -198,7 +198,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               {email}로 12자리 인증 코드를 보냈습니다.<br />
             </p>
 
-            <div className="mb-4 flex w-full items-center justify-between rounded-lg bg-[#222222] px-4 py-2 hover:bg-[#2a2a2a]">
+            <div className="mb-4 flex w-full items-center justify-between rounded-lg bg-[#222222] px-4 py-2 hover:bg-[#2a2a2a] ">
               <input
                 type="text"
                 placeholder="인증 코드 12자리 입력"
@@ -213,7 +213,7 @@ const LoginModal = ({ isOpen, onClose }) => {
               />
               <button 
                 onClick={handleVerifyCode}
-                className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2] cursor-pointer z-10"
+                className="flex h-[36px] w-[36px] items-center justify-center rounded bg-[#1DA1F2] hover:bg-[#0c85d0] cursor-pointer transition-colors"
                 type="button"
                 disabled={isLoading}
               >

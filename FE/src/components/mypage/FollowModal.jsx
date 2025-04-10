@@ -74,6 +74,8 @@ const FollowModal = ({
     }
   };
 
+  
+
   if (!isOpen) return null;
 
   return (
@@ -109,17 +111,20 @@ const FollowModal = ({
                     </div>
                     <div className="font-medium">{user.nickname}</div>
                   </Link>
-                  {user.followed ? (
+                  {user.followd === 'me' ? (
+                    // 본인인 경우 버튼 표시하지 않음
+                    null
+                  ) : user.followed ? (
                     <button
                       onClick={() => handleUnfollow(user.userId)}
-                      className="px-3 py-1 border border-gray-400 text-gray-300 hover:text-white hover:border-white rounded-full text-xs"
+                      className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
                     >
                       언팔로우
                     </button>
                   ) : (
                     <button
                       onClick={() => handleFollow(user.userId)}
-                      className="px-3 py-1 bg-[#3cc3ec] hover:bg-[#2aabda] text-black rounded-full text-xs"
+                      className="px-4 py-1.5 rounded-lg bg-[#0095F6] hover:bg-[#1877F2] text-white text-sm font-medium transition-colors"
                     >
                       팔로우
                     </button>
