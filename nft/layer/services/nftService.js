@@ -6,6 +6,7 @@ import {
   getEpisodeById, getFanartById,
   getGoodsById,
   getNftCountByTypeId,
+  updateNftUserId,
 } from '../repositories/nftRepository.js';
 import AppError from '../../utils/AppError.js';
 import { ethers } from 'ethers';
@@ -378,6 +379,8 @@ export async function buyNftService({ tokenId, price, userId }) {
       const prevOwnerShareEther = parseFloat(ethers.formatEther(prevOwnerShareWei)).toFixed(5);
       console.log("soldPriceEther:", soldPriceEther);
       console.log("originalCreatorShareEther:", originalCreatorShareEther);
+      
+      updateNftUserId(soldEvent.tokenId, userId); 
       return {
         message: 'NFT 구매 성공',
         tokenId: soldEvent.tokenId,

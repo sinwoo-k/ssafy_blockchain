@@ -64,3 +64,13 @@ export async function getNftCountByTypeId(type, type_id) {
   // rows[0].count 에서 count 컬럼을 꺼내서 반환
   return rows[0].count;
 }
+
+export async function updateNftUserId(tokenId, userId) {
+  const query = `
+    UPDATE nft
+       SET user_id = ?
+     WHERE token_id  = ?
+  `;
+  await pool.execute(query, [userId, tokenId]);
+  return true;
+}
