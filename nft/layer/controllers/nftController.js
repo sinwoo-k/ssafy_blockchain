@@ -1,4 +1,13 @@
-import { mintNftService, getNftMetadata, sellNftService, buyNftService, confirmSignatureService } from '../services/nftService.js';
+import {
+    mintNftService,
+    getNftMetadata,
+    sellNftService,
+    buyNftService,
+    confirmSignatureService,
+    mintNftServiceMetamaskRequest,
+    sellNftServiceMetamaskRequest,
+    buyNftServiceMetamaskRequest,
+} from '../services/nftService.js';
 import AppError from '../../utils/AppError.js';
 
 
@@ -103,13 +112,57 @@ export async function confirmSignatureController(req, res, next) {
 
 export async function saleTransactionsController(req, res, next) {
     try {
-        const {address} = req.params;
-        if(!address){
-            return req.status(400).json({error: '주소값은 필수입니다.'});
+        const { address } = req.params;
+        if (!address) {
+            return req.status(400).json({ error: '주소값은 필수입니다.' });
         }
-        const result = await getSaleTransactions({address});
+        const result = await getSaleTransactions({ address });
         res.status(200).json(result);
     } catch (error) {
         next(error);
+    }
+}
+
+export async function metamaskMintRequestController(req, res) {
+    try {
+        const { webtoonId, type, userId, typeId, s3Url, originalCreator, owner } = req.body;
+        // 1) 필요한 파라미터 체크
+        // 2) 메타마스크 Request 전용 서비스 호출
+        const result = await mintNftServiceMetamaskRequest({
+            webtoonId, type, userId, typeId, s3Url, originalCreator, owner
+        });
+        // 여기서 result에는 { needSignature:true, messageToSign:... } 가 포함될 것
+        return res.json(result);
+    } catch (err) {
+        console.error('metamaskMintRequestController Error:', err);
+        const status = err.statusCode || 500;
+        res.status(status).json({ error: err.message });
+    }
+}
+
+// ----------------------- 판매 -----------------------
+export async function metamaskSellRequestController(req, res) {
+    try {
+        const { tokenId, price, userId } = req.body;
+        const result = await sellNftServiceMetamaskRequest({ tokenId, price, userId });
+        return res.json(result);
+    } catch (err) {
+        console.error('metamaskSellRequestController Error:', err);
+        const status = err.statusCode || 500;
+        res.status(status).json({ error: err.message });
+    }
+}
+
+
+// ----------------------- 구매 -----------------------
+export async function metamaskBuyRequestController(req, res) {
+    try {
+        const { tokenId, price, userId } = req.body;
+        const result = await buyNftServiceMetamaskRequest({ tokenId, price, userId });
+        return res.json(result);
+    } catch (err) {
+        console.error('metamaskBuyRequestController Error:', err);
+        const status = err.statusCode || 500;
+        res.status(status).json({ error: err.message });
     }
 }

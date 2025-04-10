@@ -4,10 +4,7 @@ import com.c109.chaintoon.common.s3.service.S3Service;
 import com.c109.chaintoon.domain.search.code.SearchType;
 import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
 import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
-import com.c109.chaintoon.domain.user.dto.response.FollowingResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.MyInfoResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.SearchUserResponseDto;
-import com.c109.chaintoon.domain.user.dto.response.UserResponseDto;
+import com.c109.chaintoon.domain.user.dto.response.*;
 import com.c109.chaintoon.domain.user.entity.Following;
 import com.c109.chaintoon.domain.user.entity.FollowingId;
 import com.c109.chaintoon.domain.user.entity.User;
@@ -24,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -277,7 +275,7 @@ public class UserService {
 
     // 팔로우 목록 조회
     @Transactional(readOnly = true)
-    public List<FollowingResponseDto> getFollowingList(Integer userId, int page, int pageSize) {
+    public List<FollowingResponseDto> getFollowingList(Integer loginId, Integer userId, int page, int pageSize) {
         // 페이지네이션
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
@@ -288,12 +286,12 @@ public class UserService {
         Page<User> userPage = userRepository.findByIdIn(follwingIdList, pageable);
 
         // 조회 결과 DTO 변환
-        return toFollowDto(userPage);
+        return toFollowingDto(loginId, userPage);
     }
 
     // 팔로워 목록 조회
     @Transactional(readOnly = true)
-    public List<FollowingResponseDto> getFollowerList(Integer userId, int page, int pageSize) {
+    public List<FollowingResponseDto> getFollowerList(Integer loginId, Integer userId, int page, int pageSize) {
         // 페이지네이션
         Pageable pageable = PageRequest.of(page - 1, pageSize);
 
@@ -304,15 +302,16 @@ public class UserService {
         Page<User> userPage = userRepository.findByIdIn(follweeIdList, pageable);
 
         // 조회 결과 DTO 변환
-        return toFollowDto(userPage);
+        return toFollowingDto(loginId, userPage);
     }
 
-    private List<FollowingResponseDto> toFollowDto(Page<User> userPage) {
+    private List<FollowingResponseDto> toFollowingDto(Integer loginId, Page<User> userPage) {
         return userPage.getContent().stream()
                 .map(user -> FollowingResponseDto.builder()
                         .profile(s3Service.getPresignedUrl(user.getProfileImage()))
                         .userId(user.getId())
                         .nickname(user.getNickname())
+                        .followd(String.valueOf(Objects.equals(loginId, user.getId()) ?"me":followingRepository.existsById_FollowerIdAndId_FolloweeId(loginId, user.getId())))
                         .build())
                 .collect(Collectors.toList());
     }
