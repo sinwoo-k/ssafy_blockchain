@@ -97,7 +97,7 @@ const BiddingMyNFT = () => {
                   )}
                 </div>
               </div>
-              <div className="text-sm font-medium truncate pr-2">{item.webtoonName || 'NFT 이름'}</div>
+              <div className="text-sm font-medium truncate pr-2">{item.title || 'NFT 이름'}</div>
               <div className="text-sm bg-gray-700 px-2 py-1 rounded text-center mx-auto w-[90px]">
                 {item.myBidPrice || item.currentBiddingPrice} ETH
               </div>
