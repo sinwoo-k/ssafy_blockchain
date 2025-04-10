@@ -100,7 +100,9 @@ const WebtoonDetailInfo = ({ webtoon, patchData }) => {
             <div className='flex flex-col gap-5'>
               <p className='text-2xl break-words'>{webtoon?.webtoonName}</p>
               <Link to={`/user/${webtoon.userId}`}>
-                <p className='text-text/75 text-lg'>{webtoon?.writer}</p>
+                <p className='text-text/75 hover:text-chaintoon text-lg hover:underline'>
+                  {webtoon?.writer}
+                </p>
               </Link>
               <p className='text-text/75 text-lg'>{webtoon?.genre}</p>
               <div className=''>
