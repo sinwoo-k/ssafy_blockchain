@@ -110,6 +110,7 @@ const MyNFTList = () => {
         )
         
         await nftService.updateAuctionStatus(requestRes.auctionItemId, "SUCCESS");
+        alert('NFT가 판매 등록되었습니다.')
       } else {
         // 내부 지갑 사용자: 기존 API 호출
         await nftService.sellNFT(sellData)

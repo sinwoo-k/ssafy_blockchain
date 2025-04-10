@@ -88,6 +88,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
             metadataUri: confirmRes.metadataUri || '', // 반드시 저장되어 있어야 함
           }
           await nftService.recordMintToDb(dbPayload)
+          alert('NFT 발행 등록이 완료되었습니다.')
         }
       }
     } catch (err) {
@@ -103,23 +104,17 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
 
   return (
     <>
-      {/* 민팅 진행 중 로딩 화면 표시 */}
-      {loading || timerActive ? (
-        <button
-          className='border-chaintoon bg-chaintoon cursor-not-allowed rounded border px-2 py-1 text-white'
-          disabled={loading}
-        >
-          NFT 발행 중...
-        </button>
-      ) : (
-        <button
-          className='text-chaintoon border-chaintoon cursor-pointer rounded border px-2 py-1 hover:text-white'
-          onClick={handleMint}
-          disabled={loading}
-        >
-          NFT 발행하기
-        </button>
-      )}
+      <button
+        className={`${
+          loading || timerActive
+            ? 'border-chaintoon bg-chaintoon cursor-not-allowed'
+            : 'text-chaintoon border-chaintoon cursor-pointer hover:text-white'
+        } rounded border px-2 py-1`}
+        onClick={handleMint}
+        disabled={loading || timerActive}
+      >
+        {loading ? 'NFT 발행 중...' : 'NFT 발행하기'}
+      </button>
     </>
   )
 }
