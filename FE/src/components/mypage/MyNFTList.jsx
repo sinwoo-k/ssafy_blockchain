@@ -228,15 +228,13 @@ const MyNFTList = () => {
               <div className='col-span-3'></div> {/* 빈 칸 공간 */}
               <div className='text-center'>
                 {item.onSale ? (
-                  <span className='rounded bg-red-600 px-2 py-1 text-xs text-white'>
-                    입찰 중
-                  </span>
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-md text-xs">판매 중</span>
                 ) : (
                   <button
                     className='rounded-md bg-[#3cc3ec] px-3 py-1 text-xs text-black'
                     onClick={() => handleSellClick(item)}
                   >
-                    판매
+                    판매 하기
                   </button>
                 )}
               </div>
