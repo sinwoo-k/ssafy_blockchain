@@ -10,6 +10,7 @@ import com.c109.chaintoon.domain.user.entity.User;
 import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
 import com.c109.chaintoon.domain.user.repository.UserRepository;
 import com.c109.chaintoon.domain.webtoon.dto.request.WebtoonRequestDto;
+import com.c109.chaintoon.domain.webtoon.dto.response.PaginatedWebtoonListResponse;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonListResponseDto;
 import com.c109.chaintoon.domain.webtoon.dto.response.WebtoonResponseDto;
 import com.c109.chaintoon.domain.webtoon.entity.*;
@@ -142,6 +143,7 @@ public class WebtoonService {
         return s3Service.uploadFile(file, "webtoon/" + webtoonId  + "/seroThumbnail");
     }
 
+    // 웹툰 목록 조회
     @Transactional(readOnly = true)
     public List<WebtoonListResponseDto> getWebtoonList(int page, int pageSize, String orderBy,
                                                        List<String> genres, String adaptable, Integer writerId) {
@@ -173,6 +175,40 @@ public class WebtoonService {
         // 조건에 맞는 웹툰 조회
         Page<Webtoon> webtoonPage = webtoonRepository.findAll(spec, pageable);
         return toDtoList(webtoonPage);
+    }
+
+    // 페이지 정보를 포함한 웹툰 목록 조회, 기존 API와 호환성을 위해 새로 작성
+    @Transactional(readOnly = true)
+    public PaginatedWebtoonListResponse getPaginatedWebtoonList(int page, int pageSize, String orderBy,
+                                                                List<String> genres, String adaptable, Integer writerId) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
+
+        Specification<Webtoon> spec = (root, query, cb) -> cb.equal(root.get("deleted"), "N");
+
+        if (genres != null && !genres.isEmpty()) {
+            if (genres.size() == 1) {
+                spec = spec.and((root, query, cb) -> cb.equal(root.get("genre"), genres.get(0)));
+            } else {
+                spec = spec.and((root, query, cb) -> root.get("genre").in(genres));
+            }
+        }
+
+        if (adaptable != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("adaptable"), adaptable));
+        }
+
+        if (writerId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), writerId));
+        }
+
+        Page<Webtoon> webtoonPage = webtoonRepository.findAll(spec, pageable);
+
+        return PaginatedWebtoonListResponse.builder()
+                .webtoons(toDtoList(webtoonPage))
+                .totalItems(webtoonPage.getTotalElements())
+                .totalPages(webtoonPage.getTotalPages())
+                .currentPage(page)
+                .build();
     }
 
 
