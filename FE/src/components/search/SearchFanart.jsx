@@ -11,17 +11,20 @@ const SearchFanart = ({ keyword }) => {
   const navigate = useNavigate()
 
   const [isLoading, setIsLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [fanarts, setFanarts] = useState([])
 
   const getData = async (page) => {
     try {
-      const result = await getDomainSearch(keyword, 'SEARCH_FANART', page)
+      setIsLoading(true)
+      const result = await getDomainSearch(keyword, 'SEARCH_FANART', page, 30)
+      console.log(result.searchResult)
       setFanarts((prev) => [...prev, ...result.searchResult])
       setTotalCount(result.totalCount)
-      if (result.searchResult.length === 0) {
+      setIsLoading(false)
+      if (result.searchResult.length < 30) {
         setHasMore(false)
       }
     } catch (error) {
@@ -30,22 +33,10 @@ const SearchFanart = ({ keyword }) => {
     }
   }
 
-  const handleRequestAppend = async (event) => {
-    if (!hasMore) return
-    const nextPage = currentPage + 1
-    setIsLoading(true)
-    await getData(nextPage)
-    setCurrentPage(nextPage)
-    setIsLoading(false)
-  }
-
   // 초기 데이터 로딩 및 키워드 변경 시 데이터 초기화
   useEffect(() => {
     // mount
-    setCurrentPage(1)
-    setFanarts([])
-    setHasMore(true)
-    setIsLoading(true)
+    setPage(1)
     getData(1)
   }, [keyword])
 
@@ -62,13 +53,20 @@ const SearchFanart = ({ keyword }) => {
             <p className='text-xl'>검색 결과가 없습니다.</p>
           </div>
         ) : (
-          <div>
+          <>
             <MasonryInfiniteGrid
               align='center'
               gap={10}
               column={5}
-              onRequestAppend={handleRequestAppend}
               onRenderComplete={() => setIsLoading(false)}
+              useFirstRender={true}
+              onRequestAppend={(event) => {
+                const nextPage = page + 1
+                if (!isLoading && hasMore) {
+                  setPage(nextPage)
+                  getData(nextPage)
+                }
+              }}
             >
               {fanarts.map((fanart, index) => (
                 <div className='item' key={`${fanart.fanartId}-${index}`}>
@@ -95,7 +93,7 @@ const SearchFanart = ({ keyword }) => {
                 />
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

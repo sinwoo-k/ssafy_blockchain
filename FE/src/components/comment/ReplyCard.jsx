@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import dayjs from 'dayjs'
-import { getRandomColor } from '../../utils/randomColor'
 import {
   createCommentHate,
   createCommentLike,
@@ -23,7 +22,6 @@ import DeleteIcon from '@mui/icons-material/Delete'
 const ReplyCard = ({ reply, patchData }) => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
   const userData = useSelector((state) => state.user.userData)
-  const [randomColor, setRandomColor] = useState(getRandomColor())
 
   const [replyContent, setReplyContent] = useState('')
 
@@ -133,7 +131,7 @@ const ReplyCard = ({ reply, patchData }) => {
   }, [reply])
 
   return (
-    <div className='flex gap-5 py-2'>
+    <div className='border-text/50 flex gap-5 border-t py-2'>
       {/* 답글 표시 */}
       <div className='flex w-[50px] justify-center'>
         <SubdirectoryArrowRightIcon sx={{ fontSize: 20 }} />
@@ -152,17 +150,23 @@ const ReplyCard = ({ reply, patchData }) => {
                 />
               </div>
             ) : (
-              <AccountCircleIcon sx={{ fontSize: 35, color: randomColor }} />
+              <AccountCircleIcon sx={{ fontSize: 35, color: '#3cc3ec' }} />
             )}
             <p>{reply.nickname}</p>
           </div>
           {/* 댓글 수정 & 삭제 */}
           {userData && userData?.id === reply.userId && (
             <div className='flex gap-3'>
-              <div className='text-blue-500' onClick={toggleEdit}>
+              <div
+                className='text-text/75 hover:text-blue-500'
+                onClick={toggleEdit}
+              >
                 <IconButton Icon={EditIcon} tooltip={'댓글 수정'} />
               </div>
-              <div className='text-red-500' onClick={deleteData}>
+              <div
+                className='text-text/75 hover:text-red-500'
+                onClick={deleteData}
+              >
                 <IconButton Icon={DeleteIcon} tooltip={'댓글 삭제'} />
               </div>
             </div>

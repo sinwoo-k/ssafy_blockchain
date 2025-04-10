@@ -10,22 +10,31 @@ import ErrorIcon from '@mui/icons-material/Error'
 const FanartList = ({ webtoonId }) => {
   const navigate = useNavigate()
 
-  const [isLoading, setIsLoding] = useState(true)
-
+  const [isLoading, setIsLoading] = useState(true)
   const [fanarts, setFanarts] = useState([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
 
-  const getData = async () => {
+  const getData = async (page) => {
     try {
-      const result = await getWebtoonFanarts(webtoonId)
-      setFanarts(result)
+      setIsLoading(true)
+      const result = await getWebtoonFanarts(webtoonId, page)
+      setFanarts((prev) => [...prev, ...result]) // 기존 데이터에 누적
+      setIsLoading(false)
+      if (result.length < 30) setHasMore(false)
     } catch (error) {
-      navigate('/error', { state: { message: error.response.data.message } })
+      navigate('/error', {
+        state: {
+          message: error.response?.data?.message || '에러가 발생했습니다.',
+        },
+      })
       console.error('팬아트 조회 실패: ', error)
     }
   }
 
   useEffect(() => {
-    getData()
+    setPage(1)
+    getData(1) // 첫 페이지 로딩
   }, [])
 
   return (
@@ -34,7 +43,7 @@ const FanartList = ({ webtoonId }) => {
         <div className='mb-3 flex justify-between'>
           <p>총 {fanarts?.length}개</p>
         </div>
-        {fanarts.length === 0 ? (
+        {fanarts.length === 0 && !isLoading ? (
           <div className='flex h-[200px] w-full flex-col items-center justify-center gap-3'>
             <ErrorIcon sx={{ fontSize: 75, color: '#f5f5f5' }} />
             <p className='text-xl'>등록된 팬아트가 없습니다.</p>
@@ -45,7 +54,15 @@ const FanartList = ({ webtoonId }) => {
               align='center'
               gap={10}
               column={5}
-              onRenderComplete={() => setIsLoding(false)}
+              onRenderComplete={() => setIsLoading(false)}
+              useFirstRender={true}
+              onRequestAppend={(event) => {
+                const nextPage = page + 1
+                if (!isLoading && hasMore) {
+                  setPage(nextPage)
+                  getData(nextPage)
+                }
+              }}
             >
               {fanarts.map((fanart) => (
                 <div className='item w-[190px]' key={fanart.fanartId}>
@@ -53,8 +70,7 @@ const FanartList = ({ webtoonId }) => {
                     <img
                       src={fanart.fanartImage}
                       alt='팬아트 이미지'
-                      className='w-[190px] rounded-lg
-                      transition-transform duration-150 ease-in-out hover:scale-105'
+                      className='w-[190px] rounded-lg transition-transform duration-150 ease-in-out hover:scale-105'
                     />
                   </Link>
                   <p className='truncate py-1'>{fanart.fanartName}</p>
