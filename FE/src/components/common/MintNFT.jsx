@@ -86,6 +86,7 @@ const NFTCreateModal = ({ item, type, setShowModal }) => {
             contractAddress: confirmRes.contractAddress || '', // confirmRes 또는 상수 사용
             imageUrl: confirmRes.imageUrl || item.imageUrl || '', // 우선 confirmRes에서, 없으면 item에서
             metadataUri: confirmRes.metadataUri || '', // 반드시 저장되어 있어야 함
+            title: confirmRes.title || item.title || '', // 우선 confirmRes에서, 없으면 item에서
           }
           await nftService.recordMintToDb(dbPayload)
           alert('NFT 발행 등록이 완료되었습니다.')

@@ -10,6 +10,7 @@ import lombok.*;
 public class NftRecordDto {
     private Integer webtoonId;       // 웹툰 ID
     private Integer tokenId;         // 민팅된 토큰 ID
+    private String title;            // 메타데이터 Title
     private Integer userId;          // 사용자 ID
     private String type;             // NFT 타입 ("fanart", "goods", "episode")
     private Integer typeId;          // 실제 아이템 ID

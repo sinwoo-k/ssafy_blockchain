@@ -17,4 +17,5 @@ public class MetamaskSignatureResponseDto {
     private Map<String, Object> metamaskPayload; // could be null
     private String imageUrl;
     private String metadataUri;
+    private String title;
 }

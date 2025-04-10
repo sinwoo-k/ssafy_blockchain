@@ -43,6 +43,8 @@ public class Nft {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "type_id")
     private Integer typeId;
