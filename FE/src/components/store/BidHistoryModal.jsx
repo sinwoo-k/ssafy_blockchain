@@ -110,7 +110,7 @@ const BidHistoryModal = ({ isOpen, onClose, auctionItemId }) => {
           <h2 className="text-xl font-bold">입찰 기록</h2>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
           >
             <CloseIcon />
           </button>
@@ -169,7 +169,7 @@ const BidHistoryModal = ({ isOpen, onClose, auctionItemId }) => {
                   {Array.from({ length: Math.min(5, totalPages) }, (_, index) => index + 1).map((pageNumber) => (
                     <button 
                       key={pageNumber}
-                      className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
+                      className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
                         currentPage === pageNumber 
                           ? 'bg-blue-500 text-white font-medium' 
                           : 'bg-gray-100 text-gray-800 hover:bg-gray-200'

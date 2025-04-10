@@ -79,7 +79,7 @@ const ProductList = ({ products, formatPrice }) => {
                 </div>
                 
                 <button 
-                  className='w-full rounded-md bg-[#3cc3ec] py-2 font-medium hover:bg-blue-500 text-black cursor-pointer'
+                  className='cursor-pointer w-full rounded-md bg-[#3cc3ec] py-2 font-medium hover:bg-blue-500 text-black cursor-pointer'
                   onClick={(e) => {
                     e.stopPropagation(); // 이벤트 버블링 중단
                     
