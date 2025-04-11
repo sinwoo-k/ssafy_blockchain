@@ -19,10 +19,10 @@ contract SuperNFTMarketplace is ERC721Enumerable, Ownable {
     event NFTListed(uint256 indexed tokenId, address indexed seller, uint256 price);
     event NFTSold(uint256 indexed tokenId, address indexed buyer, uint256 price);
 
-    constructor() ERC721("SuperNFT", "SNFT") {}
+    constructor() ERC721("SSAFY SUPER APP NFT", "SSAN") {}
 
     // 1) NFT 등록 (민팅)
-    function registerNFT(address to, string calldata uri) external onlyOwner returns (uint256) {
+    function registerNFT(address to, string calldata uri) external returns (uint256) {
         uint256 tokenId = _nextTokenId++;
         _mint(to, tokenId);
         _setTokenURI(tokenId, uri);
