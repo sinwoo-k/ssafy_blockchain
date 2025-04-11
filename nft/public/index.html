@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>NFT 및 송금 API 요청 테스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    form { margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; }
+    label { display: block; margin-top: 5px; }
+    input { width: 100%; padding: 5px; margin-top: 5px; }
+    button { margin-top: 10px; padding: 8px 12px; }
+    .output { margin-top: 10px; padding: 8px; background: #f0f0f0; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>NFT 및 송금 API 요청 테스트</h1>
+  
+  <!-- NFT 민팅 폼 -->
+  <form id="mintForm">
+    <h2>NFT 민팅</h2>
+    <label for="mintWebtoonId">Webtoon ID</label>
+    <input type="text" id="mintWebtoonId" name="webtoonId" placeholder="예: webtoon1" required>
+    
+    <label for="mintType">Type (fanart, goods, episode, webtoon)</label>
+    <input type="text" id="mintType" name="type" placeholder="예: webtoon" required>
+    
+    <label for="mintTypeId">Type ID</label>
+    <input type="text" id="mintTypeId" name="typeId" placeholder="예: webtoon1" required>
+    
+    <label for="mintS3Url">S3 URL</label>
+    <input type="text" id="mintS3Url" name="s3Url" placeholder="예: https://example.com/sample.jpg" required>
+    
+    <label for="mintOriginalCreator">Original Creator</label>
+    <input type="text" id="mintOriginalCreator" name="originalCreator" placeholder="예: 0xOriginalCreator" required>
+    
+    <label for="mintRegistrant">Registrant</label>
+    <input type="text" id="mintRegistrant" name="registrant" placeholder="예: 0xRegistrant" required>
+    
+    <label for="mintUserId">User ID</label>
+    <input type="text" id="mintUserId" name="userId" placeholder="예: user1" required>
+    
+    <button type="submit">민팅 요청 전송</button>
+    <div id="mintOutput" class="output"></div>
+  </form>
+  
+  <!-- NFT 판매 폼 -->
+  <form id="sellForm">
+    <h2>NFT 판매 등록</h2>
+    <label for="sellTokenId">Token ID</label>
+    <input type="text" id="sellTokenId" name="tokenId" placeholder="예: 1234" required>
+    
+    <label for="sellPrice">Price (ETH)</label>
+    <input type="text" id="sellPrice" name="price" placeholder="예: 0.01" required>
+    
+    <label for="sellUserId">User ID</label>
+    <input type="text" id="sellUserId" name="userId" placeholder="예: user1" required>
+    
+    <button type="submit">판매 등록 요청 전송</button>
+    <div id="sellOutput" class="output"></div>
+  </form>
+  
+  <!-- NFT 구매 폼 -->
+  <form id="buyForm">
+    <h2>NFT 구매</h2>
+    <label for="buyTokenId">Token ID</label>
+    <input type="text" id="buyTokenId" name="tokenId" placeholder="예: 1234" required>
+    
+    <label for="buyPrice">Price (ETH)</label>
+    <input type="text" id="buyPrice" name="price" placeholder="예: 0.01" required>
+    
+    <label for="buyUserId">User ID</label>
+    <input type="text" id="buyUserId" name="userId" placeholder="예: user1" required>
+    
+    <button type="submit">구매 요청 전송</button>
+    <div id="buyOutput" class="output"></div>
+  </form>
+  
+  <!-- 송금 테스트 폼 -->
+  <form id="sendTxForm">
+    <h2>송금 테스트 (MetaMask 위임)</h2>
+    <label for="fromAddress">From Address</label>
+    <input type="text" id="fromAddress" name="fromAddress" placeholder="예: 0xYourAddress" required>
+    
+    <label for="toAddress">To Address</label>
+    <input type="text" id="toAddress" name="toAddress" placeholder="예: 0xRecipientAddress" required>
+    
+    <label for="sendAmount">Amount (ETH)</label>
+    <input type="text" id="sendAmount" name="amount" placeholder="예: 0.01" required>
+    
+    <label for="sendUserId">User ID</label>
+    <input type="text" id="sendUserId" name="userId" placeholder="예: user1" required>
+    
+    <button type="submit">송금 요청 전송</button>
+  </form>
+  <div id="sendTxOutput" class="output"></div>
+
+  <script>
+    // 공통: MetaMask 서명 요청 및 confirmSignature API 호출 함수
+    async function signAndConfirm(messageToSign, userId) {
+      if (!window.ethereum) {
+        alert("MetaMask가 설치되어 있지 않습니다.");
+        throw new Error("MetaMask 미설치");
+      }
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(messageToSign);
+      console.log('Signature:', signature);
+      const confirmRes = await fetch('/api/nft/confirm-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, signature })
+      });
+      return await confirmRes.json();
+    }
+
+    // 실제 거래 전송 함수: 반환받은 payload를 이용해 MetaMask로 거래 전송 및 영수증 반환
+    async function sendTransaction(payload) {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const txResponse = await signer.sendTransaction(payload);
+      console.log("Transaction sent:", txResponse);
+      const receipt = await txResponse.wait();
+      return receipt;
+    }
+
+    // 민팅 폼 처리
+    document.getElementById('mintForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const output = document.getElementById('mintOutput');
+      output.innerText = '민팅 요청 중...';
+
+      const payload = {
+        webtoonId: document.getElementById('mintWebtoonId').value,
+        type: document.getElementById('mintType').value,
+        typeId: document.getElementById('mintTypeId').value,
+        s3Url: document.getElementById('mintS3Url').value,
+        originalCreator: document.getElementById('mintOriginalCreator').value,
+        registrant: document.getElementById('mintRegistrant').value,
+        userId: document.getElementById('mintUserId').value
+      };
+
+      try {
+        const res = await fetch('/api/nft/mint-nft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.needSignature && data.messageToSign) {
+          output.innerText = '서명 요청 중...';
+          const confirmData = await signAndConfirm(data.messageToSign, payload.userId);
+          console.log("Confirm Data:", confirmData);
+          if (confirmData.metamaskPayload) {
+            output.innerText = '민팅 거래 전송 중...';
+            const receipt = await sendTransaction(confirmData.metamaskPayload);
+            output.innerText = '민팅 거래 완료! 영수증: ' + JSON.stringify(receipt);
+          } else {
+            output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
+          }
+        } else {
+          output.innerText = '서버 처리 결과: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.innerText = '오류: ' + err.message;
+      }
+    });
+
+    // 판매 폼 처리
+    document.getElementById('sellForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const output = document.getElementById('sellOutput');
+      output.innerText = '판매 등록 요청 중...';
+
+      const payload = {
+        tokenId: document.getElementById('sellTokenId').value,
+        price: document.getElementById('sellPrice').value,
+        userId: document.getElementById('sellUserId').value
+      };
+
+      try {
+        const res = await fetch('/api/nft/sell-nft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.needSignature && data.messageToSign) {
+          output.innerText = '서명 요청 중...';
+          const confirmData = await signAndConfirm(data.messageToSign, payload.userId);
+          console.log("Confirm Data:", confirmData);
+          if (confirmData.metamaskPayload) {
+            output.innerText = '판매 거래 전송 중...';
+            const receipt = await sendTransaction(confirmData.metamaskPayload);
+            output.innerText = '판매 거래 완료! 영수증: ' + JSON.stringify(receipt);
+          } else {
+            output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
+          }
+        } else {
+          output.innerText = '서버 처리 결과: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.innerText = '오류: ' + err.message;
+      }
+    });
+
+    // 구매 폼 처리
+    document.getElementById('buyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const output = document.getElementById('buyOutput');
+      output.innerText = '구매 요청 중...';
+
+      const payload = {
+        tokenId: document.getElementById('buyTokenId').value,
+        price: document.getElementById('buyPrice').value,
+        userId: document.getElementById('buyUserId').value
+      };
+
+      try {
+        const res = await fetch('/api/nft/buy-nft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.needSignature && data.messageToSign) {
+          output.innerText = '서명 요청 중...';
+          const confirmData = await signAndConfirm(data.messageToSign, payload.userId);
+          console.log("Confirm Data:", confirmData);
+          if (confirmData.metamaskPayload) {
+            output.innerText = '구매 거래 전송 중...';
+            const receipt = await sendTransaction(confirmData.metamaskPayload);
+            output.innerText = '구매 거래 완료! 영수증: ' + JSON.stringify(receipt);
+          } else {
+            output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
+          }
+        } else {
+          output.innerText = '서버 처리 결과: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.innerText = '오류: ' + err.message;
+      }
+    });
+
+    // 송금 폼 처리 (MetaMask 서명 위임)
+    document.getElementById('sendTxForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const output = document.getElementById('sendTxOutput');
+      output.innerText = '송금 요청 중...';
+
+      const payload = {
+        fromAddress: document.getElementById('fromAddress').value,
+        toAddress: document.getElementById('toAddress').value,
+        amount: document.getElementById('sendAmount').value,
+        userId: document.getElementById('sendUserId').value
+      };
+
+      try {
+        const res = await fetch('/api/nft/send-transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.needSignature && data.messageToSign) {
+          output.innerText = '서명 요청 중...';
+          const confirmData = await signAndConfirm(data.messageToSign, payload.userId);
+          console.log("Confirm Data:", confirmData);
+          if (confirmData.metamaskPayload) {
+            output.innerText = '송금 거래 전송 중...';
+            const receipt = await sendTransaction(confirmData.metamaskPayload);
+            output.innerText = '송금 거래 완료! 영수증: ' + JSON.stringify(receipt);
+          } else {
+            output.innerText = '서명 확인 결과: ' + JSON.stringify(confirmData);
+          }
+        } else {
+          output.innerText = '서버 처리 결과: ' + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.innerText = '오류: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

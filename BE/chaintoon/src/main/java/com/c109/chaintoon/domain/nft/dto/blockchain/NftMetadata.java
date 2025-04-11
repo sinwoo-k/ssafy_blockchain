@@ -1,0 +1,16 @@
+package com.c109.chaintoon.domain.nft.dto.blockchain;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class NftMetadata {
+    private Integer tokenId;
+    private String title;
+    private String description;
+    private String image;
+
+}

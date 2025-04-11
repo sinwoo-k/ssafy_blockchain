@@ -1,0 +1,226 @@
+package com.c109.chaintoon.domain.goods.service;
+
+import com.c109.chaintoon.common.exception.UnauthorizedAccessException;
+import com.c109.chaintoon.common.s3.service.S3Service;
+import com.c109.chaintoon.domain.goods.dto.request.GoodsRequestDto;
+import com.c109.chaintoon.domain.goods.dto.response.GoodsResponseDto;
+import com.c109.chaintoon.domain.goods.dto.response.WebtoonGoodsResponseDto;
+import com.c109.chaintoon.domain.goods.entity.Goods;
+import com.c109.chaintoon.domain.goods.exception.GoodsNotFoundException;
+import com.c109.chaintoon.domain.goods.repository.GoodsRepository;
+import com.c109.chaintoon.domain.goods.specification.GoodsSpecification;
+import com.c109.chaintoon.domain.nft.repository.NftRepository;
+import com.c109.chaintoon.domain.search.code.SearchType;
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
+import com.c109.chaintoon.domain.user.entity.User;
+import com.c109.chaintoon.domain.user.exception.UserIdNotFoundException;
+import com.c109.chaintoon.domain.user.repository.UserRepository;
+import com.c109.chaintoon.domain.webtoon.entity.Webtoon;
+import com.c109.chaintoon.domain.webtoon.exception.WebtoonNotFoundException;
+import com.c109.chaintoon.domain.webtoon.repository.WebtoonRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class GoodsService {
+
+    private final WebtoonRepository webtoonRepository;
+    private final GoodsRepository goodsRepository;
+    private final UserRepository userRepository;
+    private final S3Service s3Service;
+    private final NftRepository nftRepository;
+
+    private GoodsResponseDto toGoodsResponseDto(Goods goods) {
+        Webtoon webtoon = webtoonRepository
+                .findByWebtoonIdAndDeleted(goods.getWebtoonId(), "N")
+                .orElseThrow(() -> new WebtoonNotFoundException(goods.getWebtoonId()));
+
+        return GoodsResponseDto.builder()
+                .goodsId(goods.getGoodsId())
+                .userId(goods.getUserId())
+                .webtoonId(goods.getWebtoonId())
+                .webtoonName(webtoon.getWebtoonName())
+                .goodsName(goods.getGoodsName())
+                .description(goods.getDescription())
+                .goodsImage(s3Service.getPresignedUrl(goods.getGoodsImage()))
+                .build();
+    }
+
+    // 굿즈 등록
+    public GoodsResponseDto createGoods(Integer userId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
+        // 웹툰 조회
+        Webtoon webtoon = webtoonRepository.findById(goodsRequestDto.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(goodsRequestDto.getWebtoonId()));
+
+        // 웹툰 작가만 등록 가능
+        if (!webtoon.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("웹툰 작가만 굿즈를 등록할 수 있습니다.");
+        }
+
+        // 유저 조회
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException(userId));
+
+        // 굿즈 엔티티 생성
+        Goods goods = Goods.builder()
+                .userId(userId)
+                .webtoonId(goodsRequestDto.getWebtoonId())
+                .goodsName(goodsRequestDto.getGoodsName())
+                .description(goodsRequestDto.getDescription())
+                .build();
+
+        // 굿즈 저장
+        Goods savedGoods = goodsRepository.save(goods);
+
+        String goodsImageUrl = uploadGoodsImage(savedGoods.getGoodsId(), goodsImage);
+        savedGoods.setGoodsImage(goodsImageUrl);
+        goodsRepository.save(savedGoods);
+
+        return toGoodsResponseDto(savedGoods);
+    }
+
+    private String uploadGoodsImage(Integer goodsId, MultipartFile file) {
+        return s3Service.uploadFile(file, "goods/" + goodsId + "/image");
+    }
+
+    // 웹툰별 굿즈 목록 조회
+    public WebtoonGoodsResponseDto getGoodsByWebtoon(Integer webtoonId, int page, int pageSize, String orderBy) {
+        // 웹툰 조회
+        Webtoon webtoon = webtoonRepository.findById(webtoonId)
+                .orElseThrow(() -> new WebtoonNotFoundException(webtoonId));
+
+        // 2. 작가(닉네임) 조회: 웹툰의 userId를 이용하여 User 엔티티를 조회
+        User user = userRepository.findById(webtoon.getUserId())
+                .orElseThrow(() -> new UserIdNotFoundException(webtoon.getUserId()));
+        String writer = user.getNickname();
+
+        // 3. Pageable 객체 생성 (page는 프론트에서 1부터 전달한다고 가정 → 0-based로 변환)
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort(orderBy));
+
+        // 4. 해당 웹툰에 속한 굿즈 목록 조회 (Page 객체)
+        Page<Goods> goodsPage = goodsRepository.findAllByWebtoonIdAndDeleted(webtoonId, "N", pageable);
+
+        // 5. Goods 엔티티를 GoodsListResponseDto로 변환 (굿즈 목록)
+        List<GoodsResponseDto> goodsList = goodsPage.getContent().stream()
+                .map(this::toGoodsResponseDto)
+                .collect(Collectors.toList());
+
+        // 6. WebtoonGoodsResponseDto 생성하여 반환
+        return WebtoonGoodsResponseDto.builder()
+                .webtoonId(webtoon.getWebtoonId())
+                .webtoonName(webtoon.getWebtoonName())
+                .writer(writer)
+                .genre(webtoon.getGenre())
+                .garoThumbnail(s3Service.getPresignedUrl(webtoon.getGaroThumbnail()))
+                .seroThumbnail(s3Service.getPresignedUrl(webtoon.getSeroThumbnail()))
+                .totalGoodsCount((int) goodsPage.getTotalElements())
+                .goodsList(goodsList)
+                .build();
+    }
+
+    public GoodsResponseDto getGoods(Integer goodsId) {
+        Goods goods = goodsRepository.findByGoodsIdAndDeleted(goodsId, "N")
+                .orElseThrow(() -> new GoodsNotFoundException(goodsId));
+
+        return toGoodsResponseDto(goods);
+    }
+
+    // 굿즈 수정
+    public GoodsResponseDto updateGoods(Integer userId, Integer goodsId, GoodsRequestDto goodsRequestDto, MultipartFile goodsImage) {
+        // 수정할 굿즈 조회
+        Goods goods = goodsRepository.findById(goodsId)
+                .orElseThrow(() -> new GoodsNotFoundException(goodsId)); // GoodsNotFoundException은 별도 정의 필요
+
+        // 요청한 사용자가 굿즈를 등록한 사람과 일치하는지 확인
+        if (!goods.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("수정 권한이 없습니다.");
+        }
+
+        // 굿즈가 속한 웹툰 조회
+        webtoonRepository.findById(goods.getWebtoonId())
+                .orElseThrow(() -> new WebtoonNotFoundException(goods.getWebtoonId()));
+
+        // 수정 가능한 필드 업데이트
+        // 굿즈명이 전달되었으면 업데이트
+        if (goodsRequestDto.getGoodsName() != null) {
+            goods.setGoodsName(goodsRequestDto.getGoodsName());
+        }
+
+        // 이미지 업데이트
+        if (goodsImage != null && !goodsImage.isEmpty()) {
+            if(goods.getGoodsImage() != null) {
+                s3Service.deleteFile(goods.getGoodsImage());
+            }
+            String goodsImageUrl = uploadGoodsImage(goods.getGoodsId(), goodsImage);
+            goods.setGoodsImage(goodsImageUrl);
+        }
+
+        // 굿즈 수정 저장
+        Goods updatedGoods = goodsRepository.save(goods);
+
+        // 개별 굿즈 정보를 담은 DTO 생성
+        return toGoodsResponseDto(updatedGoods);
+    }
+
+    // 굿즈 삭제
+    public void deleteGoods(Integer goodsId, Integer userId) {
+        // 삭제할 굿즈 조회
+        Goods goods = goodsRepository.findById(goodsId)
+                .orElseThrow(() -> new GoodsNotFoundException(goodsId)); // GoodsNotFoundException은 별도로 정의
+
+        if (nftRepository.existsByTypeIdAndType(goodsId, "goods")) {
+            throw new IllegalArgumentException("NFT가 발행된 굿즈는 삭제할 수 없습니다.");
+        }
+
+        // 요청한 사용자가 등록한 사용자와 일치해야 함
+        if (!goods.getUserId().equals(userId)) {
+            throw new UnauthorizedAccessException("삭제 권한이 없습니다.");
+        }
+
+        // 소프트 삭제: deleted 플래그를 "Y"로 변경하고 저장
+        goods.setDeleted("Y");
+        goodsRepository.save(goods);
+    }
+
+    // 굿즈 검색
+    public SearchResponseDto<GoodsResponseDto> searchGoods(int page, int pageSize, String keyword) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, getSort("latest"));
+
+        // 키워드에 대해 제목이 포함되는 조건을 specification으로 구성
+        Specification<Goods> spec = Specification.where(GoodsSpecification.goodsNameContains(keyword))
+                .and((root, query, cb) ->cb.equal(root.get("deleted"), "N"));
+
+        Page<Goods> resultPage = goodsRepository.findAll(spec, pageable);
+
+        return SearchResponseDto.<GoodsResponseDto>builder()
+                .type(SearchType.GOODS.getValue())
+                .totalCount(resultPage.getTotalElements())
+                .searchResult(resultPage.getContent().stream()
+                        .map(this::toGoodsResponseDto)
+                        .toList())
+                .build();
+    }
+
+    private Sort getSort(String orderBy) {
+        if ("latest".equalsIgnoreCase(orderBy)) {
+            // 최신순: 생성일 내림차순
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        } else if ("oldest".equalsIgnoreCase(orderBy)) {
+            // 오래된순: 생성일 오름차순
+            return Sort.by(Sort.Direction.ASC, "createdAt");
+        } else {
+            // 기본값: 최신순
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+    }
+}

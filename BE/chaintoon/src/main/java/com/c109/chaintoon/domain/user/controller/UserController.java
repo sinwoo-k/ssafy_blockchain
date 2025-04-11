@@ -1,0 +1,135 @@
+package com.c109.chaintoon.domain.user.controller;
+
+import com.c109.chaintoon.domain.search.dto.response.SearchResponseDto;
+import com.c109.chaintoon.domain.user.dto.request.UserRequestDto;
+import com.c109.chaintoon.domain.user.dto.response.*;
+import com.c109.chaintoon.domain.user.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/users")
+public class UserController {
+
+    private final UserService userService;
+
+    // 회원 검색 (목록)
+    @GetMapping("/search")
+    public ResponseEntity<?> findUserByNickname(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize
+    ) {
+        SearchResponseDto<SearchUserResponseDto> searchResult = userService.searchByNickname(keyword, page, pageSize);
+        return new ResponseEntity<>(searchResult, HttpStatus.OK);
+    }
+
+    // id로 회원 정보 조회
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserById(
+            @AuthenticationPrincipal Integer inquirerId,
+            @PathVariable Integer userId
+    ) {
+        UserResponseDto user = userService.findUserById(inquirerId, userId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 내 정보 조회
+    @GetMapping("/self/information")
+    public ResponseEntity<?> getMyInfo(
+            @AuthenticationPrincipal Integer loginId) {
+        MyInfoResponseDto user = userService.getMyInfo(loginId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 회원 정보 수정
+    @PatchMapping()
+    public ResponseEntity<?> updateUser(
+            @AuthenticationPrincipal Integer loginId,
+            @RequestPart(value = "user", required = false) UserRequestDto userRequestDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
+    ){
+        MyInfoResponseDto user = userService.updateUser(loginId, userRequestDto, profileImage);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 배경 이미지 삽입
+    @PatchMapping("/background-image")
+    public ResponseEntity<?> updateBackgroundImage(
+            @AuthenticationPrincipal Integer loginId,
+            @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage
+    ){
+        String backgroundUrl = userService.updateBackgroundImage(loginId, backgroundImage);
+        return new ResponseEntity<>(backgroundUrl, HttpStatus.OK);
+    }
+
+    // 닉네임 중복 확인
+    @GetMapping("/is-exist/{nickname}")
+    public ResponseEntity<?> isExist(@PathVariable String nickname) {
+        return ResponseEntity.ok(userService.checkNickname(nickname));
+    }
+
+    // 프로필 이미지 제거
+    @DeleteMapping("/delete-profile")
+    public ResponseEntity<?> deleteProfile(
+            @AuthenticationPrincipal Integer loginId) {
+        MyInfoResponseDto user = userService.deleteProfile(loginId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 배경 이미지 제거
+    @DeleteMapping("/delete-background")
+    public ResponseEntity<?> deleteBackground(
+            @AuthenticationPrincipal Integer loginId) {
+        MyInfoResponseDto user = userService.deleteBackground(loginId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // 팔로우
+    @PutMapping("/following/{userId}")
+    public ResponseEntity<?> following(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId) {
+        userService.addFollow(loginId, userId); //id: 로그인 중인(팔로우하는) 유저
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 언팔로우
+    @DeleteMapping("/following/{userId}")
+    public ResponseEntity<?> unfollowing(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId) {
+        userService.removeFollow(loginId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 팔로우 조회
+    @GetMapping("/following/{userId}")
+    public ResponseEntity<?> getFollowingList(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize) {
+        List<FollowingResponseDto> followingList = userService.getFollowingList(loginId, userId, page, pageSize);
+        return new ResponseEntity<>(followingList, HttpStatus.OK);
+    }
+
+    // 팔로워 조회
+    @GetMapping("/followers/{userId}")
+    public ResponseEntity<?> getFollowerList(
+            @AuthenticationPrincipal Integer loginId,
+            @PathVariable Integer userId,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int pageSize) {
+        List<FollowingResponseDto> followerList = userService.getFollowerList(loginId, userId, page, pageSize);
+        return new ResponseEntity<>(followerList, HttpStatus.OK);
+    }
+
+}
