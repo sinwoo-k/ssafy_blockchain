@@ -104,7 +104,7 @@ export const getAuctionDetail = async (auctionItemId) => {
   if (!auctionItemId) {
     throw new Error('경매 ID는 필수 파라미터입니다.');
   }
-  
+
   const response = await API.get(`/auctions/${auctionItemId}/bidding-history`);
   return response.data;
 };
@@ -114,18 +114,17 @@ export const placeBid = async (auctionId, bidAmount) => {
   if (!auctionId || !bidAmount) {
     throw new Error('경매 ID와 입찰 금액은 필수 파라미터입니다.');
   }
-  
+
   const response = await API.post(`/auctions/bid`, { bidAmount });
   return response.data;
 };
 
 /** 즉시 구매하기*/
-export const buyNow = async (auctionId) => {
-  if (!auctionId) {
+export const buyNow = async ( auctionItemId ) => {
+  if (!auctionItemId ) {
     throw new Error('경매 ID는 필수 파라미터입니다.');
   }
-  
-  const response = await API.post(`auctions/buy-now`);
+  const response = await API.post('/auctions/buy-now', { auctionItemId });
   return response.data;
 };
 

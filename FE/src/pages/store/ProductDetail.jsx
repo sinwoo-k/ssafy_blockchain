@@ -391,11 +391,12 @@ setBidPrice(parseFloat(initialBid));
 
       } else {
         // 내부 지갑 사용자: 단순 API 호출을 통해 즉시 구매 처리
-        await buyNow({ auctionItemId: auction.auctionItemId })
+        console.log({ auctionItemId : auction.auctionItemId });
+        await buyNow(auction.auctionItemId);
       }
 
       // 구매 성공 처리: 성공 메시지 및 컬렉션 페이지로 이동
-      alert(`${auction.buyNowPrice} ETH 금액으로 즉시 구매가 완료되었습니다!`)
+      alert(`${auction.buyNowPrice} ETH 금액으로 즉시 구매 요청이 완료되었습니다다!`)
       navigate(`/store/collection/${auction.webtoonId}`)
     } catch (err) {
       console.error('즉시 구매 처리 중 오류:', err)
