@@ -11,7 +11,8 @@ import {
   getFanartAuctions,
   getNFTInfo,
   buyNowMetamask,
-  saveTradeHistory
+  saveTradeHistory,
+  buyNow
 } from '../../api/storeApi'
 import nftService from '../../api/nftApi'
 
@@ -390,7 +391,7 @@ setBidPrice(parseFloat(initialBid));
 
       } else {
         // 내부 지갑 사용자: 단순 API 호출을 통해 즉시 구매 처리
-        await nftService.buyNow({ auctionItemId: auction.auctionItemId })
+        await buyNow({ auctionItemId: auction.auctionItemId })
       }
 
       // 구매 성공 처리: 성공 메시지 및 컬렉션 페이지로 이동
